@@ -171,3 +171,14 @@ func getGrpcClient(ctx context.Context, dest net.Destination, streamSettings *in
 	globalDialerMap[dialerConf{dest, streamSettings}] = conn
 	return conn, err
 }
+
+func GrpcCloseConn(streamSettings *internet.MemoryStreamConfig) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	for k, v := range globalDialerMap {
+		if k.MemoryStreamConfig == streamSettings {
+			v.Close()
+			delete(globalDialerMap, k)
+		}
+	}
+}
