@@ -241,3 +241,14 @@ func (w *WaitReadCloser) Close() error {
 	close(w.Wait)
 	return nil
 }
+
+func HttpCloseConn(streamSettings *internet.MemoryStreamConfig) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	for k, v := range globalDialerMap {
+		if k.MemoryStreamConfig == streamSettings {
+			v.CloseIdleConnections()
+			delete(globalDialerMap, k)
+		}
+	}
+}
