@@ -104,6 +104,16 @@ func (c *UConn) VerifyPeerCertificate(rawCerts [][]byte, verifiedChains [][]*x50
 	return nil
 }
 
+type connID struct {
+	net.Destination
+	*Config
+}
+
+var (
+	globalConnPool       = make(map[connID]*utls.UConn)
+	globalConnPoolAccess sync.Mutex
+)
+
 func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (net.Conn, error) {
 	localAddr := c.LocalAddr().String()
 	uConn := &UConn{}
@@ -167,6 +177,10 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		newError(fmt.Sprintf("REALITY localAddr: %v\tuConn.Verified: %v\n", localAddr, uConn.Verified)).WriteToLog(session.ExportIDToError(ctx))
 	}
 	if !uConn.Verified {
+		cid := connID{dest, config}
+		globalConnPoolAccess.Lock()
+		globalConnPool[cid] = uConn.UConn
+		globalConnPoolAccess.Unlock()
 		go func() {
 			client := &http.Client{
 				Transport: &http2.Transport{
@@ -283,4 +297,15 @@ func randBetween(left int64, right int64) int64 {
 	}
 	bigInt, _ := rand.Int(rand.Reader, big.NewInt(right-left))
 	return left + bigInt.Int64()
+}
+
+func RealityCloseConn(config *Config) {
+	globalConnPoolAccess.Lock()
+	defer globalConnPoolAccess.Unlock()
+	for k, v := range globalConnPool {
+		if k.Config == config {
+			v.Close()
+			delete(globalConnPool, k)
+		}
+	}
 }
