@@ -30,6 +30,7 @@ import (
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/session"
+	"github.com/xtls/xray-core/common/uuid"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/transport/internet/tls"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -105,7 +106,7 @@ func (c *UConn) VerifyPeerCertificate(rawCerts [][]byte, verifiedChains [][]*x50
 }
 
 type connID struct {
-	net.Destination
+	uuid.UUID
 	*Config
 }
 
@@ -132,6 +133,10 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		return nil, newError("REALITY: failed to get fingerprint").AtError()
 	}
 	uConn.UConn = utls.UClient(c, utlsConfig, *fingerprint)
+	cid := connID{uuid.New(), config}
+	globalConnPoolAccess.Lock()
+	globalConnPool[cid] = uConn.UConn
+	globalConnPoolAccess.Unlock()
 	{
 		uConn.BuildHandshakeState()
 		hello := uConn.HandshakeState.Hello
@@ -177,10 +182,6 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		newError(fmt.Sprintf("REALITY localAddr: %v\tuConn.Verified: %v\n", localAddr, uConn.Verified)).WriteToLog(session.ExportIDToError(ctx))
 	}
 	if !uConn.Verified {
-		cid := connID{dest, config}
-		globalConnPoolAccess.Lock()
-		globalConnPool[cid] = uConn.UConn
-		globalConnPoolAccess.Unlock()
 		go func() {
 			client := &http.Client{
 				Transport: &http2.Transport{
@@ -308,4 +309,19 @@ func RealityCloseConn(config *Config) {
 			delete(globalConnPool, k)
 		}
 	}
+}
+
+func RealityCloseAllConns() (count int) {
+	globalConnPoolAccess.Lock()
+	defer globalConnPoolAccess.Unlock()
+	for k, v := range globalConnPool {
+		v.Close()
+		delete(globalConnPool, k)
+		count += 1
+	}
+	return
+}
+
+func RealityLenConns() int {
+	return len(globalConnPool)
 }
