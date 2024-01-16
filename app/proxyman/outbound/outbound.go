@@ -106,7 +106,7 @@ func (m *Manager) AddHandler(ctx context.Context, handler outbound.Handler) erro
 	m.access.Lock()
 	defer m.access.Unlock()
 
-	m.ClearTagsCache()
+	m.tagsCache = make(map[string][]string)
 
 	if m.defaultHandler == nil {
 		m.defaultHandler = handler
@@ -136,15 +136,14 @@ func (m *Manager) RemoveHandler(ctx context.Context, tag string) (err error) {
 	}
 	m.access.Lock()
 	defer m.access.Unlock()
-	m.ClearTagsCache()
+
 	v := core.FromContext(ctx)
 	if v != nil {
 		err = removeStatCounter(v, tag)
 	}
 	common.Close(m.taggedHandler[tag])
 
-	m.ClearTagsCache()
-
+	m.tagsCache = make(map[string][]string)
 	delete(m.taggedHandler, tag)
 	if m.defaultHandler != nil && m.defaultHandler.Tag() == tag {
 		m.defaultHandler = nil
@@ -181,6 +180,8 @@ func (m *Manager) Select(selectors []string) []string {
 }
 
 func (m *Manager) ClearTagsCache() {
+	m.access.Lock()
+	defer m.access.Unlock()
 	m.tagsCache = make(map[string][]string)
 }
 
