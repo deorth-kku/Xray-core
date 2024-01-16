@@ -420,6 +420,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 
 type REALITYConfig struct {
 	Show         bool            `json:"show,omitempty"`
+	MasterKeyLog string          `json:"masterKeyLog,omitempty"`
 	Dest         json.RawMessage `json:"dest,omitempty"`
 	Type         string          `json:"type,omitempty"`
 	Xver         uint64          `json:"xver,omitempty"`
@@ -440,6 +441,7 @@ type REALITYConfig struct {
 func (c *REALITYConfig) Build() (proto.Message, error) {
 	config := new(reality.Config)
 	config.Show = c.Show
+	config.MasterKeyLog = c.MasterKeyLog
 	var err error
 	if c.Dest != nil {
 		var i uint16
