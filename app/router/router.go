@@ -5,6 +5,7 @@ package router
 import (
 	"context"
 
+	proxyman_outbound "github.com/xtls/xray-core/app/proxyman/outbound"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/dns"
@@ -127,10 +128,11 @@ func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) er
 	if !ok {
 		return newError("balancer ", balancerTag, " not found")
 	}
-	hs, ok := balancer.ohm.(outbound.HandlerSelector)
+	manager, ok := balancer.ohm.(*proxyman_outbound.Manager)
 	if !ok {
-		return newError("outbound.Manager is not a HandlerSelector")
+		return newError("outbound.Manager is not a Manager")
 	}
+	manager.ClearTagsCache()
 
 	balancer.selectors.Store(&selectors)
 	return nil
