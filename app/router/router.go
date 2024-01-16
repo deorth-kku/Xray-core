@@ -127,6 +127,11 @@ func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) er
 	if !ok {
 		return newError("balancer ", balancerTag, " not found")
 	}
+	hs, ok := balancer.ohm.(outbound.HandlerSelector)
+	if !ok {
+		return newError("outbound.Manager is not a HandlerSelector")
+	}
+
 	balancer.selectors.Store(&selectors)
 	return nil
 }
