@@ -252,3 +252,18 @@ func HttpCloseConn(streamSettings *internet.MemoryStreamConfig) {
 		}
 	}
 }
+
+func HttpCloseAllConns() (closed int) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	for k, v := range globalDialerMap {
+		v.CloseIdleConnections()
+		delete(globalDialerMap, k)
+		closed++
+	}
+	return
+}
+
+func HttpLenConns() (l int) {
+	return len(globalDialerMap)
+}

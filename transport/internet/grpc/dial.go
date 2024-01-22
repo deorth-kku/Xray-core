@@ -182,3 +182,18 @@ func GrpcCloseConn(streamSettings *internet.MemoryStreamConfig) {
 		}
 	}
 }
+
+func GrpcCloseAllConns() (closed int) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	for k, v := range globalDialerMap {
+		v.Close()
+		delete(globalDialerMap, k)
+		closed++
+	}
+	return
+}
+
+func GrpcLenConns() (l int) {
+	return len(globalDialerMap)
+}
