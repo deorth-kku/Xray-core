@@ -312,17 +312,40 @@ func RealityCloseConn(config *Config) {
 	}
 }
 
+func closeCount(c *utls.UConn) int {
+	if c.Close() == nil {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 func RealityCloseAllConns() (count int) {
 	globalConnPoolAccess.Lock()
 	defer globalConnPoolAccess.Unlock()
 	for k, v := range globalConnPool {
-		v.Close()
+		count += closeCount(v)
 		delete(globalConnPool, k)
-		count += 1
 	}
 	return
 }
 
 func RealityLenConns() int {
 	return len(globalConnPool)
+}
+
+const handshakeTimeout = 1
+
+func RealityCloseFailedConns() (count int) {
+	globalConnPoolAccess.Lock()
+	defer globalConnPoolAccess.Unlock()
+	for k, v := range globalConnPool {
+		ctx, cancel := context.WithTimeout(context.Background(), handshakeTimeout*time.Second)
+		defer cancel()
+		if v.HandshakeContext(ctx) != nil {
+			count += closeCount(v)
+			delete(globalConnPool, k)
+		}
+	}
+	return
 }
