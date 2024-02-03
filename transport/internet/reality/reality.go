@@ -334,13 +334,13 @@ func RealityLenConns() int {
 	return len(globalConnPool)
 }
 
-const handshakeTimeout = 1
+const handshakeTimeout = 1 * time.Second
 
 func RealityCloseFailedConns() (count int) {
 	globalConnPoolAccess.Lock()
 	defer globalConnPoolAccess.Unlock()
 	for k, v := range globalConnPool {
-		ctx, cancel := context.WithTimeout(context.Background(), handshakeTimeout*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), handshakeTimeout)
 		defer cancel()
 		if v.HandshakeContext(ctx) != nil {
 			count += closeCount(v)
