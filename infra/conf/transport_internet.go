@@ -358,6 +358,7 @@ type TLSConfig struct {
 	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256,omitempty"`
 	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256,omitempty"`
 	MasterKeyLog                         string           `json:"masterKeyLog,omitempty"`
+	CloseTimeout                         float32          `json:"closeTimeout,omitempty"`
 }
 
 // Build implements Buildable.
@@ -414,6 +415,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 
 	config.MasterKeyLog = c.MasterKeyLog
+	config.CloseTimeout = c.CloseTimeout
 
 	return config, nil
 }
@@ -421,6 +423,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 type REALITYConfig struct {
 	Show         bool            `json:"show,omitempty"`
 	MasterKeyLog string          `json:"masterKeyLog,omitempty"`
+	CloseTimeout float32         `json:"closeTimeout,omitempty"`
 	Dest         json.RawMessage `json:"dest,omitempty"`
 	Type         string          `json:"type,omitempty"`
 	Xver         uint64          `json:"xver,omitempty"`
@@ -442,6 +445,7 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 	config := new(reality.Config)
 	config.Show = c.Show
 	config.MasterKeyLog = c.MasterKeyLog
+	config.CloseTimeout = c.CloseTimeout
 	var err error
 	if c.Dest != nil {
 		var i uint16
