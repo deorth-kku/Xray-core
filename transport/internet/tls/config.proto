@@ -86,5 +86,5 @@ message Config {
 
   string master_key_log = 15;
 
-  float close_timeout = 16;
+  int64 close_timeout = 16;
 }

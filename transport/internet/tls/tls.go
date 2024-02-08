@@ -62,9 +62,9 @@ func (c *Conn) NegotiatedProtocol() (name string, mutual bool) {
 }
 
 // Client initiates a TLS client handshake on the given connection.
-func Client(c net.Conn, config *tls.Config, closeTimeout float32) net.Conn {
+func Client(c net.Conn, config *tls.Config, closeTimeout int64) net.Conn {
 	tlsConn := tls.Client(c, config)
-	return &Conn{Conn: tlsConn, closeTimeout: time.Duration(float32(time.Second) * closeTimeout)}
+	return &Conn{Conn: tlsConn, closeTimeout: time.Duration(closeTimeout)}
 }
 
 // Server initiates a TLS server handshake on the given connection.
@@ -131,9 +131,9 @@ func (c *UConn) NegotiatedProtocol() (name string, mutual bool) {
 	return state.NegotiatedProtocol, state.NegotiatedProtocolIsMutual
 }
 
-func UClient(c net.Conn, config *tls.Config, fingerprint *utls.ClientHelloID, closeTimeout float32) net.Conn {
+func UClient(c net.Conn, config *tls.Config, fingerprint *utls.ClientHelloID, closeTimeout int64) net.Conn {
 	utlsConn := utls.UClient(c, copyConfig(config), *fingerprint)
-	return &UConn{UConn: utlsConn, closeTimeout: time.Duration(float32(time.Second) * closeTimeout)}
+	return &UConn{UConn: utlsConn, closeTimeout: time.Duration(closeTimeout)}
 }
 
 func copyConfig(c *tls.Config) *utls.Config {

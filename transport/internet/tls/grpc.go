@@ -41,7 +41,7 @@ func (t grpcUtlsInfo) GetSecurityValue() credentials.ChannelzSecurityValue {
 type grpcUtls struct {
 	config       *gotls.Config
 	fingerprint  *utls.ClientHelloID
-	closeTimeout float32
+	closeTimeout int64
 }
 
 func (c grpcUtls) Info() credentials.ProtocolInfo {
@@ -103,7 +103,7 @@ func (c *grpcUtls) OverrideServerName(serverNameOverride string) error {
 }
 
 // NewGrpcUtls uses c to construct a TransportCredentials based on uTLS.
-func NewGrpcUtls(c *gotls.Config, fingerprint *utls.ClientHelloID, closeTimeout float32) credentials.TransportCredentials {
+func NewGrpcUtls(c *gotls.Config, fingerprint *utls.ClientHelloID, closeTimeout int64) credentials.TransportCredentials {
 	tc := &grpcUtls{c.Clone(), fingerprint, closeTimeout}
 	return tc
 }

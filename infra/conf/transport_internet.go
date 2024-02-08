@@ -15,6 +15,7 @@ import (
 	"github.com/xtls/xray-core/common/platform/filesystem"
 	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/common/serial"
+	"github.com/xtls/xray-core/infra/conf/cfgcommon/duration"
 	"github.com/xtls/xray-core/transport/internet"
 	"github.com/xtls/xray-core/transport/internet/domainsocket"
 	httpheader "github.com/xtls/xray-core/transport/internet/headers/http"
@@ -343,22 +344,22 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                             bool             `json:"allowInsecure,omitempty"`
-	Certs                                []*TLSCertConfig `json:"certificates,omitempty"`
-	ServerName                           string           `json:"serverName,omitempty"`
-	ALPN                                 *StringList      `json:"alpn,omitempty"`
-	EnableSessionResumption              bool             `json:"enableSessionResumption,omitempty"`
-	DisableSystemRoot                    bool             `json:"disableSystemRoot,omitempty"`
-	MinVersion                           string           `json:"minVersion,omitempty"`
-	MaxVersion                           string           `json:"maxVersion,omitempty"`
-	CipherSuites                         string           `json:"cipherSuites,omitempty"`
-	PreferServerCipherSuites             bool             `json:"preferServerCipherSuites,omitempty"`
-	Fingerprint                          string           `json:"fingerprint,omitempty"`
-	RejectUnknownSNI                     bool             `json:"rejectUnknownSni,omitempty"`
-	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256,omitempty"`
-	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256,omitempty"`
-	MasterKeyLog                         string           `json:"masterKeyLog,omitempty"`
-	CloseTimeout                         float32          `json:"closeTimeout,omitempty"`
+	Insecure                             bool              `json:"allowInsecure,omitempty"`
+	Certs                                []*TLSCertConfig  `json:"certificates,omitempty"`
+	ServerName                           string            `json:"serverName,omitempty"`
+	ALPN                                 *StringList       `json:"alpn,omitempty"`
+	EnableSessionResumption              bool              `json:"enableSessionResumption,omitempty"`
+	DisableSystemRoot                    bool              `json:"disableSystemRoot,omitempty"`
+	MinVersion                           string            `json:"minVersion,omitempty"`
+	MaxVersion                           string            `json:"maxVersion,omitempty"`
+	CipherSuites                         string            `json:"cipherSuites,omitempty"`
+	PreferServerCipherSuites             bool              `json:"preferServerCipherSuites,omitempty"`
+	Fingerprint                          string            `json:"fingerprint,omitempty"`
+	RejectUnknownSNI                     bool              `json:"rejectUnknownSni,omitempty"`
+	PinnedPeerCertificateChainSha256     *[]string         `json:"pinnedPeerCertificateChainSha256,omitempty"`
+	PinnedPeerCertificatePublicKeySha256 *[]string         `json:"pinnedPeerCertificatePublicKeySha256,omitempty"`
+	MasterKeyLog                         string            `json:"masterKeyLog,omitempty"`
+	CloseTimeout                         duration.Duration `json:"closeTimeout,omitempty"`
 }
 
 // Build implements Buildable.
@@ -415,24 +416,24 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 
 	config.MasterKeyLog = c.MasterKeyLog
-	config.CloseTimeout = c.CloseTimeout
+	config.CloseTimeout = int64(c.CloseTimeout)
 
 	return config, nil
 }
 
 type REALITYConfig struct {
-	Show         bool            `json:"show,omitempty"`
-	MasterKeyLog string          `json:"masterKeyLog,omitempty"`
-	CloseTimeout float32         `json:"closeTimeout,omitempty"`
-	Dest         json.RawMessage `json:"dest,omitempty"`
-	Type         string          `json:"type,omitempty"`
-	Xver         uint64          `json:"xver,omitempty"`
-	ServerNames  []string        `json:"serverNames,omitempty"`
-	PrivateKey   string          `json:"privateKey,omitempty"`
-	MinClientVer string          `json:"minClientVer,omitempty"`
-	MaxClientVer string          `json:"maxClientVer,omitempty"`
-	MaxTimeDiff  uint64          `json:"maxTimeDiff,omitempty"`
-	ShortIds     []string        `json:"shortIds,omitempty"`
+	Show         bool              `json:"show,omitempty"`
+	MasterKeyLog string            `json:"masterKeyLog,omitempty"`
+	CloseTimeout duration.Duration `json:"closeTimeout,omitempty"`
+	Dest         json.RawMessage   `json:"dest,omitempty"`
+	Type         string            `json:"type,omitempty"`
+	Xver         uint64            `json:"xver,omitempty"`
+	ServerNames  []string          `json:"serverNames,omitempty"`
+	PrivateKey   string            `json:"privateKey,omitempty"`
+	MinClientVer string            `json:"minClientVer,omitempty"`
+	MaxClientVer string            `json:"maxClientVer,omitempty"`
+	MaxTimeDiff  uint64            `json:"maxTimeDiff,omitempty"`
+	ShortIds     []string          `json:"shortIds,omitempty"`
 
 	Fingerprint string `json:"fingerprint,omitempty"`
 	ServerName  string `json:"serverName,omitempty"`
@@ -445,7 +446,7 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 	config := new(reality.Config)
 	config.Show = c.Show
 	config.MasterKeyLog = c.MasterKeyLog
-	config.CloseTimeout = c.CloseTimeout
+	config.CloseTimeout = int64(c.CloseTimeout)
 	var err error
 	if c.Dest != nil {
 		var i uint16

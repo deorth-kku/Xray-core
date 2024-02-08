@@ -128,7 +128,7 @@ var (
 
 func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (net.Conn, error) {
 	localAddr := c.LocalAddr().String()
-	uConn := &UConn{closeTimeout: time.Duration(float32(time.Second) * config.CloseTimeout)}
+	uConn := &UConn{closeTimeout: time.Duration(config.CloseTimeout)}
 	utlsConfig := &utls.Config{
 		VerifyPeerCertificate:  uConn.VerifyPeerCertificate,
 		ServerName:             config.ServerName,
