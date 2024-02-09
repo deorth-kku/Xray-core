@@ -122,7 +122,7 @@ type connID struct {
 }
 
 var (
-	globalConnPool       = make(map[connID]*utls.UConn)
+	globalConnPool       = make(map[connID]*UConn)
 	globalConnPoolAccess sync.Mutex
 )
 
@@ -147,7 +147,7 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 	uConn.UConn = utls.UClient(c, utlsConfig, *fingerprint)
 	cid := connID{uuid.New(), config}
 	globalConnPoolAccess.Lock()
-	globalConnPool[cid] = uConn.UConn
+	globalConnPool[cid] = uConn
 	globalConnPoolAccess.Unlock()
 	{
 		uConn.BuildHandshakeState()
@@ -323,7 +323,7 @@ func RealityCloseConn(config *Config) {
 	}
 }
 
-func closeCount(c *utls.UConn) int {
+func closeCount(c *UConn) int {
 	if c.Close() == nil {
 		return 1
 	} else {
