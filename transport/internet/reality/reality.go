@@ -93,6 +93,14 @@ func (c *UConn) Close() error {
 	return c.close()
 }
 
+func (c *UConn) HandshakeContext(ctx context.Context) (err error) {
+	err = c.UConn.HandshakeContext(ctx)
+	if err != nil {
+		c.Close()
+	}
+	return
+}
+
 func (c *UConn) HandshakeAddressContext(ctx context.Context) net.Address {
 	if err := c.HandshakeContext(ctx); err != nil {
 		return nil
@@ -348,20 +356,4 @@ func RealityCloseAllConns() (count int) {
 
 func RealityLenConns() int {
 	return globalConnPool.Size()
-}
-
-const handshakeTimeout = 1 * time.Second
-
-func RealityCloseFailedConns() (count int) {
-	globalConnPool.Range(func(k connID, v *UConn) bool {
-		ctx, cancel := context.WithTimeout(context.Background(), handshakeTimeout)
-		defer cancel()
-		if v.HandshakeContext(ctx) != nil {
-			count += closeCount(v)
-			globalConnPool.Delete(k)
-		}
-
-		return true
-	})
-	return
 }
