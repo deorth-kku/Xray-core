@@ -25,6 +25,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/puzpuzpuz/xsync/v3"
 	utls "github.com/refraction-networking/utls"
 	"github.com/xtls/reality"
 	"github.com/xtls/xray-core/common/errors"
@@ -71,7 +72,7 @@ type UConn struct {
 	Verified     bool
 }
 
-func (c *UConn) Close() error {
+func (c *UConn) close() error {
 	if c.closeTimeout != 0 {
 		timer := time.AfterFunc(c.closeTimeout, func() {
 			c.UConn.NetConn().Close()
@@ -79,6 +80,17 @@ func (c *UConn) Close() error {
 		defer timer.Stop()
 	}
 	return c.UConn.Close()
+}
+
+func (c *UConn) Close() error {
+	globalConnPool.Range(func(k connID, v *UConn) bool {
+		if v == c {
+			globalConnPool.Delete(k)
+			return false
+		}
+		return true
+	})
+	return c.close()
 }
 
 func (c *UConn) HandshakeAddressContext(ctx context.Context) net.Address {
@@ -121,10 +133,7 @@ type connID struct {
 	*Config
 }
 
-var (
-	globalConnPool       = make(map[connID]*UConn)
-	globalConnPoolAccess sync.Mutex
-)
+var globalConnPool = xsync.NewMapOf[connID, *UConn]()
 
 func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (net.Conn, error) {
 	localAddr := c.LocalAddr().String()
@@ -146,9 +155,7 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 	}
 	uConn.UConn = utls.UClient(c, utlsConfig, *fingerprint)
 	cid := connID{uuid.New(), config}
-	globalConnPoolAccess.Lock()
-	globalConnPool[cid] = uConn
-	globalConnPoolAccess.Unlock()
+	globalConnPool.Store(cid, uConn)
 	{
 		uConn.BuildHandshakeState()
 		hello := uConn.HandshakeState.Hello
@@ -313,18 +320,17 @@ func randBetween(left int64, right int64) int64 {
 }
 
 func RealityCloseConn(config *Config) {
-	globalConnPoolAccess.Lock()
-	defer globalConnPoolAccess.Unlock()
-	for k, v := range globalConnPool {
+	globalConnPool.Range(func(k connID, v *UConn) bool {
 		if k.Config == config {
-			v.Close()
-			delete(globalConnPool, k)
+			v.close()
+			globalConnPool.Delete(k)
 		}
-	}
+		return true
+	})
 }
 
 func closeCount(c *UConn) int {
-	if c.Close() == nil {
+	if c.close() == nil {
 		return 1
 	} else {
 		return 0
@@ -332,31 +338,30 @@ func closeCount(c *UConn) int {
 }
 
 func RealityCloseAllConns() (count int) {
-	globalConnPoolAccess.Lock()
-	defer globalConnPoolAccess.Unlock()
-	for k, v := range globalConnPool {
+	globalConnPool.Range(func(k connID, v *UConn) bool {
 		count += closeCount(v)
-		delete(globalConnPool, k)
-	}
+		globalConnPool.Delete(k)
+		return true
+	})
 	return
 }
 
 func RealityLenConns() int {
-	return len(globalConnPool)
+	return globalConnPool.Size()
 }
 
 const handshakeTimeout = 1 * time.Second
 
 func RealityCloseFailedConns() (count int) {
-	globalConnPoolAccess.Lock()
-	defer globalConnPoolAccess.Unlock()
-	for k, v := range globalConnPool {
+	globalConnPool.Range(func(k connID, v *UConn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), handshakeTimeout)
 		defer cancel()
 		if v.HandshakeContext(ctx) != nil {
 			count += closeCount(v)
-			delete(globalConnPool, k)
+			globalConnPool.Delete(k)
 		}
-	}
+
+		return true
+	})
 	return
 }
