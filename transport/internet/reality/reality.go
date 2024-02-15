@@ -31,7 +31,6 @@ import (
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/session"
-	"github.com/xtls/xray-core/common/uuid"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/transport/internet/tls"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -83,13 +82,7 @@ func (c *UConn) close() error {
 }
 
 func (c *UConn) Close() error {
-	globalConnPool.Range(func(k connID, v *UConn) bool {
-		if v == c {
-			globalConnPool.Delete(k)
-			return false
-		}
-		return true
-	})
+	globalConnPool.Delete(c)
 	return c.close()
 }
 
@@ -136,12 +129,7 @@ func (c *UConn) VerifyPeerCertificate(rawCerts [][]byte, verifiedChains [][]*x50
 	return nil
 }
 
-type connID struct {
-	uuid.UUID
-	*Config
-}
-
-var globalConnPool = xsync.NewMapOf[connID, *UConn]()
+var globalConnPool = xsync.NewMapOf[*UConn, *Config]()
 
 func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (net.Conn, error) {
 	localAddr := c.LocalAddr().String()
@@ -162,8 +150,7 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		return nil, newError("REALITY: failed to get fingerprint").AtError()
 	}
 	uConn.UConn = utls.UClient(c, utlsConfig, *fingerprint)
-	cid := connID{uuid.New(), config}
-	globalConnPool.Store(cid, uConn)
+	globalConnPool.Store(uConn, config)
 	{
 		uConn.BuildHandshakeState()
 		hello := uConn.HandshakeState.Hello
@@ -328,9 +315,9 @@ func randBetween(left int64, right int64) int64 {
 }
 
 func RealityCloseConn(config *Config) {
-	globalConnPool.Range(func(k connID, v *UConn) bool {
-		if k.Config == config {
-			v.close()
+	globalConnPool.Range(func(k *UConn, v *Config) bool {
+		if v == config {
+			k.close()
 			globalConnPool.Delete(k)
 		}
 		return true
@@ -346,8 +333,8 @@ func closeCount(c *UConn) int {
 }
 
 func RealityCloseAllConns() (count int) {
-	globalConnPool.Range(func(k connID, v *UConn) bool {
-		count += closeCount(v)
+	globalConnPool.Range(func(k *UConn, _ *Config) bool {
+		count += closeCount(k)
 		globalConnPool.Delete(k)
 		return true
 	})
