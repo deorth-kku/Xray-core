@@ -71,27 +71,15 @@ type UConn struct {
 	Verified     bool
 }
 
-func (c *UConn) close() error {
+func (c *UConn) Close() error {
 	if c.closeTimeout != 0 {
 		timer := time.AfterFunc(c.closeTimeout, func() {
 			c.UConn.NetConn().Close()
 		})
 		defer timer.Stop()
 	}
+	defer globalConnPool.Delete(c)
 	return c.UConn.Close()
-}
-
-func (c *UConn) Close() error {
-	globalConnPool.Delete(c)
-	return c.close()
-}
-
-func (c *UConn) HandshakeContext(ctx context.Context) (err error) {
-	err = c.UConn.HandshakeContext(ctx)
-	if err != nil {
-		c.Close()
-	}
-	return
 }
 
 func (c *UConn) HandshakeAddressContext(ctx context.Context) net.Address {
@@ -131,7 +119,7 @@ func (c *UConn) VerifyPeerCertificate(rawCerts [][]byte, verifiedChains [][]*x50
 
 var globalConnPool = xsync.NewMapOf[*UConn, *Config]()
 
-func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (net.Conn, error) {
+func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (conn net.Conn, err error) {
 	localAddr := c.LocalAddr().String()
 	uConn := &UConn{closeTimeout: time.Duration(config.CloseTimeout)}
 	utlsConfig := &utls.Config{
@@ -167,14 +155,16 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		}
 		publicKey, err := ecdh.X25519().NewPublicKey(config.PublicKey)
 		if err != nil {
-			return nil, errors.New("REALITY: publicKey == nil")
+			err = errors.New("REALITY: publicKey == nil")
+			goto ReturnErr
 		}
 		uConn.AuthKey, _ = uConn.HandshakeState.State13.EcdheKey.ECDH(publicKey)
 		if uConn.AuthKey == nil {
-			return nil, errors.New("REALITY: SharedKey == nil")
+			err = errors.New("REALITY: SharedKey == nil")
+			goto ReturnErr
 		}
-		if _, err := hkdf.New(sha256.New, uConn.AuthKey, hello.Random[:20], []byte("REALITY")).Read(uConn.AuthKey); err != nil {
-			return nil, err
+		if _, err = hkdf.New(sha256.New, uConn.AuthKey, hello.Random[:20], []byte("REALITY")).Read(uConn.AuthKey); err != nil {
+			goto ReturnErr
 		}
 		var aead cipher.AEAD
 		if aesgcmPreferred(hello.CipherSuites) {
@@ -189,8 +179,8 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		aead.Seal(hello.SessionId[:0], hello.Random[20:], hello.SessionId[:16], hello.Raw)
 		copy(hello.Raw[39:], hello.SessionId)
 	}
-	if err := uConn.HandshakeContext(ctx); err != nil {
-		return nil, err
+	if err = uConn.HandshakeContext(ctx); err != nil {
+		goto ReturnErr
 	}
 	if config.Show {
 		newError(fmt.Sprintf("REALITY localAddr: %v\tuConn.Verified: %v\n", localAddr, uConn.Verified)).WriteToLog(session.ExportIDToError(ctx))
@@ -282,6 +272,10 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		return nil, errors.New("REALITY: processed invalid connection")
 	}
 	return uConn, nil
+ReturnErr:
+	uConn.Close()
+	globalConnPool.Delete(uConn)
+	return nil, err
 }
 
 var (
@@ -317,15 +311,14 @@ func randBetween(left int64, right int64) int64 {
 func RealityCloseConn(config *Config) {
 	globalConnPool.Range(func(k *UConn, v *Config) bool {
 		if v == config {
-			k.close()
-			globalConnPool.Delete(k)
+			k.Close()
 		}
 		return true
 	})
 }
 
 func closeCount(c *UConn) int {
-	if c.close() == nil {
+	if c.Close() == nil {
 		return 1
 	} else {
 		return 0
@@ -335,7 +328,6 @@ func closeCount(c *UConn) int {
 func RealityCloseAllConns() (count int) {
 	globalConnPool.Range(func(k *UConn, _ *Config) bool {
 		count += closeCount(k)
-		globalConnPool.Delete(k)
 		return true
 	})
 	return
