@@ -10,7 +10,7 @@ require (
 	github.com/miekg/dns v1.1.58
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.7.0
-	github.com/puzpuzpuz/xsync/v3 v3.0.2
+	github.com/puzpuzpuz/xsync/v3 v3.1.0
 	github.com/quic-go/quic-go v0.42.0
 	github.com/refraction-networking/utls v1.6.4
 	github.com/sagernet/sing v0.3.8
