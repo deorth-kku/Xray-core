@@ -18,23 +18,23 @@ type Interface interface {
 	net.Conn
 	HandshakeContext(ctx context.Context) error
 	VerifyHostname(host string) error
-	NegotiatedProtocol() (name string, mutual bool)
+	NegotiatedProtocol() string
 }
 
 var _ buf.Writer = (*Conn)(nil)
+var _ Interface = (*Conn)(nil)
 
 type Conn struct {
 	*tls.Conn
-	closeTimeout time.Duration
 }
 
+const tlsCloseTimeout = 250 * time.Millisecond
+
 func (c *Conn) Close() error {
-	if c.closeTimeout != 0 {
-		timer := time.AfterFunc(c.closeTimeout, func() {
-			c.Conn.NetConn().Close()
-		})
-		defer timer.Stop()
-	}
+	timer := time.AfterFunc(tlsCloseTimeout, func() {
+		c.Conn.NetConn().Close()
+	})
+	defer timer.Stop()
 	return c.Conn.Close()
 }
 
@@ -56,15 +56,15 @@ func (c *Conn) HandshakeAddressContext(ctx context.Context) net.Address {
 	return net.ParseAddress(state.ServerName)
 }
 
-func (c *Conn) NegotiatedProtocol() (name string, mutual bool) {
+func (c *Conn) NegotiatedProtocol() string {
 	state := c.ConnectionState()
-	return state.NegotiatedProtocol, state.NegotiatedProtocolIsMutual
+	return state.NegotiatedProtocol
 }
 
 // Client initiates a TLS client handshake on the given connection.
-func Client(c net.Conn, config *tls.Config, closeTimeout int64) net.Conn {
+func Client(c net.Conn, config *tls.Config) net.Conn {
 	tlsConn := tls.Client(c, config)
-	return &Conn{Conn: tlsConn, closeTimeout: time.Duration(closeTimeout)}
+	return &Conn{Conn: tlsConn}
 }
 
 // Server initiates a TLS server handshake on the given connection.
@@ -75,16 +75,15 @@ func Server(c net.Conn, config *tls.Config) net.Conn {
 
 type UConn struct {
 	*utls.UConn
-	closeTimeout time.Duration
 }
 
+var _ Interface = (*UConn)(nil)
+
 func (c *UConn) Close() error {
-	if c.closeTimeout != 0 {
-		timer := time.AfterFunc(c.closeTimeout, func() {
-			c.Conn.NetConn().Close()
-		})
-		defer timer.Stop()
-	}
+	timer := time.AfterFunc(tlsCloseTimeout, func() {
+		c.Conn.NetConn().Close()
+	})
+	defer timer.Stop()
 	return c.Conn.Close()
 }
 
@@ -126,14 +125,14 @@ func (c *UConn) WebsocketHandshakeContext(ctx context.Context) error {
 	return c.HandshakeContext(ctx)
 }
 
-func (c *UConn) NegotiatedProtocol() (name string, mutual bool) {
+func (c *UConn) NegotiatedProtocol() string {
 	state := c.ConnectionState()
-	return state.NegotiatedProtocol, state.NegotiatedProtocolIsMutual
+	return state.NegotiatedProtocol
 }
 
-func UClient(c net.Conn, config *tls.Config, fingerprint *utls.ClientHelloID, closeTimeout int64) net.Conn {
+func UClient(c net.Conn, config *tls.Config, fingerprint *utls.ClientHelloID) net.Conn {
 	utlsConn := utls.UClient(c, copyConfig(config), *fingerprint)
-	return &UConn{UConn: utlsConn, closeTimeout: time.Duration(closeTimeout)}
+	return &UConn{UConn: utlsConn}
 }
 
 func copyConfig(c *tls.Config) *utls.Config {

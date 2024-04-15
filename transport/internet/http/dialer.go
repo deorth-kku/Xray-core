@@ -83,9 +83,9 @@ func getHTTPClient(ctx context.Context, dest net.Destination, streamSettings *in
 
 			var cn tls.Interface
 			if fingerprint := tls.GetFingerprint(tlsConfigs.Fingerprint); fingerprint != nil {
-				cn = tls.UClient(pconn, tlsConfig, fingerprint, tlsConfigs.CloseTimeout).(*tls.UConn)
+				cn = tls.UClient(pconn, tlsConfig, fingerprint).(*tls.UConn)
 			} else {
-				cn = tls.Client(pconn, tlsConfig, tlsConfigs.CloseTimeout).(*tls.Conn)
+				cn = tls.Client(pconn, tlsConfig).(*tls.Conn)
 			}
 			if err := cn.HandshakeContext(ctx); err != nil {
 				newError("failed to dial to " + addr).Base(err).AtError().WriteToLog()
@@ -97,12 +97,9 @@ func getHTTPClient(ctx context.Context, dest net.Destination, streamSettings *in
 					return nil, err
 				}
 			}
-			negotiatedProtocol, negotiatedProtocolIsMutual := cn.NegotiatedProtocol()
+			negotiatedProtocol := cn.NegotiatedProtocol()
 			if negotiatedProtocol != http2.NextProtoTLS {
 				return nil, newError("http2: unexpected ALPN protocol " + negotiatedProtocol + "; want q" + http2.NextProtoTLS).AtError()
-			}
-			if !negotiatedProtocolIsMutual {
-				return nil, newError("http2: could not negotiate protocol mutually").AtError()
 			}
 			return cn, nil
 		},

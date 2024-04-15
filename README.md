@@ -22,6 +22,7 @@
 
 - Linux Script
   - [XTLS/Xray-install](https://github.com/XTLS/Xray-install)
+  - [team-cloudchaser/tempest](https://github.com/team-cloudchaser/tempest) (supports [`systemd`](https://systemd.io) and [OpenRC](https://github.com/OpenRC/openrc); Linux-only)
 - Docker
   - Official: [ghcr.io/xtls/xray-core](https://ghcr.io/xtls/xray-core) 
   - [iamybj/docker-xray](https://hub.docker.com/r/iamybj/docker-xray)
@@ -76,7 +77,6 @@
   - [HiddifyNG](https://github.com/hiddify/HiddifyNG)
   - [X-flutter](https://github.com/XTLS/X-flutter)
 - iOS & macOS arm64
-  - [Mango](https://github.com/arror/Mango)
   - [FoXray](https://apps.apple.com/app/foxray/id6448898396)
   - [Streisand](https://apps.apple.com/app/streisand/id6450534064)
 - macOS arm64 & x64
@@ -101,6 +101,7 @@
   - [AndroidLibXrayLite](https://github.com/2dust/AndroidLibXrayLite)
   - [XrayKit](https://github.com/arror/XrayKit)
   - [Xray-core-python](https://github.com/LorenEteval/Xray-core-python)
+  - [xray-api](https://github.com/XVGuardian/xray-api)
 - [XrayR](https://github.com/XrayR-project/XrayR)
   - [XrayR-release](https://github.com/XrayR-project/XrayR-release)
   - [XrayR-V2Board](https://github.com/missuo/XrayR-V2Board)
@@ -124,6 +125,21 @@
 - For third-party projects used in [Xray-core](https://github.com/XTLS/Xray-core), check your local or [the latest go.mod](https://github.com/XTLS/Xray-core/blob/main/go.mod).
 
 ## Compilation
+
+### Windows (PowerShell)
+
+```powershell
+$env:CGO_ENABLED=0
+go build -o xray.exe -trimpath -ldflags "-s -w -buildid=" ./main
+```
+
+### Linux / macOS
+
+```bash
+CGO_ENABLED=0 go build -o xray -trimpath -ldflags "-s -w -buildid=" ./main
+```
+
+### Reproducible Releases
 
 ```bash
 make

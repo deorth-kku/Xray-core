@@ -2,8 +2,11 @@ package outbound
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"io"
+	"math/big"
+	gonet "net"
 	"os"
 
 	"github.com/xtls/xray-core/app/proxyman"
@@ -273,7 +276,7 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (stat.Connecti
 
 				if config := tls.ConfigFromStreamSettings(h.streamSettings); config != nil {
 					tlsConfig := config.GetTLSConfig(tls.WithDestination(dest))
-					conn = tls.Client(conn, tlsConfig, config.CloseTimeout)
+					conn = tls.Client(conn, tlsConfig)
 				}
 
 				return h.getStatCouterConnection(conn), nil
@@ -288,7 +291,11 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (stat.Connecti
 				outbound = new(session.Outbound)
 				ctx = session.ContextWithOutbound(ctx, outbound)
 			}
-			outbound.Gateway = h.senderSettings.Via.AsAddress()
+			if h.senderSettings.ViaCidr == "" {
+				outbound.Gateway = h.senderSettings.Via.AsAddress()
+			} else { //Get a random address.
+				outbound.Gateway = ParseRandomIPv6(h.senderSettings.Via.AsAddress(), h.senderSettings.ViaCidr)
+			}
 		}
 	}
 
@@ -340,4 +347,22 @@ func (h *Handler) Close() error {
 		reality.RealityCloseConn(realityConfig)
 	}
 	return nil
+}
+
+func ParseRandomIPv6(address net.Address, prefix string) net.Address {
+	_, network, _ := gonet.ParseCIDR(address.IP().String() + "/" + prefix)
+
+	maskSize, totalBits := network.Mask.Size()
+	subnetSize := big.NewInt(1).Lsh(big.NewInt(1), uint(totalBits-maskSize))
+
+	// random
+	randomBigInt, _ := rand.Int(rand.Reader, subnetSize)
+
+	startIPBigInt := big.NewInt(0).SetBytes(network.IP.To16())
+	randomIPBigInt := big.NewInt(0).Add(startIPBigInt, randomBigInt)
+
+	randomIPBytes := randomIPBigInt.Bytes()
+	randomIPBytes = append(make([]byte, 16-len(randomIPBytes)), randomIPBytes...)
+
+	return net.ParseAddress(gonet.IP(randomIPBytes).String())
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/xtls/xray-core/transport/internet/domainsocket"
 	httpheader "github.com/xtls/xray-core/transport/internet/headers/http"
 	"github.com/xtls/xray-core/transport/internet/http"
+	"github.com/xtls/xray-core/transport/internet/httpupgrade"
 	"github.com/xtls/xray-core/transport/internet/kcp"
 	"github.com/xtls/xray-core/transport/internet/quic"
 	"github.com/xtls/xray-core/transport/internet/reality"
@@ -146,6 +147,7 @@ func (c *TCPConfig) Build() (proto.Message, error) {
 }
 
 type WebSocketConfig struct {
+	Host                string            `json:"host,omitempty"`
 	Path                string            `json:"path,omitempty"`
 	Headers             map[string]string `json:"headers,omitempty"`
 	AcceptProxyProtocol bool              `json:"acceptProxyProtocol,omitempty"`
@@ -154,13 +156,6 @@ type WebSocketConfig struct {
 // Build implements Buildable.
 func (c *WebSocketConfig) Build() (proto.Message, error) {
 	path := c.Path
-	header := make([]*websocket.Header, 0, 32)
-	for key, value := range c.Headers {
-		header = append(header, &websocket.Header{
-			Key:   key,
-			Value: value,
-		})
-	}
 	var ed uint32
 	if u, err := url.Parse(path); err == nil {
 		if q := u.Query(); q.Get("ed") != "" {
@@ -171,13 +166,58 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 			path = u.String()
 		}
 	}
-	config := &websocket.Config{
-		Path:   path,
-		Header: header,
-		Ed:     ed,
+	// If http host is not set in the Host field, but in headers field, we add it to Host Field here.
+	// If we don't do that, http host will be overwritten as address.
+	// Host priority: Host field > headers field > address.
+	if c.Host == "" && c.Headers["host"] != "" {
+		c.Host = c.Headers["host"]
+	} else if c.Host == "" && c.Headers["Host"] != "" {
+		c.Host = c.Headers["Host"]
 	}
-	if c.AcceptProxyProtocol {
-		config.AcceptProxyProtocol = c.AcceptProxyProtocol
+	config := &websocket.Config{
+		Path:                path,
+		Host:                c.Host,
+		Header:              c.Headers,
+		AcceptProxyProtocol: c.AcceptProxyProtocol,
+		Ed:                  ed,
+	}
+	return config, nil
+}
+
+type HttpUpgradeConfig struct {
+	Host                string            `json:"host"`
+	Path                string            `json:"path"`
+	Headers             map[string]string `json:"headers"`
+	AcceptProxyProtocol bool              `json:"acceptProxyProtocol"`
+}
+
+// Build implements Buildable.
+func (c *HttpUpgradeConfig) Build() (proto.Message, error) {
+	path := c.Path
+	var ed uint32
+	if u, err := url.Parse(path); err == nil {
+		if q := u.Query(); q.Get("ed") != "" {
+			Ed, _ := strconv.Atoi(q.Get("ed"))
+			ed = uint32(Ed)
+			q.Del("ed")
+			u.RawQuery = q.Encode()
+			path = u.String()
+		}
+	}
+	// If http host is not set in the Host field, but in headers field, we add it to Host Field here.
+	// If we don't do that, http host will be overwritten as address.
+	// Host priority: Host field > headers field > address.
+	if c.Host == "" && c.Headers["host"] != "" {
+		c.Host = c.Headers["host"]
+	} else if c.Host == "" && c.Headers["Host"] != "" {
+		c.Host = c.Headers["Host"]
+	}
+	config := &httpupgrade.Config{
+		Path:                path,
+		Host:                c.Host,
+		Header:              c.Headers,
+		AcceptProxyProtocol: c.AcceptProxyProtocol,
+		Ed:                  ed,
 	}
 	return config, nil
 }
@@ -344,22 +384,20 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                             bool              `json:"allowInsecure,omitempty"`
-	Certs                                []*TLSCertConfig  `json:"certificates,omitempty"`
-	ServerName                           string            `json:"serverName,omitempty"`
-	ALPN                                 *StringList       `json:"alpn,omitempty"`
-	EnableSessionResumption              bool              `json:"enableSessionResumption,omitempty"`
-	DisableSystemRoot                    bool              `json:"disableSystemRoot,omitempty"`
-	MinVersion                           string            `json:"minVersion,omitempty"`
-	MaxVersion                           string            `json:"maxVersion,omitempty"`
-	CipherSuites                         string            `json:"cipherSuites,omitempty"`
-	PreferServerCipherSuites             bool              `json:"preferServerCipherSuites,omitempty"`
-	Fingerprint                          string            `json:"fingerprint,omitempty"`
-	RejectUnknownSNI                     bool              `json:"rejectUnknownSni,omitempty"`
-	PinnedPeerCertificateChainSha256     *[]string         `json:"pinnedPeerCertificateChainSha256,omitempty"`
-	PinnedPeerCertificatePublicKeySha256 *[]string         `json:"pinnedPeerCertificatePublicKeySha256,omitempty"`
-	MasterKeyLog                         string            `json:"masterKeyLog,omitempty"`
-	CloseTimeout                         duration.Duration `json:"closeTimeout,omitempty"`
+	Insecure                             bool             `json:"allowInsecure,omitempty"`
+	Certs                                []*TLSCertConfig `json:"certificates,omitempty"`
+	ServerName                           string           `json:"serverName,omitempty"`
+	ALPN                                 *StringList      `json:"alpn,omitempty"`
+	EnableSessionResumption              bool             `json:"enableSessionResumption,omitempty"`
+	DisableSystemRoot                    bool             `json:"disableSystemRoot,omitempty"`
+	MinVersion                           string           `json:"minVersion,omitempty"`
+	MaxVersion                           string           `json:"maxVersion,omitempty"`
+	CipherSuites                         string           `json:"cipherSuites,omitempty"`
+	Fingerprint                          string           `json:"fingerprint,omitempty"`
+	RejectUnknownSNI                     bool             `json:"rejectUnknownSni,omitempty"`
+	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256,omitempty"`
+	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256,omitempty"`
+	MasterKeyLog                         string           `json:"masterKeyLog,omitempty"`
 }
 
 // Build implements Buildable.
@@ -386,7 +424,6 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	config.MinVersion = c.MinVersion
 	config.MaxVersion = c.MaxVersion
 	config.CipherSuites = c.CipherSuites
-	config.PreferServerCipherSuites = c.PreferServerCipherSuites
 	config.Fingerprint = strings.ToLower(c.Fingerprint)
 	if config.Fingerprint != "" && tls.GetFingerprint(config.Fingerprint) == nil {
 		return nil, newError(`unknown fingerprint: `, config.Fingerprint)
@@ -416,7 +453,6 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 
 	config.MasterKeyLog = c.MasterKeyLog
-	config.CloseTimeout = int64(c.CloseTimeout)
 
 	return config, nil
 }
@@ -611,6 +647,8 @@ func (p TransportProtocol) Build() (string, error) {
 		return "quic", nil
 	case "grpc", "gun":
 		return "grpc", nil
+	case "httpupgrade":
+		return "httpupgrade", nil
 	default:
 		return "", newError("Config: unknown transport protocol: ", p)
 	}
@@ -711,19 +749,20 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 }
 
 type StreamConfig struct {
-	Network         *TransportProtocol  `json:"network,omitempty"`
-	Security        string              `json:"security,omitempty"`
-	TLSSettings     *TLSConfig          `json:"tlsSettings,omitempty"`
-	REALITYSettings *REALITYConfig      `json:"realitySettings,omitempty"`
-	TCPSettings     *TCPConfig          `json:"tcpSettings,omitempty"`
-	KCPSettings     *KCPConfig          `json:"kcpSettings,omitempty"`
-	WSSettings      *WebSocketConfig    `json:"wsSettings,omitempty"`
-	HTTPSettings    *HTTPConfig         `json:"httpSettings,omitempty"`
-	DSSettings      *DomainSocketConfig `json:"dsSettings,omitempty"`
-	QUICSettings    *QUICConfig         `json:"quicSettings,omitempty"`
-	SocketSettings  *SocketConfig       `json:"sockopt,omitempty"`
-	GRPCConfig      *GRPCConfig         `json:"grpcSettings,omitempty"`
-	GUNConfig       *GRPCConfig         `json:"gunSettings,omitempty"`
+	Network             *TransportProtocol  `json:"network,omitempty"`
+	Security            string              `json:"security,omitempty"`
+	TLSSettings         *TLSConfig          `json:"tlsSettings,omitempty"`
+	REALITYSettings     *REALITYConfig      `json:"realitySettings,omitempty"`
+	TCPSettings         *TCPConfig          `json:"tcpSettings,omitempty"`
+	KCPSettings         *KCPConfig          `json:"kcpSettings,omitempty"`
+	WSSettings          *WebSocketConfig    `json:"wsSettings,omitempty"`
+	HTTPSettings        *HTTPConfig         `json:"httpSettings,omitempty"`
+	DSSettings          *DomainSocketConfig `json:"dsSettings,omitempty"`
+	QUICSettings        *QUICConfig         `json:"quicSettings,omitempty"`
+	SocketSettings      *SocketConfig       `json:"sockopt,omitempty"`
+	GRPCConfig          *GRPCConfig         `json:"grpcSettings,omitempty"`
+	GUNConfig           *GRPCConfig         `json:"gunSettings,omitempty"`
+	HTTPUPGRADESettings *HttpUpgradeConfig  `json:"httpupgradeSettings,omitempty"`
 }
 
 // Build implements Buildable.
@@ -842,6 +881,16 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "grpc",
 			Settings:     serial.ToTypedMessage(gs),
+		})
+	}
+	if c.HTTPUPGRADESettings != nil {
+		hs, err := c.HTTPUPGRADESettings.Build()
+		if err != nil {
+			return nil, newError("Failed to build HttpUpgrade config.").Base(err)
+		}
+		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
+			ProtocolName: "httpupgrade",
+			Settings:     serial.ToTypedMessage(hs),
 		})
 	}
 	if c.SocketSettings != nil {

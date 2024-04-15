@@ -11,6 +11,7 @@ import (
 
 type Rule struct {
 	Tag       string
+	RuleTag   string
 	Balancer  *Balancer
 	Condition Condition
 }
@@ -121,20 +122,45 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	return conds, nil
 }
 
-func (br *BalancingRule) Build(ohm outbound.Manager) (balancer *Balancer, err error) {
-	balancer = &Balancer{
-		ohm: ohm,
-	}
-	switch br.Strategy {
-	case "leastPing":
-		balancer.strategy = &LeastPingStrategy{}
-	case "roundRobin":
-		balancer.strategy = &RoundRobinStrategy{}
+// Build builds the balancing rule
+func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
+	var balancer *Balancer
+	defer balancer.selectors.Store(&br.OutboundSelector)
+	switch strings.ToLower(br.Strategy) {
+	case "leastping":
+		balancer = &Balancer{
+			strategy:    &LeastPingStrategy{},
+			fallbackTag: br.FallbackTag,
+			ohm:         ohm,
+		}
+	case "roundrobin":
+		balancer = &Balancer{
+			strategy:    &RoundRobinStrategy{},
+			fallbackTag: br.FallbackTag,
+			ohm:         ohm,
+		}
+	case "leastload":
+		i, err := br.StrategySettings.GetInstance()
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyLeastLoadConfig)
+		if !ok {
+			return nil, newError("not a StrategyLeastLoadConfig").AtError()
+		}
+		leastLoadStrategy := NewLeastLoadStrategy(s)
+		balancer = &Balancer{
+			ohm:         ohm,
+			fallbackTag: br.FallbackTag,
+			strategy:    leastLoadStrategy,
+		}
 	case "random":
 		fallthrough
 	default:
-		balancer.strategy = &RandomStrategy{}
+		balancer = &Balancer{
+			strategy: &RandomStrategy{},
+			ohm:      ohm,
+		}
 	}
-	balancer.selectors.Store(&br.OutboundSelector)
-	return
+	return balancer, nil
 }

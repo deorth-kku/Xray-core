@@ -6,6 +6,7 @@ import (
 )
 
 type GRPCConfig struct {
+	Authority           string `json:"authority,omitempty"`
 	ServiceName         string `json:"serviceName,omitempty"`
 	MultiMode           bool   `json:"multiMode,omitempty"`
 	IdleTimeout         int32  `json:"idle_timeout,omitempty"`
@@ -28,6 +29,7 @@ func (g *GRPCConfig) Build() (proto.Message, error) {
 	}
 
 	return &grpc.Config{
+		Authority:           g.Authority,
 		ServiceName:         g.ServiceName,
 		MultiMode:           g.MultiMode,
 		IdleTimeout:         g.IdleTimeout,

@@ -2,6 +2,7 @@ package routing
 
 import (
 	"github.com/xtls/xray-core/common"
+	"github.com/xtls/xray-core/common/serial"
 	"github.com/xtls/xray-core/features"
 )
 
@@ -15,6 +16,8 @@ type Router interface {
 	PickRoute(ctx Context) (Route, error)
 	ListBalancerSelectors(balancerTag string) ([]string, error)
 	SetBalancerSelectors(balancerTag string, selectors []string) error
+	AddRule(config *serial.TypedMessage, shouldAppend bool) error
+	RemoveRule(tag string) error
 }
 
 // Route is the routing result of Router feature.
@@ -49,6 +52,16 @@ func (DefaultRouter) Type() interface{} {
 // PickRoute implements Router.
 func (DefaultRouter) PickRoute(ctx Context) (Route, error) {
 	return nil, common.ErrNoClue
+}
+
+// AddRule implements Router.
+func (DefaultRouter) AddRule(config *serial.TypedMessage, shouldAppend bool) error {
+	return common.ErrNoClue
+}
+
+// RemoveRule implements Router.
+func (DefaultRouter) RemoveRule(tag string) error {
+	return common.ErrNoClue
 }
 
 func (DefaultRouter) ListBalancerSelectors(balancerTag string) ([]string, error) {

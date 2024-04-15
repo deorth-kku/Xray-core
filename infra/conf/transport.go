@@ -7,14 +7,15 @@ import (
 )
 
 type TransportConfig struct {
-	TCPConfig  *TCPConfig          `json:"tcpSettings,omitempty"`
-	KCPConfig  *KCPConfig          `json:"kcpSettings,omitempty"`
-	WSConfig   *WebSocketConfig    `json:"wsSettings,omitempty"`
-	HTTPConfig *HTTPConfig         `json:"httpSettings,omitempty"`
-	DSConfig   *DomainSocketConfig `json:"dsSettings,omitempty"`
-	QUICConfig *QUICConfig         `json:"quicSettings,omitempty"`
-	GRPCConfig *GRPCConfig         `json:"grpcSettings,omitempty"`
-	GUNConfig  *GRPCConfig         `json:"gunSettings,omitempty"`
+	TCPConfig         *TCPConfig          `json:"tcpSettings,omitempty"`
+	KCPConfig         *KCPConfig          `json:"kcpSettings,omitempty"`
+	WSConfig          *WebSocketConfig    `json:"wsSettings,omitempty"`
+	HTTPConfig        *HTTPConfig         `json:"httpSettings,omitempty"`
+	DSConfig          *DomainSocketConfig `json:"dsSettings,omitempty"`
+	QUICConfig        *QUICConfig         `json:"quicSettings,omitempty"`
+	GRPCConfig        *GRPCConfig         `json:"grpcSettings,omitempty"`
+	GUNConfig         *GRPCConfig         `json:"gunSettings,omitempty"`
+	HTTPUPGRADEConfig *HttpUpgradeConfig  `json:"httpupgradeSettings,omitempty"`
 }
 
 // Build implements Buildable.
@@ -98,6 +99,17 @@ func (c *TransportConfig) Build() (*global.Config, error) {
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "grpc",
 			Settings:     serial.ToTypedMessage(gs),
+		})
+	}
+
+	if c.HTTPUPGRADEConfig != nil {
+		hs, err := c.HTTPUPGRADEConfig.Build()
+		if err != nil {
+			return nil, newError("failed to build HttpUpgrade config").Base(err)
+		}
+		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
+			ProtocolName: "httpupgrade",
+			Settings:     serial.ToTypedMessage(hs),
 		})
 	}
 

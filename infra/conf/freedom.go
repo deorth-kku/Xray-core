@@ -17,6 +17,7 @@ type FreedomConfig struct {
 	Redirect       string    `json:"redirect,omitempty"`
 	UserLevel      uint32    `json:"userLevel,omitempty"`
 	Fragment       *Fragment `json:"fragment,omitempty"`
+	ProxyProtocol  uint32    `json:"proxyProtocol,omitempty"`
 }
 
 type Fragment struct {
@@ -164,6 +165,9 @@ func (c *FreedomConfig) Build() (proto.Message, error) {
 		if len(host) > 0 {
 			config.DestinationOverride.Server.Address = v2net.NewIPOrDomain(v2net.ParseAddress(host))
 		}
+	}
+	if c.ProxyProtocol > 0 && c.ProxyProtocol <= 2 {
+		config.ProxyProtocol = c.ProxyProtocol
 	}
 	return config, nil
 }

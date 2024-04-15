@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/pires/go-proxyproto"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/dice"
@@ -152,6 +153,18 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		if err != nil {
 			return err
 		}
+
+		if h.config.ProxyProtocol > 0 && h.config.ProxyProtocol <= 2 {
+			version := byte(h.config.ProxyProtocol)
+			srcAddr := inbound.Source.RawNetAddr()
+			dstAddr := rawConn.RemoteAddr()
+			header := proxyproto.HeaderProxyFromAddrs(version, srcAddr, dstAddr)
+			if _, err = header.WriteTo(rawConn); err != nil {
+				rawConn.Close()
+				return err
+			}
+		}
+
 		conn = rawConn
 		return nil
 	})
@@ -360,6 +373,9 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 			return f.writer.Write(b)
 		}
 		recordLen := 5 + ((int(b[3]) << 8) | int(b[4]))
+		if len(b) < recordLen { // maybe already fragmented somehow
+			return f.writer.Write(b)
+		}
 		data := b[5:recordLen]
 		buf := make([]byte, 1024)
 		for from := 0; ; {
