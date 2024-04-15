@@ -125,7 +125,6 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 // Build builds the balancing rule
 func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
 	var balancer *Balancer
-	defer balancer.selectors.Store(&br.OutboundSelector)
 	switch strings.ToLower(br.Strategy) {
 	case "leastping":
 		balancer = &Balancer{
@@ -162,5 +161,6 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			ohm:      ohm,
 		}
 	}
+	balancer.selectors.Store(&br.OutboundSelector)
 	return balancer, nil
 }
