@@ -218,7 +218,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 func (r *Router) ListBalancerSelectors(balancerTag string) (tags []string, err error) {
 	balancer, ok := r.balancers[balancerTag]
 	if !ok {
-		err = newError("balancer ", balancerTag, " not found")
+		err = errors.New("balancer ", balancerTag, " not found")
 		return
 	}
 	tags = *balancer.selectors.Load()
@@ -228,11 +228,11 @@ func (r *Router) ListBalancerSelectors(balancerTag string) (tags []string, err e
 func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) error {
 	balancer, ok := r.balancers[balancerTag]
 	if !ok {
-		return newError("balancer ", balancerTag, " not found")
+		return errors.New("balancer ", balancerTag, " not found")
 	}
 	manager, ok := balancer.ohm.(*proxyman_outbound.Manager)
 	if !ok {
-		return newError("outbound.Manager is not a Manager")
+		return errors.New("outbound.Manager is not a Manager")
 	}
 	manager.ClearTagsCache()
 
