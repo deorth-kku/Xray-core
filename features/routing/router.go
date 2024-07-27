@@ -54,6 +54,14 @@ func (DefaultRouter) PickRoute(ctx Context) (Route, error) {
 	return nil, common.ErrNoClue
 }
 
+func (DefaultRouter) ListBalancerSelectors(balancerTag string) ([]string, error) {
+	return []string{}, common.ErrNoClue
+}
+
+func (DefaultRouter) SetBalancerSelectors(balancerTag string, selectors []string) error {
+	return common.ErrNoClue
+}
+
 // AddRule implements Router.
 func (DefaultRouter) AddRule(config *serial.TypedMessage, shouldAppend bool) error {
 	return common.ErrNoClue
@@ -61,14 +69,6 @@ func (DefaultRouter) AddRule(config *serial.TypedMessage, shouldAppend bool) err
 
 // RemoveRule implements Router.
 func (DefaultRouter) RemoveRule(tag string) error {
-	return common.ErrNoClue
-}
-
-func (DefaultRouter) ListBalancerSelectors(balancerTag string) ([]string, error) {
-	return []string{}, common.ErrNoClue
-}
-
-func (DefaultRouter) SetBalancerSelectors(balancerTag string, selectors []string) error {
 	return common.ErrNoClue
 }
 
