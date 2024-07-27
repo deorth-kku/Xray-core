@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,6 +12,8 @@ import (
 	"github.com/xtls/xray-core/app/dispatcher"
 	"github.com/xtls/xray-core/app/proxyman"
 	"github.com/xtls/xray-core/app/stats"
+	"github.com/xtls/xray-core/common/errors"
+	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/serial"
 	core "github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/transport/internet"
@@ -54,7 +57,7 @@ func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
 		case "https", "tls", "ssl":
 			kp = append(kp, proxyman.KnownProtocols_TLS)
 		default:
-			return nil, newError("Unknown protocol: ", p)
+			return nil, errors.New("Unknown protocol: ", p)
 		}
 	}
 	return kp, nil
@@ -85,7 +88,7 @@ func (c *SniffingConfig) Build() (*proxyman.SniffingConfig, error) {
 			case "fakedns+others":
 				p = append(p, "fakedns+others")
 			default:
-				return nil, newError("unknown protocol: ", protocol)
+				return nil, errors.New("unknown protocol: ", protocol)
 			}
 		}
 	}
@@ -120,7 +123,7 @@ func (m *MuxConfig) Build() (*proxyman.MultiplexingConfig, error) {
 		m.XudpProxyUDP443 = "reject"
 	case "reject", "allow", "skip":
 	default:
-		return nil, newError(`unknown "xudpProxyUDP443": `, m.XudpProxyUDP443)
+		return nil, errors.New(`unknown "xudpProxyUDP443": `, m.XudpProxyUDP443)
 	}
 	return &proxyman.MultiplexingConfig{
 		Enabled:         m.Enabled,
@@ -147,7 +150,7 @@ func (c *InboundDetourAllocationConfig) Build() (*proxyman.AllocationStrategy, e
 	case "external":
 		config.Type = proxyman.AllocationStrategy_External
 	default:
-		return nil, newError("unknown allocation strategy: ", c.Strategy)
+		return nil, errors.New("unknown allocation strategy: ", c.Strategy)
 	}
 	if c.Concurrency != nil {
 		config.Concurrency = &proxyman.AllocationStrategy_AllocationStrategyConcurrency{
@@ -183,7 +186,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	if c.ListenOn == nil {
 		// Listen on anyip, must set PortList
 		if c.PortList == nil {
-			return nil, newError("Listen on AnyIP but no Port(s) set in InboundDetour.")
+			return nil, errors.New("Listen on AnyIP but no Port(s) set in InboundDetour.")
 		}
 		receiverSettings.PortList = c.PortList.Build()
 	} else {
@@ -194,7 +197,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 		if listenIP {
 			// Listen on specific IP, must set PortList
 			if c.PortList == nil {
-				return nil, newError("Listen on specific ip without port in InboundDetour.")
+				return nil, errors.New("Listen on specific ip without port in InboundDetour.")
 			}
 			// Listen on IP:Port
 			receiverSettings.PortList = c.PortList.Build()
@@ -204,7 +207,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 				receiverSettings.PortList = nil
 			}
 		} else {
-			return nil, newError("unable to listen on domain address: ", c.ListenOn.Domain())
+			return nil, errors.New("unable to listen on domain address: ", c.ListenOn.Domain())
 		}
 	}
 
@@ -223,7 +226,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 			for _, pr := range c.PortList.Range {
 				fmt.Fprintf(&ports, "%d-%d ", pr.From, pr.To)
 			}
-			return nil, newError("not enough ports. concurrency = ", concurrency, " ports: ", ports.String())
+			return nil, errors.New("not enough ports. concurrency = ", concurrency, " ports: ", ports.String())
 		}
 
 		as, err := c.Allocation.Build()
@@ -242,14 +245,14 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	if c.SniffingConfig != nil {
 		s, err := c.SniffingConfig.Build()
 		if err != nil {
-			return nil, newError("failed to build sniffing config").Base(err)
+			return nil, errors.New("failed to build sniffing config").Base(err)
 		}
 		receiverSettings.SniffingSettings = s
 	}
 	if c.DomainOverride != nil {
 		kp, err := toProtocolList(*c.DomainOverride)
 		if err != nil {
-			return nil, newError("failed to parse inbound detour config").Base(err)
+			return nil, errors.New("failed to parse inbound detour config").Base(err)
 		}
 		receiverSettings.DomainOverride = kp
 	}
@@ -260,7 +263,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	}
 	rawConfig, err := inboundConfigLoader.LoadWithID(settings, c.Protocol)
 	if err != nil {
-		return nil, newError("failed to load inbound detour config.").Base(err)
+		return nil, errors.New("failed to load inbound detour config.").Base(err)
 	}
 	if dokodemoConfig, ok := rawConfig.(*DokodemoConfig); ok {
 		receiverSettings.ReceiveOriginalDestination = dokodemoConfig.Redirect
@@ -279,7 +282,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 
 type OutboundDetourConfig struct {
 	Protocol      string           `json:"protocol,omitempty"`
-	SendThrough   *Address         `json:"sendThrough,omitempty"`
+	SendThrough   *string          `json:"sendThrough,omitempty"`
 	Tag           string           `json:"tag,omitempty"`
 	Settings      *json.RawMessage `json:"settings,omitempty"`
 	StreamSetting *StreamConfig    `json:"streamSettings,omitempty"`
@@ -292,7 +295,7 @@ func (c *OutboundDetourConfig) checkChainProxyConfig() error {
 		return nil
 	}
 	if len(c.ProxySettings.Tag) > 0 && len(c.StreamSetting.SocketSettings.DialerProxy) > 0 {
-		return newError("proxySettings.tag is conflicted with sockopt.dialerProxy").AtWarning()
+		return errors.New("proxySettings.tag is conflicted with sockopt.dialerProxy").AtWarning()
 	}
 	return nil
 }
@@ -305,9 +308,14 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	}
 
 	if c.SendThrough != nil {
-		address := c.SendThrough
-		if address.Family().IsDomain() {
-			return nil, newError("unable to send through: " + address.String())
+		address := ParseSendThough(c.SendThrough)
+		//Check if CIDR exists
+		if strings.Contains(*c.SendThrough, "/") {
+			senderSettings.ViaCidr = strings.Split(*c.SendThrough, "/")[1]
+		} else {
+			if address.Family().IsDomain() {
+				return nil, errors.New("unable to send through: " + address.String())
+			}
 		}
 		senderSettings.Via = address.Build()
 	}
@@ -323,7 +331,7 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	if c.ProxySettings != nil {
 		ps, err := c.ProxySettings.Build()
 		if err != nil {
-			return nil, newError("invalid outbound detour proxy settings.").Base(err)
+			return nil, errors.New("invalid outbound detour proxy settings.").Base(err)
 		}
 		if ps.TransportLayerProxy {
 			if senderSettings.StreamSettings != nil {
@@ -343,7 +351,7 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	if c.MuxSettings != nil {
 		ms, err := c.MuxSettings.Build()
 		if err != nil {
-			return nil, newError("failed to build Mux config.").Base(err)
+			return nil, errors.New("failed to build Mux config.").Base(err)
 		}
 		senderSettings.MultiplexSettings = ms
 	}
@@ -354,7 +362,7 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	}
 	rawConfig, err := outboundConfigLoader.LoadWithID(settings, c.Protocol)
 	if err != nil {
-		return nil, newError("failed to parse to outbound detour config.").Base(err)
+		return nil, errors.New("failed to parse to outbound detour config.").Base(err)
 	}
 	ts, err := rawConfig.(Buildable).Build()
 	if err != nil {
@@ -397,19 +405,20 @@ type Config struct {
 	// and should not be used.
 	OutboundDetours []OutboundDetourConfig `json:"outboundDetour,omitempty"`
 
-	LogConfig       *LogConfig             `json:"log,omitempty"`
-	RouterConfig    *RouterConfig          `json:"routing,omitempty"`
-	DNSConfig       *DNSConfig             `json:"dns,omitempty"`
-	InboundConfigs  []InboundDetourConfig  `json:"inbounds,omitempty"`
-	OutboundConfigs []OutboundDetourConfig `json:"outbounds,omitempty"`
-	Transport       *TransportConfig       `json:"transport,omitempty"`
-	Policy          *PolicyConfig          `json:"policy,omitempty"`
-	API             *APIConfig             `json:"api,omitempty"`
-	Metrics         *MetricsConfig         `json:"metrics,omitempty"`
-	Stats           *StatsConfig           `json:"stats,omitempty"`
-	Reverse         *ReverseConfig         `json:"reverse,omitempty"`
-	FakeDNS         *FakeDNSConfig         `json:"fakeDns,omitempty"`
-	Observatory     *ObservatoryConfig     `json:"observatory,omitempty"`
+	LogConfig        *LogConfig              `json:"log,omitempty"`
+	RouterConfig     *RouterConfig           `json:"routing,omitempty"`
+	DNSConfig        *DNSConfig              `json:"dns,omitempty"`
+	InboundConfigs   []InboundDetourConfig   `json:"inbounds,omitempty"`
+	OutboundConfigs  []OutboundDetourConfig  `json:"outbounds,omitempty"`
+	Transport        *TransportConfig        `json:"transport,omitempty"`
+	Policy           *PolicyConfig           `json:"policy,omitempty"`
+	API              *APIConfig              `json:"api,omitempty"`
+	Metrics          *MetricsConfig          `json:"metrics,omitempty"`
+	Stats            *StatsConfig            `json:"stats,omitempty"`
+	Reverse          *ReverseConfig          `json:"reverse,omitempty"`
+	FakeDNS          *FakeDNSConfig          `json:"fakeDns,omitempty"`
+	Observatory      *ObservatoryConfig      `json:"observatory,omitempty"`
+	BurstObservatory *BurstObservatoryConfig `json:"burstObservatory,omitempty"`
 }
 
 func (c *Config) findInboundTag(tag string) int {
@@ -474,6 +483,10 @@ func (c *Config) Override(o *Config, fn string) {
 		c.Observatory = o.Observatory
 	}
 
+	if o.BurstObservatory != nil {
+		c.BurstObservatory = o.BurstObservatory
+	}
+
 	// deprecated attrs... keep them for now
 	if o.InboundConfig != nil {
 		c.InboundConfig = o.InboundConfig
@@ -494,11 +507,11 @@ func (c *Config) Override(o *Config, fn string) {
 		for i := range o.InboundConfigs {
 			if idx := c.findInboundTag(o.InboundConfigs[i].Tag); idx > -1 {
 				c.InboundConfigs[idx] = o.InboundConfigs[i]
-				newError("[", fn, "] updated inbound with tag: ", o.InboundConfigs[i].Tag).AtInfo().WriteToLog()
+				errors.LogInfo(context.Background(), "[", fn, "] updated inbound with tag: ", o.InboundConfigs[i].Tag)
 
 			} else {
 				c.InboundConfigs = append(c.InboundConfigs, o.InboundConfigs[i])
-				newError("[", fn, "] appended inbound with tag: ", o.InboundConfigs[i].Tag).AtInfo().WriteToLog()
+				errors.LogInfo(context.Background(), "[", fn, "] appended inbound with tag: ", o.InboundConfigs[i].Tag)
 			}
 
 		}
@@ -510,14 +523,14 @@ func (c *Config) Override(o *Config, fn string) {
 		for i := range o.OutboundConfigs {
 			if idx := c.findOutboundTag(o.OutboundConfigs[i].Tag); idx > -1 {
 				c.OutboundConfigs[idx] = o.OutboundConfigs[i]
-				newError("[", fn, "] updated outbound with tag: ", o.OutboundConfigs[i].Tag).AtInfo().WriteToLog()
+				errors.LogInfo(context.Background(), "[", fn, "] updated outbound with tag: ", o.OutboundConfigs[i].Tag)
 			} else {
 				if strings.Contains(strings.ToLower(fn), "tail") {
 					c.OutboundConfigs = append(c.OutboundConfigs, o.OutboundConfigs[i])
-					newError("[", fn, "] appended outbound with tag: ", o.OutboundConfigs[i].Tag).AtInfo().WriteToLog()
+					errors.LogInfo(context.Background(), "[", fn, "] appended outbound with tag: ", o.OutboundConfigs[i].Tag)
 				} else {
 					outboundPrepends = append(outboundPrepends, o.OutboundConfigs[i])
-					newError("[", fn, "] prepend outbound with tag: ", o.OutboundConfigs[i].Tag).AtInfo().WriteToLog()
+					errors.LogInfo(context.Background(), "[", fn, "] prepend outbound with tag: ", o.OutboundConfigs[i].Tag)
 				}
 			}
 		}
@@ -542,6 +555,12 @@ func applyTransportConfig(s *StreamConfig, t *TransportConfig) {
 	}
 	if s.DSSettings == nil {
 		s.DSSettings = t.DSConfig
+	}
+	if s.HTTPUPGRADESettings == nil {
+		s.HTTPUPGRADESettings = t.HTTPUPGRADEConfig
+	}
+	if s.SplitHTTPSettings == nil {
+		s.SplitHTTPSettings = t.SplitHTTPConfig
 	}
 }
 
@@ -602,7 +621,7 @@ func (c *Config) Build() (*core.Config, error) {
 	if c.DNSConfig != nil {
 		dnsApp, err := c.DNSConfig.Build()
 		if err != nil {
-			return nil, newError("failed to parse DNS config").Base(err)
+			return nil, errors.New("failed to parse DNS config").Base(err)
 		}
 		config.App = append(config.App, serial.ToTypedMessage(dnsApp))
 	}
@@ -633,6 +652,14 @@ func (c *Config) Build() (*core.Config, error) {
 
 	if c.Observatory != nil {
 		r, err := c.Observatory.Build()
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(r))
+	}
+
+	if c.BurstObservatory != nil {
+		r, err := c.BurstObservatory.Build()
 		if err != nil {
 			return nil, err
 		}
@@ -704,4 +731,11 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 
 	return config, nil
+}
+
+// Convert string to Address.
+func ParseSendThough(Addr *string) *Address {
+	var addr Address
+	addr.Address = net.ParseAddress(strings.Split(*Addr, "/")[0])
+	return &addr
 }

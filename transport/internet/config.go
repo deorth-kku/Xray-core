@@ -1,6 +1,7 @@
 package internet
 
 import (
+	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/serial"
 	"github.com/xtls/xray-core/features"
 )
@@ -43,6 +44,8 @@ func transportProtocolToString(protocol TransportProtocol) string {
 		return "websocket"
 	case TransportProtocol_DomainSocket:
 		return "domainsocket"
+	case TransportProtocol_HTTPUpgrade:
+		return "httpupgrade"
 	default:
 		return unknownProtocol
 	}
@@ -50,16 +53,18 @@ func transportProtocolToString(protocol TransportProtocol) string {
 
 func RegisterProtocolConfigCreator(name string, creator ConfigCreator) error {
 	if _, found := globalTransportConfigCreatorCache[name]; found {
-		return newError("protocol ", name, " is already registered").AtError()
+		return errors.New("protocol ", name, " is already registered").AtError()
 	}
 	globalTransportConfigCreatorCache[name] = creator
 	return nil
 }
 
+// Note: Each new transport needs to add init() func in transport/internet/xxx/config.go
+// Otherwise, it will cause #3244
 func CreateTransportConfig(name string) (interface{}, error) {
 	creator, ok := globalTransportConfigCreatorCache[name]
 	if !ok {
-		return nil, newError("unknown transport protocol: ", name)
+		return nil, errors.New("unknown transport protocol: ", name)
 	}
 	return creator(), nil
 }
