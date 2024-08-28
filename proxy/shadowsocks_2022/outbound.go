@@ -16,7 +16,10 @@ import (
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/session"
+	"github.com/xtls/xray-core/common/signal"
 	"github.com/xtls/xray-core/common/singbridge"
+	"github.com/xtls/xray-core/core"
+	"github.com/xtls/xray-core/features/policy"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
 )
@@ -61,6 +64,21 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Outbound, error) {
 	return o, nil
 }
 
+type ActivityConn struct {
+	net.Conn
+	*signal.ActivityTimer
+}
+
+func (ac *ActivityConn) Read(b []byte) (n int, err error) {
+	ac.ActivityTimer.Update()
+	return ac.Conn.Read(b)
+}
+
+func (ac *ActivityConn) Write(b []byte) (n int, err error) {
+	ac.ActivityTimer.Update()
+	return ac.Conn.Write(b)
+}
+
 func (o *Outbound) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
 	var inboundConn net.Conn
 	inbound := session.InboundFromContext(ctx)
@@ -92,7 +110,17 @@ func (o *Outbound) Process(ctx context.Context, link *transport.Link, dialer int
 	}
 
 	if session.TimeoutOnlyFromContext(ctx) {
-		ctx, _ = context.WithCancel(context.Background())
+		i := core.MustFromContext(ctx)
+		policyManager, ok := i.GetFeature(policy.ManagerType()).(policy.Manager)
+		if !ok {
+			errors.LogError(ctx, "cannot find policyManger for ss2022")
+			panic("cannot find policyManger for ss2022")
+		}
+		sessionPolicy := policyManager.ForLevel(0)
+		var cancel func()
+		ctx, cancel = context.WithCancel(context.Background())
+		act := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
+		inboundConn = &ActivityConn{inboundConn, act}
 	}
 
 	if network == net.Network_TCP {
