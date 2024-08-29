@@ -186,10 +186,10 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 }
 
 type HttpUpgradeConfig struct {
-	Host                string            `json:"host"`
-	Path                string            `json:"path"`
-	Headers             map[string]string `json:"headers"`
-	AcceptProxyProtocol bool              `json:"acceptProxyProtocol"`
+	Host                string            `json:"host,omitempty"`
+	Path                string            `json:"path,omitempty"`
+	Headers             map[string]string `json:"headers,omitempty"`
+	AcceptProxyProtocol bool              `json:"acceptProxyProtocol,omitempty"`
 }
 
 // Build implements Buildable.
@@ -226,14 +226,14 @@ func (c *HttpUpgradeConfig) Build() (proto.Message, error) {
 }
 
 type SplitHTTPConfig struct {
-	Host                 string            `json:"host"`
-	Path                 string            `json:"path"`
-	Headers              map[string]string `json:"headers"`
-	ScMaxConcurrentPosts *Int32Range       `json:"scMaxConcurrentPosts"`
-	ScMaxEachPostBytes   *Int32Range       `json:"scMaxEachPostBytes"`
-	ScMinPostsIntervalMs *Int32Range       `json:"scMinPostsIntervalMs"`
-	NoSSEHeader          bool              `json:"noSSEHeader"`
-	XPaddingBytes        *Int32Range       `json:"xPaddingBytes"`
+	Host                 string            `json:"host,omitempty"`
+	Path                 string            `json:"path,omitempty"`
+	Headers              map[string]string `json:"headers,omitempty"`
+	ScMaxConcurrentPosts *Int32Range       `json:"scMaxConcurrentPosts,omitempty"`
+	ScMaxEachPostBytes   *Int32Range       `json:"scMaxEachPostBytes,omitempty"`
+	ScMinPostsIntervalMs *Int32Range       `json:"scMinPostsIntervalMs,omitempty"`
+	NoSSEHeader          bool              `json:"noSSEHeader,omitempty"`
+	XPaddingBytes        *Int32Range       `json:"xPaddingBytes,omitempty"`
 }
 
 func splithttpNewRandRangeConfig(input *Int32Range) *splithttp.RandRangeConfig {
@@ -705,10 +705,10 @@ func (p TransportProtocol) Build() (string, error) {
 }
 
 type CustomSockoptConfig struct {
-	Level string `json:"level"`
-	Opt   string `json:"opt"`
-	Value string `json:"value"`
-	Type  string `json:"type"`
+	Level string `json:"level,omitempty"`
+	Opt   string `json:"opt,omitempty"`
+	Value string `json:"value,omitempty"`
+	Type  string `json:"type,omitempty"`
 }
 
 type SocketConfig struct {
