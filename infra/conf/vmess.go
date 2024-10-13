@@ -57,10 +57,6 @@ func (c *VMessDetourConfig) Build() *inbound.DetourConfig {
 	}
 }
 
-type FeaturesConfig struct {
-	Detour *VMessDetourConfig `json:"detour,omitempty"`
-}
-
 type VMessDefaultConfig struct {
 	Level byte `json:"level,omitempty"`
 }
@@ -74,7 +70,6 @@ func (c *VMessDefaultConfig) Build() *inbound.DefaultConfig {
 
 type VMessInboundConfig struct {
 	Users        []json.RawMessage   `json:"clients,omitempty"`
-	Features     *FeaturesConfig     `json:"features,omitempty"`
 	Defaults     *VMessDefaultConfig `json:"default,omitempty"`
 	DetourConfig *VMessDetourConfig  `json:"detour,omitempty"`
 }
@@ -89,8 +84,6 @@ func (c *VMessInboundConfig) Build() (proto.Message, error) {
 
 	if c.DetourConfig != nil {
 		config.Detour = c.DetourConfig.Build()
-	} else if c.Features != nil && c.Features.Detour != nil {
-		config.Detour = c.Features.Detour.Build()
 	}
 
 	config.User = make([]*protocol.User, len(c.Users))

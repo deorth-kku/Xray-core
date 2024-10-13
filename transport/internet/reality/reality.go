@@ -37,8 +37,6 @@ import (
 	"golang.org/x/net/http2"
 )
 
-//go:generate go run github.com/xtls/xray-core/common/errors/errorgen
-
 //go:linkname aesgcmPreferred github.com/refraction-networking/utls.aesgcmPreferred
 func aesgcmPreferred(ciphers []uint16) bool
 
@@ -155,6 +153,9 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		if err != nil {
 			err = errors.New("REALITY: publicKey == nil")
 			goto ReturnErr
+		}
+		if uConn.HandshakeState.State13.EcdheKey == nil {
+			return nil, errors.New("Current fingerprint ", uConn.ClientHelloID.Client, uConn.ClientHelloID.Version, " does not support TLS 1.3, REALITY handshake cannot establish.")
 		}
 		uConn.AuthKey, _ = uConn.HandshakeState.State13.EcdheKey.ECDH(publicKey)
 		if uConn.AuthKey == nil {

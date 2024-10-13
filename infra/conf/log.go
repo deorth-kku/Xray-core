@@ -16,10 +16,11 @@ func DefaultLogConfig() *log.Config {
 }
 
 type LogConfig struct {
-	AccessLog string `json:"access,omitempty"`
-	ErrorLog  string `json:"error,omitempty"`
-	LogLevel  string `json:"loglevel,omitempty"`
-	DNSLog    bool   `json:"dnsLog,omitempty"`
+	AccessLog   string `json:"access,omitempty"`
+	ErrorLog    string `json:"error,omitempty"`
+	LogLevel    string `json:"loglevel,omitempty"`
+	DNSLog      bool   `json:"dnsLog,omitempty"`
+	MaskAddress string `json:"maskAddress,omitempty"`
 }
 
 func (v *LogConfig) Build() *log.Config {
@@ -59,5 +60,6 @@ func (v *LogConfig) Build() *log.Config {
 	default:
 		config.ErrorLogLevel = clog.Severity_Warning
 	}
+	config.MaskAddress = v.MaskAddress
 	return config
 }

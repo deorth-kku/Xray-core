@@ -13,6 +13,7 @@ type DNSOutboundConfig struct {
 	Port       uint16   `json:"port,omitempty"`
 	UserLevel  uint32   `json:"userLevel,omitempty"`
 	NonIPQuery string   `json:"nonIPQuery,omitempty"`
+	BlockTypes []int32  `json:"blockTypes,omitempty"`
 }
 
 func (c *DNSOutboundConfig) Build() (proto.Message, error) {
@@ -34,5 +35,6 @@ func (c *DNSOutboundConfig) Build() (proto.Message, error) {
 		return nil, errors.New(`unknown "nonIPQuery": `, c.NonIPQuery)
 	}
 	config.Non_IPQuery = c.NonIPQuery
+	config.BlockTypes = c.BlockTypes
 	return config, nil
 }

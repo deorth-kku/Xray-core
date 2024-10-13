@@ -14,16 +14,13 @@ import (
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/platform/filesystem"
-	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/common/serial"
 	"github.com/xtls/xray-core/infra/conf/cfgcommon/duration"
 	"github.com/xtls/xray-core/transport/internet"
-	"github.com/xtls/xray-core/transport/internet/domainsocket"
 	httpheader "github.com/xtls/xray-core/transport/internet/headers/http"
 	"github.com/xtls/xray-core/transport/internet/http"
 	"github.com/xtls/xray-core/transport/internet/httpupgrade"
 	"github.com/xtls/xray-core/transport/internet/kcp"
-	"github.com/xtls/xray-core/transport/internet/quic"
 	"github.com/xtls/xray-core/transport/internet/reality"
 	"github.com/xtls/xray-core/transport/internet/splithttp"
 	"github.com/xtls/xray-core/transport/internet/tcp"
@@ -235,6 +232,14 @@ type SplitHTTPConfig struct {
 	ScMinPostsIntervalMs *Int32Range       `json:"scMinPostsIntervalMs,omitempty"`
 	NoSSEHeader          bool              `json:"noSSEHeader,omitempty"`
 	XPaddingBytes        *Int32Range       `json:"xPaddingBytes,omitempty"`
+	Xmux                 Xmux              `json:"xmux,omitempty"`
+}
+
+type Xmux struct {
+	MaxConcurrency *Int32Range `json:"maxConcurrency,omitempty"`
+	MaxConnections *Int32Range `json:"maxConnections,omitempty"`
+	CMaxReuseTimes *Int32Range `json:"cMaxReuseTimes,omitempty"`
+	CMaxLifetimeMs *Int32Range `json:"cMaxLifetimeMs,omitempty"`
 }
 
 func splithttpNewRandRangeConfig(input *Int32Range) *splithttp.RandRangeConfig {
@@ -258,6 +263,19 @@ func (c *SplitHTTPConfig) Build() (proto.Message, error) {
 	} else if c.Host == "" && c.Headers["Host"] != "" {
 		c.Host = c.Headers["Host"]
 	}
+
+	if c.Xmux.MaxConnections != nil && c.Xmux.MaxConnections.To > 0 && c.Xmux.MaxConcurrency != nil && c.Xmux.MaxConcurrency.To > 0 {
+		return nil, errors.New("maxConnections cannot be specified together with maxConcurrency")
+	}
+
+	// Multiplexing config
+	muxProtobuf := splithttp.Multiplexing{
+		MaxConcurrency: splithttpNewRandRangeConfig(c.Xmux.MaxConcurrency),
+		MaxConnections: splithttpNewRandRangeConfig(c.Xmux.MaxConnections),
+		CMaxReuseTimes: splithttpNewRandRangeConfig(c.Xmux.CMaxReuseTimes),
+		CMaxLifetimeMs: splithttpNewRandRangeConfig(c.Xmux.CMaxLifetimeMs),
+	}
+
 	config := &splithttp.Config{
 		Path:                 c.Path,
 		Host:                 c.Host,
@@ -267,6 +285,7 @@ func (c *SplitHTTPConfig) Build() (proto.Message, error) {
 		ScMinPostsIntervalMs: splithttpNewRandRangeConfig(c.ScMinPostsIntervalMs),
 		NoSSEHeader:          c.NoSSEHeader,
 		XPaddingBytes:        splithttpNewRandRangeConfig(c.XPaddingBytes),
+		Xmux:                 &muxProtobuf,
 	}
 	return config, nil
 }
@@ -314,62 +333,6 @@ func (c *HTTPConfig) Build() (proto.Message, error) {
 		}
 	}
 	return config, nil
-}
-
-type QUICConfig struct {
-	Header   json.RawMessage `json:"header,omitempty"`
-	Security string          `json:"security,omitempty"`
-	Key      string          `json:"key,omitempty"`
-}
-
-// Build implements Buildable.
-func (c *QUICConfig) Build() (proto.Message, error) {
-	config := &quic.Config{
-		Key: c.Key,
-	}
-
-	if len(c.Header) > 0 {
-		headerConfig, _, err := kcpHeaderLoader.Load(c.Header)
-		if err != nil {
-			return nil, errors.New("invalid QUIC header config.").Base(err).AtError()
-		}
-		ts, err := headerConfig.(Buildable).Build()
-		if err != nil {
-			return nil, errors.New("invalid QUIC header config").Base(err).AtError()
-		}
-		config.Header = serial.ToTypedMessage(ts)
-	}
-
-	var st protocol.SecurityType
-	switch strings.ToLower(c.Security) {
-	case "aes-128-gcm":
-		st = protocol.SecurityType_AES128_GCM
-	case "chacha20-poly1305":
-		st = protocol.SecurityType_CHACHA20_POLY1305
-	default:
-		st = protocol.SecurityType_NONE
-	}
-
-	config.Security = &protocol.SecurityConfig{
-		Type: st,
-	}
-
-	return config, nil
-}
-
-type DomainSocketConfig struct {
-	Path     string `json:"path,omitempty"`
-	Abstract bool   `json:"abstract,omitempty"`
-	Padding  bool   `json:"padding,omitempty"`
-}
-
-// Build implements Buildable.
-func (c *DomainSocketConfig) Build() (proto.Message, error) {
-	return &domainsocket.Config{
-		Path:     c.Path,
-		Abstract: c.Abstract,
-		Padding:  c.Padding,
-	}, nil
 }
 
 func readFileOrString(f string, s []string) ([]byte, error) {
@@ -513,6 +476,7 @@ type REALITYConfig struct {
 	MasterKeyLog string            `json:"masterKeyLog,omitempty"`
 	CloseTimeout duration.Duration `json:"closeTimeout,omitempty"`
 	Dest         json.RawMessage   `json:"dest,omitempty"`
+	Target       json.RawMessage   `json:"target,omitempty"`
 	Type         string            `json:"type,omitempty"`
 	Xver         uint64            `json:"xver,omitempty"`
 	ServerNames  []string          `json:"serverNames,omitempty"`
@@ -535,6 +499,9 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 	config.MasterKeyLog = c.MasterKeyLog
 	config.CloseTimeout = int64(c.CloseTimeout)
 	var err error
+	if c.Dest == nil {
+		c.Dest = c.Target
+	}
 	if c.Dest != nil {
 		var i uint16
 		var s string
@@ -562,7 +529,7 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 			}
 		}
 		if c.Type == "" {
-			return nil, errors.New(`please fill in a valid value for "dest"`)
+			return nil, errors.New(`please fill in a valid value for "dest" or "target"`)
 		}
 		if c.Xver > 2 {
 			return nil, errors.New(`invalid PROXY protocol version, "xver" only accepts 0, 1, 2`)
@@ -684,18 +651,14 @@ type TransportProtocol string
 // Build implements Buildable.
 func (p TransportProtocol) Build() (string, error) {
 	switch strings.ToLower(string(p)) {
-	case "tcp":
+	case "raw", "tcp":
 		return "tcp", nil
 	case "kcp", "mkcp":
 		return "mkcp", nil
 	case "ws", "websocket":
 		return "websocket", nil
-	case "h2", "http":
+	case "h2", "h3", "http":
 		return "http", nil
-	case "ds", "domainsocket":
-		return "domainsocket", nil
-	case "quic":
-		return "quic", nil
 	case "grpc", "gun":
 		return "grpc", nil
 	case "httpupgrade":
@@ -823,21 +786,20 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 }
 
 type StreamConfig struct {
-	Network             *TransportProtocol  `json:"network,omitempty"`
-	Security            string              `json:"security,omitempty"`
-	TLSSettings         *TLSConfig          `json:"tlsSettings,omitempty"`
-	REALITYSettings     *REALITYConfig      `json:"realitySettings,omitempty"`
-	TCPSettings         *TCPConfig          `json:"tcpSettings,omitempty"`
-	KCPSettings         *KCPConfig          `json:"kcpSettings,omitempty"`
-	WSSettings          *WebSocketConfig    `json:"wsSettings,omitempty"`
-	HTTPSettings        *HTTPConfig         `json:"httpSettings,omitempty"`
-	DSSettings          *DomainSocketConfig `json:"dsSettings,omitempty"`
-	QUICSettings        *QUICConfig         `json:"quicSettings,omitempty"`
-	SocketSettings      *SocketConfig       `json:"sockopt,omitempty"`
-	GRPCConfig          *GRPCConfig         `json:"grpcSettings,omitempty"`
-	GUNConfig           *GRPCConfig         `json:"gunSettings,omitempty"`
-	HTTPUPGRADESettings *HttpUpgradeConfig  `json:"httpupgradeSettings,omitempty"`
-	SplitHTTPSettings   *SplitHTTPConfig    `json:"splithttpSettings,omitempty"`
+	Network             *TransportProtocol `json:"network,omitempty"`
+	Security            string             `json:"security,omitempty"`
+	TLSSettings         *TLSConfig         `json:"tlsSettings,omitempty"`
+	REALITYSettings     *REALITYConfig     `json:"realitySettings,omitempty"`
+	RAWSettings         *TCPConfig         `json:"rawSettings,omitempty"`
+	TCPSettings         *TCPConfig         `json:"tcpSettings,omitempty"`
+	KCPSettings         *KCPConfig         `json:"kcpSettings,omitempty"`
+	WSSettings          *WebSocketConfig   `json:"wsSettings,omitempty"`
+	HTTPSettings        *HTTPConfig        `json:"httpSettings,omitempty"`
+	SocketSettings      *SocketConfig      `json:"sockopt,omitempty"`
+	GRPCConfig          *GRPCConfig        `json:"grpcSettings,omitempty"`
+	GUNConfig           *GRPCConfig        `json:"gunSettings,omitempty"`
+	HTTPUPGRADESettings *HttpUpgradeConfig `json:"httpupgradeSettings,omitempty"`
+	SplitHTTPSettings   *SplitHTTPConfig   `json:"splithttpSettings,omitempty"`
 }
 
 // Build implements Buildable.
@@ -867,8 +829,8 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		config.SecuritySettings = append(config.SecuritySettings, tm)
 		config.SecurityType = tm.Type
 	case "reality":
-		if config.ProtocolName != "tcp" && config.ProtocolName != "http" && config.ProtocolName != "grpc" && config.ProtocolName != "domainsocket" {
-			return nil, errors.New("REALITY only supports TCP, H2, gRPC and DomainSocket for now.")
+		if config.ProtocolName != "tcp" && config.ProtocolName != "http" && config.ProtocolName != "grpc" {
+			return nil, errors.New("REALITY only supports TCP, H2 and gRPC for now.")
 		}
 		if c.REALITYSettings == nil {
 			return nil, errors.New(`REALITY: Empty "realitySettings".`)
@@ -881,14 +843,17 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		config.SecuritySettings = append(config.SecuritySettings, tm)
 		config.SecurityType = tm.Type
 	case "xtls":
-		return nil, errors.New(`Please use VLESS flow "xtls-rprx-vision" with TLS or REALITY.`)
+		return nil, errors.PrintRemovedFeatureError(`Legacy XTLS`, `xtls-rprx-vision with TLS or REALITY`)
 	default:
 		return nil, errors.New(`Unknown security "` + c.Security + `".`)
+	}
+	if c.TCPSettings == nil {
+		c.TCPSettings = c.RAWSettings
 	}
 	if c.TCPSettings != nil {
 		ts, err := c.TCPSettings.Build()
 		if err != nil {
-			return nil, errors.New("Failed to build TCP config.").Base(err)
+			return nil, errors.New("Failed to build RAW config.").Base(err)
 		}
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "tcp",
@@ -923,26 +888,6 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "http",
 			Settings:     serial.ToTypedMessage(ts),
-		})
-	}
-	if c.DSSettings != nil {
-		ds, err := c.DSSettings.Build()
-		if err != nil {
-			return nil, errors.New("Failed to build DomainSocket config.").Base(err)
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "domainsocket",
-			Settings:     serial.ToTypedMessage(ds),
-		})
-	}
-	if c.QUICSettings != nil {
-		qs, err := c.QUICSettings.Build()
-		if err != nil {
-			return nil, errors.New("Failed to build QUIC config").Base(err)
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "quic",
-			Settings:     serial.ToTypedMessage(qs),
 		})
 	}
 	if c.GRPCConfig == nil {

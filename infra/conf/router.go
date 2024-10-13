@@ -14,11 +14,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type RouterRulesConfig struct {
-	RuleList       []json.RawMessage `json:"rules,omitempty"`
-	DomainStrategy string            `json:"domainStrategy,omitempty"`
-}
-
 // StrategyConfig represents a strategy config
 type StrategyConfig struct {
 	Type     string           `json:"type,omitempty"`
@@ -76,10 +71,9 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 }
 
 type RouterConfig struct {
-	Settings       *RouterRulesConfig `json:"settings,omitempty"` // Deprecated
-	RuleList       []json.RawMessage  `json:"rules,omitempty"`
-	DomainStrategy *string            `json:"domainStrategy,omitempty"`
-	Balancers      []*BalancingRule   `json:"balancers,omitempty"`
+	RuleList       []json.RawMessage `json:"rules,omitempty"`
+	DomainStrategy *string           `json:"domainStrategy,omitempty"`
+	Balancers      []*BalancingRule  `json:"balancers,omitempty"`
 
 	DomainMatcher string `json:"domainMatcher,omitempty"`
 }
@@ -88,8 +82,6 @@ func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
 	ds := ""
 	if c.DomainStrategy != nil {
 		ds = *c.DomainStrategy
-	} else if c.Settings != nil {
-		ds = c.Settings.DomainStrategy
 	}
 
 	switch strings.ToLower(ds) {
@@ -111,10 +103,6 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 	var rawRuleList []json.RawMessage
 	if c != nil {
 		rawRuleList = c.RuleList
-		if c.Settings != nil {
-			c.RuleList = append(c.RuleList, c.Settings.RuleList...)
-			rawRuleList = c.RuleList
-		}
 	}
 
 	for _, rawRule := range rawRuleList {
