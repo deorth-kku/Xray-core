@@ -2,6 +2,7 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -53,6 +54,10 @@ func (v *Address) UnmarshalJSON(data []byte) error {
 	v.Address = net.ParseAddress(rawStr)
 
 	return nil
+}
+
+func (v *Address) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.Quote(v.String())), nil
 }
 
 func (v *Address) Build() *net.IPOrDomain {
@@ -230,6 +235,21 @@ func (list *PortList) UnmarshalJSON(data []byte) error {
 		list.Range = append(list.Range, PortRange{From: number, To: number})
 	}
 	return nil
+}
+
+func (list *PortList) MarshalJSON() ([]byte, error) {
+	if len(list.Range) == 1 && list.Range[0].From == list.Range[0].To {
+		return json.Marshal(list.Range[0].From)
+	}
+	strs := make([]string, 0, len(list.Range))
+	for _, rg := range list.Range {
+		if rg.From == rg.To {
+			strs = append(strs, fmt.Sprint(rg.From))
+		} else {
+			strs = append(strs, fmt.Sprintf("%d-%d", rg.From, rg.To))
+		}
+	}
+	return []byte(strconv.Quote(strings.Join(strs, ","))), nil
 }
 
 type User struct {
