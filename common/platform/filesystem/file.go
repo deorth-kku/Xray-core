@@ -1,8 +1,10 @@
 package filesystem
 
 import (
+	"compress/gzip"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/platform"
@@ -15,11 +17,22 @@ var NewFileReader FileReaderFunc = func(path string) (io.ReadCloser, error) {
 }
 
 func ReadFile(path string) ([]byte, error) {
-	reader, err := NewFileReader(path)
+	var reader io.Reader
+	freader, err := NewFileReader(path)
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer freader.Close()
+	if strings.HasSuffix(path, ".gz") {
+		gzreader, err := gzip.NewReader(freader)
+		if err != nil {
+			return nil, err
+		}
+		defer gzreader.Close()
+		reader = gzreader
+	} else {
+		reader = freader
+	}
 
 	return buf.ReadAllToBytes(reader)
 }

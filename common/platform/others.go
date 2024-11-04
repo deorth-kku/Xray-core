@@ -32,6 +32,10 @@ func GetAssetLocation(file string) string {
 		filepath.Join("/opt/share/xray/", file),
 	} {
 		if _, err := os.Stat(p); os.IsNotExist(err) {
+			if _, err = os.Stat(p + ".gz"); !os.IsNotExist(err) {
+				// gzip asset found
+				return p + ".gz"
+			}
 			continue
 		}
 
