@@ -9,6 +9,7 @@ import (
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/net/cnc"
 	"github.com/xtls/xray-core/common/session"
+	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/outbound"
 	"github.com/xtls/xray-core/transport"
@@ -77,12 +78,8 @@ func DestIpAddress() net.IP {
 	return effectiveSystemDialer.DestIpAddress()
 }
 
-var (
-	dnsClient dns.Client
-	obm       outbound.Manager
-)
-
-func lookupIP(domain string, strategy DomainStrategy, localAddr net.Address) ([]net.IP, error) {
+func lookupIP(ctx context.Context, domain string, strategy DomainStrategy, localAddr net.Address) ([]net.IP, error) {
+	dnsClient := dnsClientFromContext(ctx)
 	if dnsClient == nil {
 		return nil, nil
 	}
@@ -104,6 +101,7 @@ func lookupIP(domain string, strategy DomainStrategy, localAddr net.Address) ([]
 }
 
 func canLookupIP(ctx context.Context, dst net.Destination, sockopt *SocketConfig) bool {
+	dnsClient := dnsClientFromContext(ctx)
 	if dst.Address.Family().IsIP() || dnsClient == nil {
 		return false
 	}
@@ -112,6 +110,10 @@ func canLookupIP(ctx context.Context, dst net.Destination, sockopt *SocketConfig
 
 func redirect(ctx context.Context, dst net.Destination, obt string) net.Conn {
 	errors.LogInfo(ctx, "redirecting request "+dst.String()+" to "+obt)
+	obm := obmFromContext(ctx)
+	if obm == nil {
+		return nil
+	}
 	h := obm.GetHandler(obt)
 	outbounds := session.OutboundsFromContext(ctx)
 	ctx = session.ContextWithOutbounds(ctx, append(outbounds, &session.Outbound{
@@ -153,7 +155,7 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	}
 
 	if canLookupIP(ctx, dest, sockopt) {
-		ips, err := lookupIP(dest.Address.String(), sockopt.DomainStrategy, src)
+		ips, err := lookupIP(ctx, dest.Address.String(), sockopt.DomainStrategy, src)
 		if err == nil && len(ips) > 0 {
 			dest.Address = net.IPAddress(ips[dice.Roll(len(ips))])
 			errors.LogInfo(ctx, "replace destination with "+dest.String())
@@ -162,6 +164,7 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 		}
 	}
 
+	obm := obmFromContext(ctx)
 	if obm != nil && len(sockopt.DialerProxy) > 0 {
 		nc := redirect(ctx, dest, sockopt.DialerProxy)
 		if nc != nil {
@@ -172,7 +175,28 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
 }
 
-func InitSystemDialer(dc dns.Client, om outbound.Manager) {
-	dnsClient = dc
-	obm = om
+func obmFromContext(ctx context.Context) outbound.Manager {
+	ins := core.FromContext(ctx)
+	if ins == nil {
+		return nil
+	}
+	obmraw := ins.GetFeature(outbound.ManagerType())
+	if obmraw == nil {
+		return nil
+	}
+	obm, _ := obmraw.(outbound.Manager)
+	return obm
+}
+
+func dnsClientFromContext(ctx context.Context) dns.Client {
+	ins := core.FromContext(ctx)
+	if ins == nil {
+		return nil
+	}
+	dnsclientraw := ins.GetFeature(dns.ClientType())
+	if dnsclientraw == nil {
+		return nil
+	}
+	dnsclient, _ := dnsclientraw.(dns.Client)
+	return dnsclient
 }

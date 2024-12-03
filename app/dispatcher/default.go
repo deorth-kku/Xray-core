@@ -391,7 +391,7 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 	outbounds := session.OutboundsFromContext(ctx)
 	ob := outbounds[len(outbounds)-1]
 	if hosts, ok := d.dns.(dns.HostsLookup); ok && destination.Address.Family().IsDomain() {
-		proxied := hosts.LookupHosts(ob.Target.String())
+		proxied := hosts.LookupHosts(ob.Target.Address.Domain())
 		if proxied != nil {
 			ro := ob.RouteTarget == destination
 			destination.Address = *proxied
