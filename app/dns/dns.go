@@ -16,6 +16,18 @@ import (
 	"github.com/xtls/xray-core/features/dns"
 )
 
+type Hosts interface {
+	Lookup(domain string, option dns.IPOption) []net.Address
+}
+
+func (d *DNS) SwapHosts(n Hosts) Hosts {
+	d.Mutex.Lock()
+	defer d.Mutex.Unlock()
+	old := d.hosts
+	d.hosts = n
+	return old
+}
+
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
@@ -24,7 +36,7 @@ type DNS struct {
 	disableFallback        bool
 	disableFallbackIfMatch bool
 	ipOption               *dns.IPOption
-	hosts                  *StaticHosts
+	hosts                  Hosts
 	clients                []*Client
 	ctx                    context.Context
 	domainMatcher          strmatcher.IndexMatcher
