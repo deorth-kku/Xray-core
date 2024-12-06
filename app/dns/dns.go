@@ -37,7 +37,7 @@ type DNS struct {
 	disableFallbackIfMatch bool
 	ipOption               *dns.IPOption
 	hosts                  Hosts
-	clients                []*Client
+	Clients                []*Client
 	ctx                    context.Context
 	domainMatcher          strmatcher.IndexMatcher
 	matcherInfos           []*DomainMatcherInfo
@@ -136,7 +136,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		tag:                    tag,
 		hosts:                  hosts,
 		ipOption:               ipOption,
-		clients:                clients,
+		Clients:                clients,
 		ctx:                    ctx,
 		domainMatcher:          domainMatcher,
 		matcherInfos:           matcherInfos,
@@ -255,16 +255,16 @@ func (s *DNS) SetFakeDNSOption(isFakeEnable bool) {
 }
 
 func (s *DNS) sortClients(domain string) []*Client {
-	clients := make([]*Client, 0, len(s.clients))
-	clientUsed := make([]bool, len(s.clients))
-	clientNames := make([]string, 0, len(s.clients))
+	clients := make([]*Client, 0, len(s.Clients))
+	clientUsed := make([]bool, len(s.Clients))
+	clientNames := make([]string, 0, len(s.Clients))
 	domainRules := []string{}
 
 	// Priority domain matching
 	hasMatch := false
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
-		client := s.clients[info.clientIdx]
+		client := s.Clients[info.clientIdx]
 		domainRule := client.domains[info.domainRuleIdx]
 		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
 		if clientUsed[info.clientIdx] {
@@ -278,7 +278,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 
 	if !(s.disableFallback || s.disableFallbackIfMatch && hasMatch) {
 		// Default round-robin query
-		for idx, client := range s.clients {
+		for idx, client := range s.Clients {
 			if clientUsed[idx] || client.skipFallback {
 				continue
 			}
@@ -296,8 +296,8 @@ func (s *DNS) sortClients(domain string) []*Client {
 	}
 
 	if len(clients) == 0 {
-		clients = append(clients, s.clients[0])
-		clientNames = append(clientNames, s.clients[0].Name())
+		clients = append(clients, s.Clients[0])
+		clientNames = append(clientNames, s.Clients[0].Name())
 		errors.LogDebug(s.ctx, "domain ", domain, " will use the first DNS: ", clientNames)
 	}
 

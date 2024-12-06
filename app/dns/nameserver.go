@@ -25,7 +25,7 @@ type Server interface {
 
 // Client is the interface for DNS client.
 type Client struct {
-	server       Server
+	Server       Server
 	clientIP     net.IP
 	skipFallback bool
 	domains      []string
@@ -153,7 +153,7 @@ func NewClient(
 			}
 		}
 
-		client.server = server
+		client.Server = server
 		client.clientIP = clientIP
 		client.skipFallback = ns.SkipFallback
 		client.domains = rules
@@ -165,13 +165,13 @@ func NewClient(
 
 // Name returns the server name the client manages.
 func (c *Client) Name() string {
-	return c.server.Name()
+	return c.Server.Name()
 }
 
 // QueryIP sends DNS query to the name server with the client's IP.
 func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption, disableCache bool) ([]net.IP, error) {
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
-	ips, err := c.server.QueryIP(ctx, domain, c.clientIP, option, disableCache)
+	ips, err := c.Server.QueryIP(ctx, domain, c.clientIP, option, disableCache)
 	cancel()
 
 	if err != nil {
