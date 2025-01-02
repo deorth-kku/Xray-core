@@ -145,6 +145,18 @@ func (p *StaticMuxPicker) cleanup() error {
 	return nil
 }
 
+func (p *StaticMuxPicker) Close() error {
+	p.access.Lock()
+	defer p.access.Unlock()
+	if p.cTask.Close() != nil {
+		p.cTask.Close()
+	}
+	for _, w := range p.workers {
+		w.client.Close()
+	}
+	return nil
+}
+
 func (p *StaticMuxPicker) PickAvailable() (*mux.ClientWorker, error) {
 	p.access.Lock()
 	defer p.access.Unlock()

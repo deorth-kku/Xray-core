@@ -40,6 +40,13 @@ func (m *ClientManager) Dispatch(ctx context.Context, link *transport.Link) erro
 	return errors.New("unable to find an available mux client").AtWarning()
 }
 
+func (m *ClientManager) Close() error {
+	if m.Picker != nil {
+		return common.Close(m.Picker)
+	}
+	return nil
+}
+
 type WorkerPicker interface {
 	PickAvailable() (*ClientWorker, error)
 }
@@ -124,6 +131,18 @@ func (p *IncrementalWorkerPicker) PickAvailable() (*ClientWorker, error) {
 	return worker, err
 }
 
+func (p *IncrementalWorkerPicker) Close() error {
+	p.access.Lock()
+	defer p.access.Unlock()
+	if p.cleanupTask != nil {
+		p.cleanupTask.Close()
+	}
+	for _, w := range p.workers {
+		w.Close()
+	}
+	return nil
+}
+
 type ClientWorkerFactory interface {
 	Create() (*ClientWorker, error)
 }
@@ -147,18 +166,18 @@ func (f *DialingWorkerFactory) Create() (*ClientWorker, error) {
 		return nil, err
 	}
 
-	go func(p proxy.Outbound, d internet.Dialer, c common.Closable) {
+	go func(p proxy.Outbound, d internet.Dialer, cl common.Closable) {
 		outbounds := []*session.Outbound{{
 			Target: net.TCPDestination(muxCoolAddress, muxCoolPort),
 		}}
 		ctx := session.ContextWithOutbounds(context.Background(), outbounds)
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, c.cancel = context.WithCancel(ctx)
 
 		if err := p.Process(ctx, &transport.Link{Reader: uplinkReader, Writer: downlinkWriter}, d); err != nil {
 			errors.LogInfoInner(ctx, err, "failed to handler mux client connection")
 		}
-		common.Must(c.Close())
-		cancel()
+		common.Must(cl.Close())
+		c.cancel()
 	}(f.Proxy, f.Dialer, c.done)
 
 	return c, nil
@@ -174,6 +193,7 @@ type ClientWorker struct {
 	link           transport.Link
 	done           *done.Instance
 	strategy       ClientStrategy
+	cancel         context.CancelFunc
 }
 
 var (
@@ -204,6 +224,10 @@ func (m *ClientWorker) ActiveConnections() uint32 {
 	return uint32(m.sessionManager.Size())
 }
 
+func (m *ClientWorker) Close() error {
+	return m.done.Close()
+}
+
 // Closed returns true if this Client is closed.
 func (m *ClientWorker) Closed() bool {
 	return m.done.Done()
@@ -219,6 +243,9 @@ func (m *ClientWorker) monitor() {
 			m.sessionManager.Close()
 			common.Close(m.link.Writer)
 			common.Interrupt(m.link.Reader)
+			if m.cancel != nil {
+				m.cancel()
+			}
 			return
 		case <-timer.C:
 			size := m.sessionManager.Size()

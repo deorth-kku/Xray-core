@@ -334,8 +334,12 @@ func (h *Handler) Start() error {
 
 // Close implements common.Closable.
 func (h *Handler) Close() error {
-	common.Close(h.mux)
-	common.Close(h.xudp)
+	if h.mux != nil {
+		h.mux.Close()
+	}
+	if h.xudp != nil {
+		h.xudp.Close()
+	}
 	switch h.streamSettings.ProtocolName {
 	case "grpc":
 		grpc.GrpcCloseConn(h.streamSettings)
