@@ -1,7 +1,5 @@
 package router
 
-//go:generate go run github.com/xtls/xray-core/common/errors/errorgen
-
 import (
 	"context"
 	sync "sync"
@@ -35,6 +33,7 @@ type Route struct {
 	routing.Context
 	outboundGroupTags []string
 	outboundTag       string
+	ruleTag           string
 }
 
 // Init initializes the Router.
@@ -90,7 +89,7 @@ func (r *Router) PickRoute(ctx routing.Context) (routing.Route, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Route{Context: ctx, outboundTag: tag}, nil
+	return &Route{Context: ctx, outboundTag: tag, ruleTag: rule.RuleTag}, nil
 }
 
 // AddRule implements routing.Router.
@@ -218,7 +217,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 func (r *Router) ListBalancerSelectors(balancerTag string) (tags []string, err error) {
 	balancer, ok := r.balancers[balancerTag]
 	if !ok {
-		err = newError("balancer ", balancerTag, " not found")
+		err = errors.New("balancer ", balancerTag, " not found")
 		return
 	}
 	tags = *balancer.selectors.Load()
@@ -228,11 +227,11 @@ func (r *Router) ListBalancerSelectors(balancerTag string) (tags []string, err e
 func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) error {
 	balancer, ok := r.balancers[balancerTag]
 	if !ok {
-		return newError("balancer ", balancerTag, " not found")
+		return errors.New("balancer ", balancerTag, " not found")
 	}
 	manager, ok := balancer.ohm.(*proxyman_outbound.Manager)
 	if !ok {
-		return newError("outbound.Manager is not a Manager")
+		return errors.New("outbound.Manager is not a Manager")
 	}
 	manager.ClearTagsCache()
 
@@ -263,6 +262,10 @@ func (r *Route) GetOutboundGroupTags() []string {
 // GetOutboundTag implements routing.Route.
 func (r *Route) GetOutboundTag() string {
 	return r.outboundTag
+}
+
+func (r *Route) GetRuleTag() string {
+	return r.ruleTag
 }
 
 func init() {

@@ -2,6 +2,7 @@ package socks
 
 import (
 	"context"
+	goerrors "errors"
 	"io"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/xtls/xray-core/common/signal"
 	"github.com/xtls/xray-core/common/task"
 	"github.com/xtls/xray-core/core"
-	"github.com/xtls/xray-core/features"
 	"github.com/xtls/xray-core/features/policy"
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/proxy/http"
@@ -55,12 +55,6 @@ func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 func (s *Server) policy() policy.Session {
 	config := s.config
 	p := s.policyManager.ForLevel(config.UserLevel)
-	if config.Timeout > 0 {
-		features.PrintDeprecatedFeatureWarning("Socks timeout")
-	}
-	if config.Timeout > 0 && config.UserLevel == 0 {
-		p.Timeouts.ConnectionIdle = time.Duration(config.Timeout) * time.Second
-	}
 	return p
 }
 
@@ -85,7 +79,13 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn stat.Con
 	switch network {
 	case net.Network_TCP:
 		firstbyte := make([]byte, 1)
-		conn.Read(firstbyte)
+		if n, err := conn.Read(firstbyte); n == 0 {
+			if goerrors.Is(err, io.EOF) {
+				errors.LogInfo(ctx, "Connection closed immediately, likely health check connection")
+				return nil
+			}
+			return errors.New("failed to read from connection").Base(err)
+		}
 		if firstbyte[0] != 5 && firstbyte[0] != 4 { // Check if it is Socks5/4/4a
 			errors.LogDebug(ctx, "Not Socks request, try to parse as HTTP request")
 			return s.httpServer.ProcessWithFirstbyte(ctx, network, conn, dispatcher, firstbyte...)
