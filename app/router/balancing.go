@@ -32,6 +32,12 @@ type RoundRobinStrategy struct {
 
 func (s *RoundRobinStrategy) InjectContext(ctx context.Context) {
 	s.ctx = ctx
+	if len(s.FallbackTag) > 0 {
+		common.Must(core.RequireFeatures(s.ctx, func(observatory extension.Observatory) error {
+			s.observatory = observatory
+			return nil
+		}))
+	}
 }
 
 func (s *RoundRobinStrategy) GetPrincipleTarget(strings []string) []string {
@@ -39,12 +45,6 @@ func (s *RoundRobinStrategy) GetPrincipleTarget(strings []string) []string {
 }
 
 func (s *RoundRobinStrategy) PickOutbound(tags []string) string {
-	if len(s.FallbackTag) > 0 && s.observatory == nil {
-		common.Must(core.RequireFeatures(s.ctx, func(observatory extension.Observatory) error {
-			s.observatory = observatory
-			return nil
-		}))
-	}
 	if s.observatory != nil {
 		observeReport, err := s.observatory.GetObservation(s.ctx)
 		if err == nil {

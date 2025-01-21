@@ -13,7 +13,6 @@ import (
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/errors"
-	common_errors "github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/mux"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/net/cnc"
@@ -26,7 +25,6 @@ import (
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
 	"github.com/xtls/xray-core/transport/internet/grpc"
-	"github.com/xtls/xray-core/transport/internet/http"
 	"github.com/xtls/xray-core/transport/internet/reality"
 	"github.com/xtls/xray-core/transport/internet/stat"
 	"github.com/xtls/xray-core/transport/internet/tls"
@@ -68,12 +66,12 @@ func removeStatCounter(v *core.Instance, tag string) (err error) {
 	if len(tag) > 0 && policy.ForSystem().Stats.OutboundDownlink {
 		statsManager := v.GetFeature(stats.ManagerType()).(stats.Manager)
 		name := "outbound>>>" + tag + ">>>traffic>>>downlink"
-		err = common_errors.Combine(err, statsManager.UnregisterCounter(name))
+		err = errors.Combine(err, statsManager.UnregisterCounter(name))
 	}
 	return
 }
 
-// Handler is an implements of outbound.Handler.
+// Handler implements outbound.Handler.
 type Handler struct {
 	tag             string
 	senderSettings  *proxyman.SenderConfig
@@ -343,8 +341,6 @@ func (h *Handler) Close() error {
 	switch h.streamSettings.ProtocolName {
 	case "grpc":
 		grpc.GrpcCloseConn(h.streamSettings)
-	case "http":
-		http.HttpCloseConn(h.streamSettings)
 	}
 	if realityConfig := reality.ConfigFromStreamSettings(h.streamSettings); realityConfig != nil {
 		reality.RealityCloseConn(realityConfig)

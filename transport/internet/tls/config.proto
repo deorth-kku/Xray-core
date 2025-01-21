@@ -85,5 +85,6 @@ message Config {
 
   string master_key_log = 15;
 
-  int64 close_timeout = 16;
+  // Lists of string as CurvePreferences values.
+  repeated string curve_preferences = 16;
 }
