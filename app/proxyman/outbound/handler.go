@@ -25,7 +25,6 @@ import (
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
 	"github.com/xtls/xray-core/transport/internet/grpc"
-	"github.com/xtls/xray-core/transport/internet/reality"
 	"github.com/xtls/xray-core/transport/internet/stat"
 	"github.com/xtls/xray-core/transport/internet/tls"
 	"github.com/xtls/xray-core/transport/pipe"
@@ -341,9 +340,6 @@ func (h *Handler) Close() error {
 	switch h.streamSettings.ProtocolName {
 	case "grpc":
 		grpc.GrpcCloseConn(h.streamSettings)
-	}
-	if realityConfig := reality.ConfigFromStreamSettings(h.streamSettings); realityConfig != nil {
-		reality.RealityCloseConn(realityConfig)
 	}
 	return nil
 }

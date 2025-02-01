@@ -25,7 +25,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/puzpuzpuz/xsync/v3"
 	utls "github.com/refraction-networking/utls"
 	"github.com/xtls/reality"
 	"github.com/xtls/xray-core/common/errors"
@@ -74,7 +73,6 @@ func (c *UConn) Close() error {
 		c.UConn.NetConn().Close()
 	})
 	defer timer.Stop()
-	defer globalConnPool.Delete(c)
 	return c.UConn.Close()
 }
 
@@ -113,8 +111,6 @@ func (c *UConn) VerifyPeerCertificate(rawCerts [][]byte, verifiedChains [][]*x50
 	return nil
 }
 
-var globalConnPool = xsync.NewMapOf[*UConn, *Config]()
-
 func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destination) (conn net.Conn, err error) {
 	localAddr := c.LocalAddr().String()
 	uConn := &UConn{}
@@ -134,7 +130,6 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 		return nil, errors.New("REALITY: failed to get fingerprint").AtError()
 	}
 	uConn.UConn = utls.UClient(c, utlsConfig, *fingerprint)
-	globalConnPool.Store(uConn, config)
 	{
 		uConn.BuildHandshakeState()
 		hello := uConn.HandshakeState.Hello
@@ -277,7 +272,6 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 	return uConn, nil
 ReturnErr:
 	uConn.Close()
-	globalConnPool.Delete(uConn)
 	return nil, err
 }
 
@@ -309,33 +303,4 @@ func randBetween(left int64, right int64) int64 {
 	}
 	bigInt, _ := rand.Int(rand.Reader, big.NewInt(right-left))
 	return left + bigInt.Int64()
-}
-
-func RealityCloseConn(config *Config) {
-	globalConnPool.Range(func(k *UConn, v *Config) bool {
-		if v == config {
-			k.Close()
-		}
-		return true
-	})
-}
-
-func closeCount(c *UConn) int {
-	if c.Close() == nil {
-		return 1
-	} else {
-		return 0
-	}
-}
-
-func RealityCloseAllConns() (count int) {
-	globalConnPool.Range(func(k *UConn, _ *Config) bool {
-		count += closeCount(k)
-		return true
-	})
-	return
-}
-
-func RealityLenConns() int {
-	return globalConnPool.Size()
 }
