@@ -157,7 +157,7 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn stat.Connection, dis
 			if err != nil {
 				if inbound.Source.IsValid() {
 					errors.LogInfoInner(ctx, err, "dropping invalid UDP packet from: ", inbound.Source)
-					log.Record(&log.AccessMessage{
+					errors.Log(ctx, &log.AccessMessage{
 						From:   inbound.Source,
 						To:     "",
 						Status: log.AccessRejected,
@@ -205,7 +205,7 @@ func (s *Server) handleConnection(ctx context.Context, conn stat.Connection, dis
 	bufferedReader := buf.BufferedReader{Reader: buf.NewReader(conn)}
 	request, bodyReader, err := ReadTCPSession(s.validator, &bufferedReader)
 	if err != nil {
-		log.Record(&log.AccessMessage{
+		errors.Log(ctx, &log.AccessMessage{
 			From:   conn.RemoteAddr(),
 			To:     "",
 			Status: log.AccessRejected,

@@ -377,7 +377,7 @@ func (s *DoHNameServer) QueryIP(ctx context.Context, domain string, clientIP net
 		ips, err := s.findIPsForDomain(fqdn, option)
 		if err == nil || err == dns_feature.ErrEmptyResponse {
 			errors.LogDebugInner(ctx, err, s.name, " cache HIT ", domain, " -> ", ips)
-			log.Record(&log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSCacheHit, Elapsed: 0, Error: err})
+			errors.Log(ctx, &log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSCacheHit, Elapsed: 0, Error: err})
 			return ips, err
 		}
 	}
@@ -414,7 +414,7 @@ func (s *DoHNameServer) QueryIP(ctx context.Context, domain string, clientIP net
 	for {
 		ips, err := s.findIPsForDomain(fqdn, option)
 		if err != errRecordNotFound {
-			log.Record(&log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
+			errors.Log(ctx, &log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
 			return ips, err
 		}
 

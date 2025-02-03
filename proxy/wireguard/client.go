@@ -85,7 +85,7 @@ func (h *Handler) processWireGuard(ctx context.Context, dialer internet.Dialer) 
 		return nil
 	}
 
-	log.Record(&log.GeneralMessage{
+	errors.Log(ctx, &log.GeneralMessage{
 		Severity: log.Severity_Info,
 		Content:  "switching dialer",
 	})

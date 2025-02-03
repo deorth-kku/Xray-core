@@ -475,7 +475,7 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 				accessMessage.Detour = inTag + " >> " + tag
 			}
 		}
-		log.Record(accessMessage)
+		errors.Log(ctx, accessMessage)
 	}
 
 	handler.Dispatch(ctx, link)

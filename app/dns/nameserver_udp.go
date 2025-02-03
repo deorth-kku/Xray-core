@@ -252,7 +252,7 @@ func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP
 		ips, err := s.findIPsForDomain(fqdn, option)
 		if err == nil || err == dns_feature.ErrEmptyResponse {
 			errors.LogDebugInner(ctx, err, s.name, " cache HIT ", domain, " -> ", ips)
-			log.Record(&log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSCacheHit, Elapsed: 0, Error: err})
+			errors.Log(ctx, &log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSCacheHit, Elapsed: 0, Error: err})
 			return ips, err
 		}
 	}
@@ -289,7 +289,7 @@ func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP
 	for {
 		ips, err := s.findIPsForDomain(fqdn, option)
 		if err != errRecordNotFound {
-			log.Record(&log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
+			errors.Log(ctx, &log.DNSLog{Server: s.name, Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
 			return ips, err
 		}
 

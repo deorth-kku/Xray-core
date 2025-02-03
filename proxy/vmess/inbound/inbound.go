@@ -245,7 +245,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection s
 	request, err := svrSession.DecodeRequestHeader(reader, isDrain)
 	if err != nil {
 		if errors.Cause(err) != io.EOF {
-			log.Record(&log.AccessMessage{
+			errors.Log(ctx, &log.AccessMessage{
 				From:   connection.RemoteAddr(),
 				To:     "",
 				Status: log.AccessRejected,

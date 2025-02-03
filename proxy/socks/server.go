@@ -126,7 +126,7 @@ func (s *Server) processTCP(ctx context.Context, conn stat.Connection, dispatche
 	request, err := svrSession.Handshake(reader, conn)
 	if err != nil {
 		if inbound.Source.IsValid() {
-			log.Record(&log.AccessMessage{
+			errors.Log(ctx, &log.AccessMessage{
 				From:   inbound.Source,
 				To:     "",
 				Status: log.AccessRejected,

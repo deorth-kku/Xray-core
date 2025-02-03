@@ -36,7 +36,7 @@ func (s *LocalNameServer) QueryIP(ctx context.Context, domain string, _ net.IP, 
 
 	if len(ips) > 0 {
 		errors.LogInfo(ctx, "Localhost got answer: ", domain, " -> ", ips)
-		log.Record(&log.DNSLog{Server: s.Name(), Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
+		errors.Log(ctx, &log.DNSLog{Server: s.Name(), Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
 	}
 
 	return

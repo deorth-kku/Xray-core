@@ -170,6 +170,16 @@ func LogErrorInner(ctx context.Context, inner error, msg ...interface{}) {
 	doLog(ctx, inner, log.Severity_Error, msg...)
 }
 
+func loggerFromContext(ctx context.Context) log.Handler
+
+func Log(ctx context.Context, msg log.Message) {
+	if logger := loggerFromContext(ctx); logger != nil {
+		logger.Handle(msg)
+		return
+	}
+	log.Record(msg)
+}
+
 func doLog(ctx context.Context, inner error, severity log.Severity, msg ...interface{}) {
 	pc, _, _, _ := runtime.Caller(2)
 	details := runtime.FuncForPC(pc).Name()
@@ -192,7 +202,7 @@ func doLog(ctx context.Context, inner error, severity log.Severity, msg ...inter
 			err.prefix = append(err.prefix, id)
 		}
 	}
-	log.Record(&log.GeneralMessage{
+	Log(ctx, &log.GeneralMessage{
 		Severity: GetSeverity(err),
 		Content:  err,
 	})
