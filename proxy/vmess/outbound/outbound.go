@@ -69,9 +69,17 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 	var rec *protocol.ServerSpec
 	var conn stat.Connection
+	var user *protocol.MemoryUser
+	var sessionPolicy policy.Session
 	err := retry.ExponentialBackoff(5, 200).On(func() error {
 		rec = h.serverPicker.PickServer()
-		rawConn, err := dialer.Dial(ctx, rec.Destination())
+		user = rec.PickUser()
+		sessionPolicy = h.policyManager.ForLevel(user.Level)
+		tryctx, cancel := context.WithCancel(ctx)
+		timer := time.AfterFunc(sessionPolicy.Timeouts.Handshake, cancel)
+		defer timer.Stop()
+
+		rawConn, err := dialer.Dial(tryctx, rec.Destination())
 		if err != nil {
 			return err
 		}
@@ -95,7 +103,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		command = protocol.RequestCommandMux
 	}
 
-	user := rec.PickUser()
 	request := &protocol.RequestHeader{
 		Version: encoding.Version,
 		User:    user,
@@ -141,7 +148,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	}
 
 	session := encoding.NewClientSession(ctx, int64(behaviorSeed))
-	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, func() {

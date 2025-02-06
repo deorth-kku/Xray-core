@@ -123,6 +123,25 @@ func (c *UConn) WebsocketHandshakeContext(ctx context.Context) error {
 	return c.HandshakeContext(ctx)
 }
 
+func (c *UConn) HandshakeContext(ctx context.Context) error {
+	sig := make(chan error, 1)
+	go func() {
+		defer close(sig)
+		sig <- c.UConn.HandshakeContext(ctx)
+	}()
+	select {
+	case <-ctx.Done():
+		err := c.NetConn().SetReadDeadline(time.Now())
+		if err != nil {
+			return err
+		}
+		defer c.NetConn().SetReadDeadline(time.Time{})
+		return ctx.Err()
+	case err := <-sig:
+		return err
+	}
+}
+
 func (c *UConn) NegotiatedProtocol() string {
 	state := c.ConnectionState()
 	return state.NegotiatedProtocol

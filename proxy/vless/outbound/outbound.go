@@ -78,10 +78,18 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 	var rec *protocol.ServerSpec
 	var conn stat.Connection
+	var user *protocol.MemoryUser
+	var sessionPolicy policy.Session
 	if err := retry.ExponentialBackoff(5, 200).On(func() error {
 		rec = h.serverPicker.PickServer()
+		user = rec.PickUser()
+		sessionPolicy = h.policyManager.ForLevel(user.Level)
+		tryctx, cancel := context.WithCancel(ctx)
+		timer := time.AfterFunc(sessionPolicy.Timeouts.Handshake, cancel)
+		defer timer.Stop()
+
 		var err error
-		conn, err = dialer.Dial(ctx, rec.Destination())
+		conn, err = dialer.Dial(tryctx, rec.Destination())
 		if err != nil {
 			return err
 		}
@@ -108,7 +116,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 	request := &protocol.RequestHeader{
 		Version: encoding.Version,
-		User:    rec.PickUser(),
+		User:    user,
 		Command: command,
 		Address: target.Address,
 		Port:    target.Port,
@@ -167,7 +175,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		newCtx, newCancel = context.WithCancel(context.Background())
 	}
 
-	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, func() {
 		cancel()

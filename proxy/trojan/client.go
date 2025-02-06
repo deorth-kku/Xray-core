@@ -61,11 +61,18 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	network := destination.Network
 
 	var server *protocol.ServerSpec
+	var user *protocol.MemoryUser
+	var sessionPolicy policy.Session
 	var conn stat.Connection
 
 	err := retry.ExponentialBackoff(5, 100).On(func() error {
 		server = c.serverPicker.PickServer()
-		rawConn, err := dialer.Dial(ctx, server.Destination())
+		user = server.PickUser()
+		sessionPolicy = c.policyManager.ForLevel(user.Level)
+		tryctx, cancel := context.WithCancel(ctx)
+		timer := time.AfterFunc(sessionPolicy.Timeouts.Handshake, cancel)
+		defer timer.Stop()
+		rawConn, err := dialer.Dial(tryctx, server.Destination())
 		if err != nil {
 			return err
 		}
@@ -80,7 +87,6 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 	defer conn.Close()
 
-	user := server.PickUser()
 	account, ok := user.Account.(*MemoryAccount)
 	if !ok {
 		return errors.New("user account is not valid")
@@ -92,7 +98,6 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		newCtx, newCancel = context.WithCancel(context.Background())
 	}
 
-	sessionPolicy := c.policyManager.ForLevel(user.Level)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, func() {
 		cancel()
