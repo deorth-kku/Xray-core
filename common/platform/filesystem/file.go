@@ -2,43 +2,62 @@ package filesystem
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/platform"
 )
 
-type FileReaderFunc func(path string) (io.ReadCloser, error)
-
-var NewFileReader FileReaderFunc = func(path string) (io.ReadCloser, error) {
-	return os.Open(path)
+type mergeReadCloser struct {
+	io.Reader
+	closers []io.Closer
 }
 
-func ReadFile(path string) ([]byte, error) {
-	var reader io.Reader
-	freader, err := NewFileReader(path)
+func (m mergeReadCloser) Close() error {
+	errs := make([]any, 0, len(m.closers))
+	for _, c := range m.closers {
+		err := c.Close()
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("closers returned errors: %w"+strings.Repeat(",%w", len(errs)-1), errs...)
+}
+
+func NewFileReader(path string) (io.ReadCloser, error) {
+	if filepath.Ext(path) != ".gz" {
+		return os.Open(path)
+	}
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	defer freader.Close()
-	if strings.HasSuffix(path, ".gz") {
-		gzreader, err := gzip.NewReader(freader)
-		if err != nil {
-			return nil, err
-		}
-		defer gzreader.Close()
-		reader = gzreader
-	} else {
-		reader = freader
+	gf, err := gzip.NewReader(f)
+	if err != nil {
+		f.Close()
+		return nil, err
 	}
+	return mergeReadCloser{gf, []io.Closer{gf, f}}, nil
+}
 
+func ReadFile(path string) ([]byte, error) {
+	reader, err := NewFileReader(path)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
 	return buf.ReadAllToBytes(reader)
 }
 
-func ReadAsset(file string) ([]byte, error) {
-	return ReadFile(platform.GetAssetLocation(file))
+func ReadAsset(file string) (io.ReadCloser, error) {
+	return NewFileReader(platform.GetAssetLocation(file))
 }
 
 func CopyFile(dst string, src string) error {

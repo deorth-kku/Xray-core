@@ -2,7 +2,7 @@ package conf
 
 import (
 	"encoding/json"
-	"runtime"
+	"io"
 	"strconv"
 	"strings"
 
@@ -188,71 +188,38 @@ func loadGeoIP(code string) ([]*router.CIDR, error) {
 	return loadIP("geoip.dat", code)
 }
 
-var (
-	FileCache = make(map[string][]byte)
-	IPCache   = make(map[string]*router.GeoIP)
-	SiteCache = make(map[string]*router.GeoSite)
-)
-
-func loadFile(file string) ([]byte, error) {
-	if FileCache[file] == nil {
-		bs, err := filesystem.ReadAsset(file)
-		if err != nil {
-			return nil, errors.New("failed to open file: ", file).Base(err)
-		}
-		if len(bs) == 0 {
-			return nil, errors.New("empty file: ", file)
-		}
-		// Do not cache file, may save RAM when there
-		// are many files, but consume CPU each time.
-		return bs, nil
-		FileCache[file] = bs
-	}
-	return FileCache[file], nil
-}
-
 func loadIP(file, code string) ([]*router.CIDR, error) {
-	index := file + ":" + code
-	if IPCache[index] == nil {
-		bs, err := loadFile(file)
-		if err != nil {
-			return nil, errors.New("failed to load file: ", file).Base(err)
-		}
-		bs = find(bs, []byte(code))
-		if bs == nil {
-			return nil, errors.New("code not found in ", file, ": ", code)
-		}
-		var geoip router.GeoIP
-		if err := proto.Unmarshal(bs, &geoip); err != nil {
-			return nil, errors.New("error unmarshal IP in ", file, ": ", code).Base(err)
-		}
-		defer runtime.GC()     // or debug.FreeOSMemory()
-		return geoip.Cidr, nil // do not cache geoip
-		IPCache[index] = &geoip
+	f, err := filesystem.ReadAsset(file)
+	if err != nil {
+		return nil, errors.New("failed to load file: ", file).Base(err)
 	}
-	return IPCache[index].Cidr, nil
+	defer f.Close()
+	data := find(f, []byte(code))
+	if data == nil {
+		return nil, errors.New("code not found in ", file, ": ", code)
+	}
+	var geoip router.GeoIP
+	if err := proto.Unmarshal(data, &geoip); err != nil {
+		return nil, errors.New("error unmarshal IP in ", file, ": ", code).Base(err)
+	}
+	return geoip.Cidr, nil // do not cache geoip
 }
 
 func loadSite(file, code string) ([]*router.Domain, error) {
-	index := file + ":" + code
-	if SiteCache[index] == nil {
-		bs, err := loadFile(file)
-		if err != nil {
-			return nil, errors.New("failed to load file: ", file).Base(err)
-		}
-		bs = find(bs, []byte(code))
-		if bs == nil {
-			return nil, errors.New("list not found in ", file, ": ", code)
-		}
-		var geosite router.GeoSite
-		if err := proto.Unmarshal(bs, &geosite); err != nil {
-			return nil, errors.New("error unmarshal Site in ", file, ": ", code).Base(err)
-		}
-		defer runtime.GC()         // or debug.FreeOSMemory()
-		return geosite.Domain, nil // do not cache geosite
-		SiteCache[index] = &geosite
+	f, err := filesystem.ReadAsset(file)
+	if err != nil {
+		return nil, errors.New("failed to load file: ", file).Base(err)
 	}
-	return SiteCache[index].Domain, nil
+	defer f.Close()
+	data := find(f, []byte(code))
+	if f == nil {
+		return nil, errors.New("list not found in ", file, ": ", code)
+	}
+	var geosite router.GeoSite
+	if err := proto.Unmarshal(data, &geosite); err != nil {
+		return nil, errors.New("error unmarshal Site in ", file, ": ", code).Base(err)
+	}
+	return geosite.Domain, nil // do not cache geosite
 }
 
 func DecodeVarint(buf []byte) (x uint64, n int) {
@@ -272,37 +239,43 @@ func DecodeVarint(buf []byte) (x uint64, n int) {
 	return 0, 0
 }
 
-func find(data, code []byte) []byte {
+func readappend(data []byte, rd io.Reader, n int) ([]byte, int, error) {
+	oldl := len(data)
+	data = append(data, make([]byte, n)...)
+	readl, err := io.ReadFull(rd, data[oldl:])
+	return data, readl, err
+}
+
+func find(rd io.Reader, code []byte) []byte {
 	codeL := len(code)
 	if codeL == 0 {
 		return nil
 	}
+	var err error
+	var buf []byte
 	for {
-		dataL := len(data)
-		if dataL < 2 {
+		const peek = 9
+		buf, _, err = readappend(buf[:0], rd, peek)
+		if err != nil {
 			return nil
 		}
-		x, y := DecodeVarint(data[1:])
+		x, y := DecodeVarint(buf[1:])
 		if x == 0 && y == 0 {
 			return nil
 		}
 		headL, bodyL := 1+y, int(x)
-		dataL -= headL
-		if dataL < bodyL {
+		buf, _, err = readappend(buf, rd, bodyL+headL-peek)
+		if err != nil {
 			return nil
 		}
-		data = data[headL:]
-		if int(data[1]) == codeL {
-			for i := 0; i < codeL && data[2+i] == code[i]; i++ {
+		buf = buf[headL:]
+		if int(buf[1]) == codeL {
+			for i := 0; i < codeL && buf[2+i] == code[i]; i++ {
 				if i+1 == codeL {
-					return data[:bodyL]
+					return buf
 				}
 			}
 		}
-		if dataL == bodyL {
-			return nil
-		}
-		data = data[bodyL:]
 	}
 }
 
