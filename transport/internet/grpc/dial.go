@@ -85,8 +85,13 @@ func getGrpcClient(ctx context.Context, dest net.Destination, streamSettings *in
 	sockopt := streamSettings.SocketSettings
 	grpcSettings := streamSettings.ProtocolSettings.(*Config)
 
-	if client, found := globalDialerMap[dialerConf{dest, streamSettings}]; found && client.GetState() != connectivity.Shutdown {
-		return client, nil
+	if client, found := globalDialerMap[dialerConf{dest, streamSettings}]; found {
+		if client.GetState() != connectivity.Shutdown {
+			client.Close()
+			delete(globalDialerMap, dialerConf{dest, streamSettings})
+		} else {
+			return client, nil
+		}
 	}
 
 	dialOptions := []grpc.DialOption{
@@ -191,7 +196,7 @@ func GrpcCloseConn(streamSettings *internet.MemoryStreamConfig) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 	for k, v := range globalDialerMap {
-		if k.MemoryStreamConfig == streamSettings {
+		if k.MemoryStreamConfig == streamSettings || v.GetState() == connectivity.Shutdown {
 			v.Close()
 			delete(globalDialerMap, k)
 		}
