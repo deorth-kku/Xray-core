@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/xtls/xray-core/common"
+	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/features"
 	"github.com/xtls/xray-core/transport"
 )
@@ -43,3 +44,6 @@ type Manager interface {
 func ManagerType() interface{} {
 	return (*Manager)(nil)
 }
+
+// [Manager.AddHandler] should return an error based on ErrTagExist when given tag existed.
+var ErrTagExist = errors.New("existing tag found")
