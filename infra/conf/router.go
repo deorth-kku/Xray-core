@@ -205,7 +205,7 @@ func loadIP(file, code string) ([]*router.CIDR, error) {
 	return geoip.Cidr, nil // do not cache geoip
 }
 
-func loadSite(file, code string) ([]*router.Domain, error) {
+func LoadSite(file, code string) ([]*router.Domain, error) {
 	f, err := filesystem.ReadAsset(file)
 	if err != nil {
 		return nil, errors.New("failed to load file: ", file).Base(err)
@@ -327,7 +327,7 @@ func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, er
 	}
 	country := strings.ToUpper(parts[0])
 	attrs := parseAttrs(parts[1:])
-	domains, err := loadSite(file, country)
+	domains, err := LoadSite(file, country)
 	if err != nil {
 		return nil, err
 	}
