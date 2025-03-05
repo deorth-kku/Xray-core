@@ -2,7 +2,9 @@ package conf
 
 import (
 	"encoding/json"
+	goerrors "errors"
 	"io"
+	"iter"
 	"strconv"
 	"strings"
 
@@ -194,9 +196,9 @@ func loadIP(file, code string) ([]*router.CIDR, error) {
 		return nil, errors.New("failed to load file: ", file).Base(err)
 	}
 	defer f.Close()
-	data := find(f, []byte(code))
-	if data == nil {
-		return nil, errors.New("code not found in ", file, ": ", code)
+	data, err := find(f, code)
+	if err != nil {
+		return nil, errors.New("error when reading file: ", file).Base(err)
 	}
 	var geoip router.GeoIP
 	if err := proto.Unmarshal(data, &geoip); err != nil {
@@ -211,7 +213,10 @@ func LoadSite(file, code string) ([]*router.Domain, error) {
 		return nil, errors.New("failed to load file: ", file).Base(err)
 	}
 	defer f.Close()
-	data := find(f, []byte(code))
+	data, err := find(f, code)
+	if err != nil {
+		return nil, errors.New("error when reading file: ", file).Base(err)
+	}
 	if f == nil {
 		return nil, errors.New("list not found in ", file, ": ", code)
 	}
@@ -246,37 +251,52 @@ func readappend(data []byte, rd io.Reader, n int) ([]byte, int, error) {
 	return data, readl, err
 }
 
-func find(rd io.Reader, code []byte) []byte {
-	codeL := len(code)
-	if codeL == 0 {
-		return nil
-	}
+func RangeDat(rd io.Reader) (iter.Seq2[string, []byte], func() error) {
 	var err error
-	var buf []byte
-	for {
-		const peek = 9
-		buf, _, err = readappend(buf[:0], rd, peek)
-		if err != nil {
-			return nil
-		}
-		x, y := DecodeVarint(buf[1:])
-		if x == 0 && y == 0 {
-			return nil
-		}
-		headL, bodyL := 1+y, int(x)
-		buf, _, err = readappend(buf, rd, bodyL+headL-peek)
-		if err != nil {
-			return nil
-		}
-		buf = buf[headL:]
-		if int(buf[1]) == codeL {
-			for i := 0; i < codeL && buf[2+i] == code[i]; i++ {
-				if i+1 == codeL {
-					return buf
+	return func(yield func(string, []byte) bool) {
+			var buf []byte
+			for {
+				const peek = 9
+				buf, _, err = readappend(buf[:0], rd, peek)
+				if err != nil {
+					return
+				}
+				x, y := DecodeVarint(buf[1:])
+				if x == 0 && y == 0 {
+					return
+				}
+				headL, bodyL := 1+y, int(x)
+				buf, _, err = readappend(buf, rd, bodyL+headL-peek)
+				if err != nil {
+					return
+				}
+				buf = buf[headL:]
+				if buf[0] != '\n' {
+					err = errors.New("corrupted file")
+				}
+				if !yield(string(buf[2:2+buf[1]]), buf[2+buf[1]:]) {
+					return
 				}
 			}
+		}, func() error {
+			if goerrors.Is(err, io.EOF) {
+				return nil
+			}
+			return err
+		}
+}
+
+func find(rd io.Reader, code string) ([]byte, error) {
+	if len(code) == 0 {
+		return nil, nil
+	}
+	it, errf := RangeDat(rd)
+	for k, data := range it {
+		if k == code {
+			return data, errf()
 		}
 	}
+	return nil, errf()
 }
 
 type AttributeMatcher interface {
