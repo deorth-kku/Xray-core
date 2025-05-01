@@ -45,13 +45,11 @@ func (c *Config) GetNormalizedQuery() string {
 	return query
 }
 
-func (c *Config) GetRequestHeader(rawURL string) http.Header {
+func (c *Config) GetRequestHeader(u url.URL) http.Header {
 	header := http.Header{}
 	for k, v := range c.Headers {
 		header.Add(k, v)
 	}
-
-	u, _ := url.Parse(rawURL)
 	// https://www.rfc-editor.org/rfc/rfc7541.html#appendix-B
 	// h2's HPACK Header Compression feature employs a huffman encoding using a static table.
 	// 'X' is assigned an 8 bit code, so HPACK compression won't change actual padding length on the wire.

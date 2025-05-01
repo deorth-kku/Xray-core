@@ -373,7 +373,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		if xmuxClient != nil {
 			xmuxClient.LeftRequests.Add(-1)
 		}
-		conn.reader, conn.remoteAddr, conn.localAddr, err = httpClient.OpenStream(ctx, requestURL.String(), reader, false)
+		conn.reader, conn.remoteAddr, conn.localAddr, err = httpClient.OpenStream(ctx, requestURL, reader, false)
 		if err != nil { // browser dialer only
 			return nil, err
 		}
@@ -382,7 +382,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		if xmuxClient2 != nil {
 			xmuxClient2.LeftRequests.Add(-1)
 		}
-		conn.reader, conn.remoteAddr, conn.localAddr, err = httpClient2.OpenStream(ctx, requestURL2.String(), nil, false)
+		conn.reader, conn.remoteAddr, conn.localAddr, err = httpClient2.OpenStream(ctx, requestURL2, nil, false)
 		if err != nil { // browser dialer only
 			return nil, err
 		}
@@ -391,7 +391,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		if xmuxClient != nil {
 			xmuxClient.LeftRequests.Add(-1)
 		}
-		_, _, _, err = httpClient.OpenStream(ctx, requestURL.String(), reader, true)
+		_, _, _, err = httpClient.OpenStream(ctx, requestURL, reader, true)
 		if err != nil { // browser dialer only
 			return nil, err
 		}
@@ -459,7 +459,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 			go func() {
 				err := httpClient.PostPacket(
 					ctx,
-					url.String(),
+					url,
 					&buf.MultiBufferContainer{MultiBuffer: chunk},
 					int64(chunk.Len()),
 				)
