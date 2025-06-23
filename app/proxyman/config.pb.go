@@ -116,13 +116,13 @@ type AllocationStrategy struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type AllocationStrategy_Type `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.proxyman.AllocationStrategy_Type" json:"type,omitempty"`
+	Type AllocationStrategy_Type `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.proxyman.AllocationStrategy_Type" json:"type,omitzero"`
 	// Number of handlers (ports) running in parallel.
 	// Default value is 3 if unset.
-	Concurrency *AllocationStrategy_AllocationStrategyConcurrency `protobuf:"bytes,2,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	Concurrency *AllocationStrategy_AllocationStrategyConcurrency `protobuf:"bytes,2,opt,name=concurrency,proto3" json:"concurrency,omitzero"`
 	// Number of minutes before a handler is regenerated.
 	// Default value is 5 if unset.
-	Refresh *AllocationStrategy_AllocationStrategyRefresh `protobuf:"bytes,3,opt,name=refresh,proto3" json:"refresh,omitempty"`
+	Refresh *AllocationStrategy_AllocationStrategyRefresh `protobuf:"bytes,3,opt,name=refresh,proto3" json:"refresh,omitzero"`
 }
 
 func (x *AllocationStrategy) Reset() {
@@ -182,16 +182,16 @@ type SniffingConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Whether or not to enable content sniffing on an inbound connection.
-	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitzero"`
 	// Override target destination if sniff'ed protocol is in the given list.
 	// Supported values are "http", "tls", "fakedns".
-	DestinationOverride []string `protobuf:"bytes,2,rep,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitempty"`
-	DomainsExcluded     []string `protobuf:"bytes,3,rep,name=domains_excluded,json=domainsExcluded,proto3" json:"domains_excluded,omitempty"`
+	DestinationOverride []string `protobuf:"bytes,2,rep,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitzero"`
+	DomainsExcluded     []string `protobuf:"bytes,3,rep,name=domains_excluded,json=domainsExcluded,proto3" json:"domains_excluded,omitzero"`
 	// Whether should only try to sniff metadata without waiting for client input.
 	// Can be used to support SMTP like protocol where server send the first
 	// message.
-	MetadataOnly bool `protobuf:"varint,4,opt,name=metadata_only,json=metadataOnly,proto3" json:"metadata_only,omitempty"`
-	RouteOnly    bool `protobuf:"varint,5,opt,name=route_only,json=routeOnly,proto3" json:"route_only,omitempty"`
+	MetadataOnly bool `protobuf:"varint,4,opt,name=metadata_only,json=metadataOnly,proto3" json:"metadata_only,omitzero"`
+	RouteOnly    bool `protobuf:"varint,5,opt,name=route_only,json=routeOnly,proto3" json:"route_only,omitzero"`
 }
 
 func (x *SniffingConfig) Reset() {
@@ -265,13 +265,13 @@ type ReceiverConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// PortList specifies the ports which the Receiver should listen on.
-	PortList *net.PortList `protobuf:"bytes,1,opt,name=port_list,json=portList,proto3" json:"port_list,omitempty"`
+	PortList *net.PortList `protobuf:"bytes,1,opt,name=port_list,json=portList,proto3" json:"port_list,omitzero"`
 	// Listen specifies the IP address that the Receiver should listen on.
-	Listen                     *net.IPOrDomain        `protobuf:"bytes,2,opt,name=listen,proto3" json:"listen,omitempty"`
-	AllocationStrategy         *AllocationStrategy    `protobuf:"bytes,3,opt,name=allocation_strategy,json=allocationStrategy,proto3" json:"allocation_strategy,omitempty"`
-	StreamSettings             *internet.StreamConfig `protobuf:"bytes,4,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitempty"`
-	ReceiveOriginalDestination bool                   `protobuf:"varint,5,opt,name=receive_original_destination,json=receiveOriginalDestination,proto3" json:"receive_original_destination,omitempty"`
-	SniffingSettings           *SniffingConfig        `protobuf:"bytes,7,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
+	Listen                     *net.IPOrDomain        `protobuf:"bytes,2,opt,name=listen,proto3" json:"listen,omitzero"`
+	AllocationStrategy         *AllocationStrategy    `protobuf:"bytes,3,opt,name=allocation_strategy,json=allocationStrategy,proto3" json:"allocation_strategy,omitzero"`
+	StreamSettings             *internet.StreamConfig `protobuf:"bytes,4,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitzero"`
+	ReceiveOriginalDestination bool                   `protobuf:"varint,5,opt,name=receive_original_destination,json=receiveOriginalDestination,proto3" json:"receive_original_destination,omitzero"`
+	SniffingSettings           *SniffingConfig        `protobuf:"bytes,7,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitzero"`
 }
 
 func (x *ReceiverConfig) Reset() {
@@ -351,9 +351,9 @@ type InboundHandlerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag              string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	ReceiverSettings *serial.TypedMessage `protobuf:"bytes,2,opt,name=receiver_settings,json=receiverSettings,proto3" json:"receiver_settings,omitempty"`
-	ProxySettings    *serial.TypedMessage `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
+	Tag              string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	ReceiverSettings *serial.TypedMessage `protobuf:"bytes,2,opt,name=receiver_settings,json=receiverSettings,proto3" json:"receiver_settings,omitzero"`
+	ProxySettings    *serial.TypedMessage `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitzero"`
 }
 
 func (x *InboundHandlerConfig) Reset() {
@@ -449,11 +449,11 @@ type SenderConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Send traffic through the given IP. Only IP is allowed.
-	Via               *net.IPOrDomain        `protobuf:"bytes,1,opt,name=via,proto3" json:"via,omitempty"`
-	StreamSettings    *internet.StreamConfig `protobuf:"bytes,2,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitempty"`
-	ProxySettings     *internet.ProxyConfig  `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
-	MultiplexSettings *MultiplexingConfig    `protobuf:"bytes,4,opt,name=multiplex_settings,json=multiplexSettings,proto3" json:"multiplex_settings,omitempty"`
-	ViaCidr           string                 `protobuf:"bytes,5,opt,name=via_cidr,json=viaCidr,proto3" json:"via_cidr,omitempty"`
+	Via               *net.IPOrDomain        `protobuf:"bytes,1,opt,name=via,proto3" json:"via,omitzero"`
+	StreamSettings    *internet.StreamConfig `protobuf:"bytes,2,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitzero"`
+	ProxySettings     *internet.ProxyConfig  `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitzero"`
+	MultiplexSettings *MultiplexingConfig    `protobuf:"bytes,4,opt,name=multiplex_settings,json=multiplexSettings,proto3" json:"multiplex_settings,omitzero"`
+	ViaCidr           string                 `protobuf:"bytes,5,opt,name=via_cidr,json=viaCidr,proto3" json:"via_cidr,omitzero"`
 }
 
 func (x *SenderConfig) Reset() {
@@ -527,13 +527,13 @@ type MultiplexingConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Whether or not Mux is enabled.
-	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitzero"`
 	// Max number of concurrent connections that one Mux connection can handle.
-	Concurrency int32 `protobuf:"varint,2,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	Concurrency int32 `protobuf:"varint,2,opt,name=concurrency,proto3" json:"concurrency,omitzero"`
 	// Transport XUDP in another Mux.
-	XudpConcurrency int32 `protobuf:"varint,3,opt,name=xudpConcurrency,proto3" json:"xudpConcurrency,omitempty"`
+	XudpConcurrency int32 `protobuf:"varint,3,opt,name=xudpConcurrency,proto3" json:"xudpConcurrency,omitzero"`
 	// "reject" (default), "allow" or "skip".
-	XudpProxyUDP443 string `protobuf:"bytes,4,opt,name=xudpProxyUDP443,proto3" json:"xudpProxyUDP443,omitempty"`
+	XudpProxyUDP443 string `protobuf:"bytes,4,opt,name=xudpProxyUDP443,proto3" json:"xudpProxyUDP443,omitzero"`
 }
 
 func (x *MultiplexingConfig) Reset() {
@@ -599,7 +599,7 @@ type AllocationStrategy_AllocationStrategyConcurrency struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *AllocationStrategy_AllocationStrategyConcurrency) Reset() {
@@ -644,7 +644,7 @@ type AllocationStrategy_AllocationStrategyRefresh struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *AllocationStrategy_AllocationStrategyRefresh) Reset() {

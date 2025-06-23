@@ -27,7 +27,7 @@ type Config struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Tag of the outbound handler that handles metrics http connections.
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 }
 
 func (x *Config) Reset() {

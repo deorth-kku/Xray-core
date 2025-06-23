@@ -83,7 +83,7 @@ type SecurityConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type SecurityType `protobuf:"varint,1,opt,name=type,proto3,enum=xray.common.protocol.SecurityType" json:"type,omitempty"`
+	Type SecurityType `protobuf:"varint,1,opt,name=type,proto3,enum=xray.common.protocol.SecurityType" json:"type,omitzero"`
 }
 
 func (x *SecurityConfig) Reset() {

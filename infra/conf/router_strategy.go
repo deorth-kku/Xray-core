@@ -33,15 +33,15 @@ func (v *strategyEmptyConfig) Build() (proto.Message, error) {
 
 type strategyLeastLoadConfig struct {
 	// weight settings
-	Costs []*router.StrategyWeight `json:"costs,omitempty"`
+	Costs []*router.StrategyWeight `json:"costs,omitzero"`
 	// ping rtt baselines
-	Baselines []duration.Duration `json:"baselines,omitempty"`
+	Baselines []duration.Duration `json:"baselines,omitzero"`
 	// expected nodes count to select
-	Expected int32 `json:"expected,omitempty"`
+	Expected int32 `json:"expected,omitzero"`
 	// max acceptable rtt, filter away high delay nodes. default 0
-	MaxRTT duration.Duration `json:"maxRTT,omitempty"`
+	MaxRTT duration.Duration `json:"maxRTT,omitzero"`
 	// acceptable failure rate
-	Tolerance float64 `json:"tolerance,omitempty"`
+	Tolerance float64 `json:"tolerance,omitzero"`
 }
 
 // healthCheckSettings holds settings for health Checker

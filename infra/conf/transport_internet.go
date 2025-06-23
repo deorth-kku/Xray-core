@@ -44,15 +44,15 @@ var (
 )
 
 type KCPConfig struct {
-	Mtu             *uint32         `json:"mtu,omitempty"`
-	Tti             *uint32         `json:"tti,omitempty"`
-	UpCap           *uint32         `json:"uplinkCapacity,omitempty"`
-	DownCap         *uint32         `json:"downlinkCapacity,omitempty"`
-	Congestion      *bool           `json:"congestion,omitempty"`
-	ReadBufferSize  *uint32         `json:"readBufferSize,omitempty"`
-	WriteBufferSize *uint32         `json:"writeBufferSize,omitempty"`
-	HeaderConfig    json.RawMessage `json:"header,omitempty"`
-	Seed            *string         `json:"seed,omitempty"`
+	Mtu             *uint32         `json:"mtu,omitzero"`
+	Tti             *uint32         `json:"tti,omitzero"`
+	UpCap           *uint32         `json:"uplinkCapacity,omitzero"`
+	DownCap         *uint32         `json:"downlinkCapacity,omitzero"`
+	Congestion      *bool           `json:"congestion,omitzero"`
+	ReadBufferSize  *uint32         `json:"readBufferSize,omitzero"`
+	WriteBufferSize *uint32         `json:"writeBufferSize,omitzero"`
+	HeaderConfig    json.RawMessage `json:"header,omitzero"`
+	Seed            *string         `json:"seed,omitzero"`
 }
 
 // Build implements Buildable.
@@ -118,8 +118,8 @@ func (c *KCPConfig) Build() (proto.Message, error) {
 }
 
 type TCPConfig struct {
-	HeaderConfig        json.RawMessage `json:"header,omitempty"`
-	AcceptProxyProtocol bool            `json:"acceptProxyProtocol,omitempty"`
+	HeaderConfig        json.RawMessage `json:"header,omitzero"`
+	AcceptProxyProtocol bool            `json:"acceptProxyProtocol,omitzero"`
 }
 
 // Build implements Buildable.
@@ -143,11 +143,11 @@ func (c *TCPConfig) Build() (proto.Message, error) {
 }
 
 type WebSocketConfig struct {
-	Host                string            `json:"host,omitempty"`
-	Path                string            `json:"path,omitempty"`
-	Headers             map[string]string `json:"headers,omitempty"`
-	AcceptProxyProtocol bool              `json:"acceptProxyProtocol,omitempty"`
-	HeartbeatPeriod     uint32            `json:"heartbeatPeriod,omitempty"`
+	Host                string            `json:"host,omitzero"`
+	Path                string            `json:"path,omitzero"`
+	Headers             map[string]string `json:"headers,omitzero"`
+	AcceptProxyProtocol bool              `json:"acceptProxyProtocol,omitzero"`
+	HeartbeatPeriod     uint32            `json:"heartbeatPeriod,omitzero"`
 }
 
 // Build implements Buildable.
@@ -184,10 +184,10 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 }
 
 type HttpUpgradeConfig struct {
-	Host                string            `json:"host,omitempty"`
-	Path                string            `json:"path,omitempty"`
-	Headers             map[string]string `json:"headers,omitempty"`
-	AcceptProxyProtocol bool              `json:"acceptProxyProtocol,omitempty"`
+	Host                string            `json:"host,omitzero"`
+	Path                string            `json:"path,omitzero"`
+	Headers             map[string]string `json:"headers,omitzero"`
+	AcceptProxyProtocol bool              `json:"acceptProxyProtocol,omitzero"`
 }
 
 // Build implements Buildable.
@@ -220,29 +220,29 @@ func (c *HttpUpgradeConfig) Build() (proto.Message, error) {
 }
 
 type SplitHTTPConfig struct {
-	Host                 string            `json:"host,omitempty"`
-	Path                 string            `json:"path,omitempty"`
-	Mode                 string            `json:"mode,omitempty"`
-	Headers              map[string]string `json:"headers,omitempty"`
-	XPaddingBytes        Int32Range        `json:"xPaddingBytes,omitempty"`
-	NoGRPCHeader         bool              `json:"noGRPCHeader,omitempty"`
-	NoSSEHeader          bool              `json:"noSSEHeader,omitempty"`
-	ScMaxEachPostBytes   Int32Range        `json:"scMaxEachPostBytes,omitempty"`
-	ScMinPostsIntervalMs Int32Range        `json:"scMinPostsIntervalMs,omitempty"`
-	ScMaxBufferedPosts   int64             `json:"scMaxBufferedPosts,omitempty"`
-	ScStreamUpServerSecs Int32Range        `json:"scStreamUpServerSecs,omitempty"`
-	Xmux                 XmuxConfig        `json:"xmux,omitempty"`
-	DownloadSettings     *StreamConfig     `json:"downloadSettings,omitempty"`
-	Extra                json.RawMessage   `json:"extra,omitempty"`
+	Host                 string            `json:"host,omitzero"`
+	Path                 string            `json:"path,omitzero"`
+	Mode                 string            `json:"mode,omitzero"`
+	Headers              map[string]string `json:"headers,omitzero"`
+	XPaddingBytes        Int32Range        `json:"xPaddingBytes,omitzero"`
+	NoGRPCHeader         bool              `json:"noGRPCHeader,omitzero"`
+	NoSSEHeader          bool              `json:"noSSEHeader,omitzero"`
+	ScMaxEachPostBytes   Int32Range        `json:"scMaxEachPostBytes,omitzero"`
+	ScMinPostsIntervalMs Int32Range        `json:"scMinPostsIntervalMs,omitzero"`
+	ScMaxBufferedPosts   int64             `json:"scMaxBufferedPosts,omitzero"`
+	ScStreamUpServerSecs Int32Range        `json:"scStreamUpServerSecs,omitzero"`
+	Xmux                 XmuxConfig        `json:"xmux,omitzero"`
+	DownloadSettings     *StreamConfig     `json:"downloadSettings,omitzero"`
+	Extra                json.RawMessage   `json:"extra,omitzero"`
 }
 
 type XmuxConfig struct {
-	MaxConcurrency   Int32Range `json:"maxConcurrency,omitempty"`
-	MaxConnections   Int32Range `json:"maxConnections,omitempty"`
-	CMaxReuseTimes   Int32Range `json:"cMaxReuseTimes,omitempty"`
-	HMaxRequestTimes Int32Range `json:"hMaxRequestTimes,omitempty"`
-	HMaxReusableSecs Int32Range `json:"hMaxReusableSecs,omitempty"`
-	HKeepAlivePeriod int64      `json:"hKeepAlivePeriod,omitempty"`
+	MaxConcurrency   Int32Range `json:"maxConcurrency,omitzero"`
+	MaxConnections   Int32Range `json:"maxConnections,omitzero"`
+	CMaxReuseTimes   Int32Range `json:"cMaxReuseTimes,omitzero"`
+	HMaxRequestTimes Int32Range `json:"hMaxRequestTimes,omitzero"`
+	HMaxReusableSecs Int32Range `json:"hMaxReusableSecs,omitzero"`
+	HKeepAlivePeriod int64      `json:"hKeepAlivePeriod,omitzero"`
 }
 
 func newRangeConfig(input Int32Range) *splithttp.RangeConfig {
@@ -342,14 +342,14 @@ func readFileOrString(f string, s []string) ([]byte, error) {
 }
 
 type TLSCertConfig struct {
-	CertFile       string   `json:"certificateFile,omitempty"`
-	CertStr        []string `json:"certificate,omitempty"`
-	KeyFile        string   `json:"keyFile,omitempty"`
-	KeyStr         []string `json:"key,omitempty"`
-	Usage          string   `json:"usage,omitempty"`
-	OcspStapling   uint64   `json:"ocspStapling,omitempty"`
-	OneTimeLoading bool     `json:"oneTimeLoading,omitempty"`
-	BuildChain     bool     `json:"buildChain,omitempty"`
+	CertFile       string   `json:"certificateFile,omitzero"`
+	CertStr        []string `json:"certificate,omitzero"`
+	KeyFile        string   `json:"keyFile,omitzero"`
+	KeyStr         []string `json:"key,omitzero"`
+	Usage          string   `json:"usage,omitzero"`
+	OcspStapling   uint64   `json:"ocspStapling,omitzero"`
+	OneTimeLoading bool     `json:"oneTimeLoading,omitzero"`
+	BuildChain     bool     `json:"buildChain,omitzero"`
 }
 
 // Build implements Buildable.
@@ -394,22 +394,22 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                             bool             `json:"allowInsecure,omitempty"`
-	Certs                                []*TLSCertConfig `json:"certificates,omitempty"`
-	ServerName                           string           `json:"serverName,omitempty"`
-	ALPN                                 *StringList      `json:"alpn,omitempty"`
-	EnableSessionResumption              bool             `json:"enableSessionResumption,omitempty"`
-	DisableSystemRoot                    bool             `json:"disableSystemRoot,omitempty"`
-	MinVersion                           string           `json:"minVersion,omitempty"`
-	MaxVersion                           string           `json:"maxVersion,omitempty"`
-	CipherSuites                         string           `json:"cipherSuites,omitempty"`
-	Fingerprint                          string           `json:"fingerprint,omitempty"`
-	RejectUnknownSNI                     bool             `json:"rejectUnknownSni,omitempty"`
-	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256,omitempty"`
-	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256,omitempty"`
-	CurvePreferences                     *StringList      `json:"curvePreferences,omitempty"`
-	MasterKeyLog                         string           `json:"masterKeyLog,omitempty"`
-	ServerNameToVerify                   string           `json:"serverNameToVerify,omitempty"`
+	Insecure                             bool             `json:"allowInsecure,omitzero"`
+	Certs                                []*TLSCertConfig `json:"certificates,omitzero"`
+	ServerName                           string           `json:"serverName,omitzero"`
+	ALPN                                 *StringList      `json:"alpn,omitzero"`
+	EnableSessionResumption              bool             `json:"enableSessionResumption,omitzero"`
+	DisableSystemRoot                    bool             `json:"disableSystemRoot,omitzero"`
+	MinVersion                           string           `json:"minVersion,omitzero"`
+	MaxVersion                           string           `json:"maxVersion,omitzero"`
+	CipherSuites                         string           `json:"cipherSuites,omitzero"`
+	Fingerprint                          string           `json:"fingerprint,omitzero"`
+	RejectUnknownSNI                     bool             `json:"rejectUnknownSni,omitzero"`
+	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256,omitzero"`
+	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256,omitzero"`
+	CurvePreferences                     *StringList      `json:"curvePreferences,omitzero"`
+	MasterKeyLog                         string           `json:"masterKeyLog,omitzero"`
+	ServerNameToVerify                   string           `json:"serverNameToVerify,omitzero"`
 }
 
 // Build implements Buildable.
@@ -477,24 +477,24 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 }
 
 type REALITYConfig struct {
-	MasterKeyLog string          `json:"masterKeyLog,omitempty"`
-	Show         bool            `json:"show,omitempty"`
-	Target       json.RawMessage `json:"target,omitempty"`
-	Dest         json.RawMessage `json:"dest,omitempty"`
-	Type         string          `json:"type,omitempty"`
-	Xver         uint64          `json:"xver,omitempty"`
-	ServerNames  []string        `json:"serverNames,omitempty"`
-	PrivateKey   string          `json:"privateKey,omitempty"`
-	MinClientVer string          `json:"minClientVer,omitempty"`
-	MaxClientVer string          `json:"maxClientVer,omitempty"`
-	MaxTimeDiff  uint64          `json:"maxTimeDiff,omitempty"`
-	ShortIds     []string        `json:"shortIds,omitempty"`
+	MasterKeyLog string          `json:"masterKeyLog,omitzero"`
+	Show         bool            `json:"show,omitzero"`
+	Target       json.RawMessage `json:"target,omitzero"`
+	Dest         json.RawMessage `json:"dest,omitzero"`
+	Type         string          `json:"type,omitzero"`
+	Xver         uint64          `json:"xver,omitzero"`
+	ServerNames  []string        `json:"serverNames,omitzero"`
+	PrivateKey   string          `json:"privateKey,omitzero"`
+	MinClientVer string          `json:"minClientVer,omitzero"`
+	MaxClientVer string          `json:"maxClientVer,omitzero"`
+	MaxTimeDiff  uint64          `json:"maxTimeDiff,omitzero"`
+	ShortIds     []string        `json:"shortIds,omitzero"`
 
-	Fingerprint string `json:"fingerprint,omitempty"`
-	ServerName  string `json:"serverName,omitempty"`
-	PublicKey   string `json:"publicKey,omitempty"`
-	ShortId     string `json:"shortId,omitempty"`
-	SpiderX     string `json:"spiderX,omitempty"`
+	Fingerprint string `json:"fingerprint,omitzero"`
+	ServerName  string `json:"serverName,omitzero"`
+	PublicKey   string `json:"publicKey,omitzero"`
+	ShortId     string `json:"shortId,omitzero"`
+	SpiderX     string `json:"spiderX,omitzero"`
 }
 
 func (c *REALITYConfig) Build() (proto.Message, error) {
@@ -674,30 +674,30 @@ func (p TransportProtocol) Build() (string, error) {
 }
 
 type CustomSockoptConfig struct {
-	Level string `json:"level,omitempty"`
-	Opt   string `json:"opt,omitempty"`
-	Value string `json:"value,omitempty"`
-	Type  string `json:"type,omitempty"`
+	Level string `json:"level,omitzero"`
+	Opt   string `json:"opt,omitzero"`
+	Value string `json:"value,omitzero"`
+	Type  string `json:"type,omitzero"`
 }
 
 type SocketConfig struct {
-	Mark                 int32                  `json:"mark,omitempty"`
-	TFO                  interface{}            `json:"tcpFastOpen,omitempty"`
-	TProxy               string                 `json:"tproxy,omitempty"`
-	AcceptProxyProtocol  bool                   `json:"acceptProxyProtocol,omitempty"`
-	DomainStrategy       string                 `json:"domainStrategy,omitempty"`
-	DialerProxy          string                 `json:"dialerProxy,omitempty"`
-	TCPKeepAliveInterval int32                  `json:"tcpKeepAliveInterval,omitempty"`
-	TCPKeepAliveIdle     int32                  `json:"tcpKeepAliveIdle,omitempty"`
-	TCPCongestion        string                 `json:"tcpCongestion,omitempty"`
-	TCPWindowClamp       int32                  `json:"tcpWindowClamp,omitempty"`
-	TCPMaxSeg            int32                  `json:"tcpMaxSeg,omitempty"`
-	Penetrate            bool                   `json:"penetrate,omitempty"`
-	TCPUserTimeout       int32                  `json:"tcpUserTimeout,omitempty"`
-	V6only               bool                   `json:"v6only,omitempty"`
-	Interface            string                 `json:"interface,omitempty"`
-	TcpMptcp             bool                   `json:"tcpMptcp,omitempty"`
-	CustomSockopt        []*CustomSockoptConfig `json:"customSockopt,omitempty"`
+	Mark                 int32                  `json:"mark,omitzero"`
+	TFO                  interface{}            `json:"tcpFastOpen,omitzero"`
+	TProxy               string                 `json:"tproxy,omitzero"`
+	AcceptProxyProtocol  bool                   `json:"acceptProxyProtocol,omitzero"`
+	DomainStrategy       string                 `json:"domainStrategy,omitzero"`
+	DialerProxy          string                 `json:"dialerProxy,omitzero"`
+	TCPKeepAliveInterval int32                  `json:"tcpKeepAliveInterval,omitzero"`
+	TCPKeepAliveIdle     int32                  `json:"tcpKeepAliveIdle,omitzero"`
+	TCPCongestion        string                 `json:"tcpCongestion,omitzero"`
+	TCPWindowClamp       int32                  `json:"tcpWindowClamp,omitzero"`
+	TCPMaxSeg            int32                  `json:"tcpMaxSeg,omitzero"`
+	Penetrate            bool                   `json:"penetrate,omitzero"`
+	TCPUserTimeout       int32                  `json:"tcpUserTimeout,omitzero"`
+	V6only               bool                   `json:"v6only,omitzero"`
+	Interface            string                 `json:"interface,omitzero"`
+	TcpMptcp             bool                   `json:"tcpMptcp,omitzero"`
+	CustomSockopt        []*CustomSockoptConfig `json:"customSockopt,omitzero"`
 }
 
 // Build implements Buildable.
@@ -789,21 +789,21 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 }
 
 type StreamConfig struct {
-	Address             *Address           `json:"address,omitempty"`
-	Port                uint16             `json:"port,omitempty"`
-	Network             *TransportProtocol `json:"network,omitempty"`
-	Security            string             `json:"security,omitempty"`
-	TLSSettings         *TLSConfig         `json:"tlsSettings,omitempty"`
-	REALITYSettings     *REALITYConfig     `json:"realitySettings,omitempty"`
-	RAWSettings         *TCPConfig         `json:"rawSettings,omitempty"`
-	TCPSettings         *TCPConfig         `json:"tcpSettings,omitempty"`
-	XHTTPSettings       *SplitHTTPConfig   `json:"xhttpSettings,omitempty"`
-	SplitHTTPSettings   *SplitHTTPConfig   `json:"splithttpSettings,omitempty"`
-	KCPSettings         *KCPConfig         `json:"kcpSettings,omitempty"`
-	GRPCSettings        *GRPCConfig        `json:"grpcSettings,omitempty"`
-	WSSettings          *WebSocketConfig   `json:"wsSettings,omitempty"`
-	HTTPUPGRADESettings *HttpUpgradeConfig `json:"httpupgradeSettings,omitempty"`
-	SocketSettings      *SocketConfig      `json:"sockopt,omitempty"`
+	Address             *Address           `json:"address,omitzero"`
+	Port                uint16             `json:"port,omitzero"`
+	Network             *TransportProtocol `json:"network,omitzero"`
+	Security            string             `json:"security,omitzero"`
+	TLSSettings         *TLSConfig         `json:"tlsSettings,omitzero"`
+	REALITYSettings     *REALITYConfig     `json:"realitySettings,omitzero"`
+	RAWSettings         *TCPConfig         `json:"rawSettings,omitzero"`
+	TCPSettings         *TCPConfig         `json:"tcpSettings,omitzero"`
+	XHTTPSettings       *SplitHTTPConfig   `json:"xhttpSettings,omitzero"`
+	SplitHTTPSettings   *SplitHTTPConfig   `json:"splithttpSettings,omitzero"`
+	KCPSettings         *KCPConfig         `json:"kcpSettings,omitzero"`
+	GRPCSettings        *GRPCConfig        `json:"grpcSettings,omitzero"`
+	WSSettings          *WebSocketConfig   `json:"wsSettings,omitzero"`
+	HTTPUPGRADESettings *HttpUpgradeConfig `json:"httpupgradeSettings,omitzero"`
+	SocketSettings      *SocketConfig      `json:"sockopt,omitzero"`
 }
 
 // Build implements Buildable.
@@ -932,10 +932,10 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 }
 
 type ProxyConfig struct {
-	Tag string `json:"tag,omitempty"`
+	Tag string `json:"tag,omitzero"`
 
 	// TransportLayerProxy: For compatibility.
-	TransportLayerProxy bool `json:"transportLayer,omitempty"`
+	TransportLayerProxy bool `json:"transportLayer,omitzero"`
 }
 
 // Build implements Buildable.

@@ -9,10 +9,10 @@ import (
 )
 
 type ObservatoryConfig struct {
-	SubjectSelector   []string          `json:"subjectSelector,omitempty"`
-	ProbeURL          string            `json:"probeURL,omitempty"`
-	ProbeInterval     duration.Duration `json:"probeInterval,omitempty"`
-	EnableConcurrency bool              `json:"enableConcurrency,omitempty"`
+	SubjectSelector   []string          `json:"subjectSelector,omitzero"`
+	ProbeURL          string            `json:"probeURL,omitzero"`
+	ProbeInterval     duration.Duration `json:"probeInterval,omitzero"`
+	EnableConcurrency bool              `json:"enableConcurrency,omitzero"`
 }
 
 func (o *ObservatoryConfig) Build() (proto.Message, error) {
@@ -22,7 +22,7 @@ func (o *ObservatoryConfig) Build() (proto.Message, error) {
 type BurstObservatoryConfig struct {
 	SubjectSelector []string `json:"subjectSelector"`
 	// health check settings
-	HealthCheck *healthCheckSettings `json:"pingConfig,omitempty"`
+	HealthCheck *healthCheckSettings `json:"pingConfig,omitzero"`
 }
 
 func (b BurstObservatoryConfig) Build() (proto.Message, error) {

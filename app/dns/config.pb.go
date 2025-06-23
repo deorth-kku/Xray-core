@@ -128,13 +128,13 @@ type NameServer struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address           *net.Endpoint                `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	ClientIp          []byte                       `protobuf:"bytes,5,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
-	SkipFallback      bool                         `protobuf:"varint,6,opt,name=skipFallback,proto3" json:"skipFallback,omitempty"`
-	PrioritizedDomain []*NameServer_PriorityDomain `protobuf:"bytes,2,rep,name=prioritized_domain,json=prioritizedDomain,proto3" json:"prioritized_domain,omitempty"`
-	Geoip             []*router.GeoIP              `protobuf:"bytes,3,rep,name=geoip,proto3" json:"geoip,omitempty"`
-	OriginalRules     []*NameServer_OriginalRule   `protobuf:"bytes,4,rep,name=original_rules,json=originalRules,proto3" json:"original_rules,omitempty"`
-	QueryStrategy     QueryStrategy                `protobuf:"varint,7,opt,name=query_strategy,json=queryStrategy,proto3,enum=xray.app.dns.QueryStrategy" json:"query_strategy,omitempty"`
+	Address           *net.Endpoint                `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitzero"`
+	ClientIp          []byte                       `protobuf:"bytes,5,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitzero"`
+	SkipFallback      bool                         `protobuf:"varint,6,opt,name=skipFallback,proto3" json:"skipFallback,omitzero"`
+	PrioritizedDomain []*NameServer_PriorityDomain `protobuf:"bytes,2,rep,name=prioritized_domain,json=prioritizedDomain,proto3" json:"prioritized_domain,omitzero"`
+	Geoip             []*router.GeoIP              `protobuf:"bytes,3,rep,name=geoip,proto3" json:"geoip,omitzero"`
+	OriginalRules     []*NameServer_OriginalRule   `protobuf:"bytes,4,rep,name=original_rules,json=originalRules,proto3" json:"original_rules,omitzero"`
+	QueryStrategy     QueryStrategy                `protobuf:"varint,7,opt,name=query_strategy,json=queryStrategy,proto3,enum=xray.app.dns.QueryStrategy" json:"query_strategy,omitzero"`
 }
 
 func (x *NameServer) Reset() {
@@ -223,18 +223,18 @@ type Config struct {
 
 	// NameServer list used by this DNS client.
 	// A special value 'localhost' as a domain address can be set to use DNS on local system.
-	NameServer []*NameServer `protobuf:"bytes,5,rep,name=name_server,json=nameServer,proto3" json:"name_server,omitempty"`
+	NameServer []*NameServer `protobuf:"bytes,5,rep,name=name_server,json=nameServer,proto3" json:"name_server,omitzero"`
 	// Client IP for EDNS client subnet. Must be 4 bytes (IPv4) or 16 bytes
 	// (IPv6).
-	ClientIp    []byte                `protobuf:"bytes,3,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
-	StaticHosts []*Config_HostMapping `protobuf:"bytes,4,rep,name=static_hosts,json=staticHosts,proto3" json:"static_hosts,omitempty"`
+	ClientIp    []byte                `protobuf:"bytes,3,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitzero"`
+	StaticHosts []*Config_HostMapping `protobuf:"bytes,4,rep,name=static_hosts,json=staticHosts,proto3" json:"static_hosts,omitzero"`
 	// Tag is the inbound tag of DNS client.
-	Tag string `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitzero"`
 	// DisableCache disables DNS cache
-	DisableCache           bool          `protobuf:"varint,8,opt,name=disableCache,proto3" json:"disableCache,omitempty"`
-	QueryStrategy          QueryStrategy `protobuf:"varint,9,opt,name=query_strategy,json=queryStrategy,proto3,enum=xray.app.dns.QueryStrategy" json:"query_strategy,omitempty"`
-	DisableFallback        bool          `protobuf:"varint,10,opt,name=disableFallback,proto3" json:"disableFallback,omitempty"`
-	DisableFallbackIfMatch bool          `protobuf:"varint,11,opt,name=disableFallbackIfMatch,proto3" json:"disableFallbackIfMatch,omitempty"`
+	DisableCache           bool          `protobuf:"varint,8,opt,name=disableCache,proto3" json:"disableCache,omitzero"`
+	QueryStrategy          QueryStrategy `protobuf:"varint,9,opt,name=query_strategy,json=queryStrategy,proto3,enum=xray.app.dns.QueryStrategy" json:"query_strategy,omitzero"`
+	DisableFallback        bool          `protobuf:"varint,10,opt,name=disableFallback,proto3" json:"disableFallback,omitzero"`
+	DisableFallbackIfMatch bool          `protobuf:"varint,11,opt,name=disableFallbackIfMatch,proto3" json:"disableFallbackIfMatch,omitzero"`
 }
 
 func (x *Config) Reset() {
@@ -328,8 +328,8 @@ type NameServer_PriorityDomain struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type   DomainMatchingType `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.dns.DomainMatchingType" json:"type,omitempty"`
-	Domain string             `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	Type   DomainMatchingType `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.dns.DomainMatchingType" json:"type,omitzero"`
+	Domain string             `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitzero"`
 }
 
 func (x *NameServer_PriorityDomain) Reset() {
@@ -381,8 +381,8 @@ type NameServer_OriginalRule struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Rule string `protobuf:"bytes,1,opt,name=rule,proto3" json:"rule,omitempty"`
-	Size uint32 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
+	Rule string `protobuf:"bytes,1,opt,name=rule,proto3" json:"rule,omitzero"`
+	Size uint32 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitzero"`
 }
 
 func (x *NameServer_OriginalRule) Reset() {
@@ -434,12 +434,12 @@ type Config_HostMapping struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type   DomainMatchingType `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.dns.DomainMatchingType" json:"type,omitempty"`
-	Domain string             `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
-	Ip     [][]byte           `protobuf:"bytes,3,rep,name=ip,proto3" json:"ip,omitempty"`
+	Type   DomainMatchingType `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.dns.DomainMatchingType" json:"type,omitzero"`
+	Domain string             `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitzero"`
+	Ip     [][]byte           `protobuf:"bytes,3,rep,name=ip,proto3" json:"ip,omitzero"`
 	// ProxiedDomain indicates the mapped domain has the same IP address on this
 	// domain. Xray will use this domain for IP queries.
-	ProxiedDomain string `protobuf:"bytes,4,opt,name=proxied_domain,json=proxiedDomain,proto3" json:"proxied_domain,omitempty"`
+	ProxiedDomain string `protobuf:"bytes,4,opt,name=proxied_domain,json=proxiedDomain,proto3" json:"proxied_domain,omitzero"`
 }
 
 func (x *Config_HostMapping) Reset() {

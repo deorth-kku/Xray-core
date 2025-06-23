@@ -25,7 +25,7 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Domain string `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
+	Domain string `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitzero"`
 }
 
 func (x *Config) Reset() {

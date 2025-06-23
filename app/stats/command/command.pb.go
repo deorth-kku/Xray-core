@@ -26,9 +26,9 @@ type GetStatsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Name of the stat counter.
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitzero"`
 	// Whether or not to reset the counter to fetching its value.
-	Reset_ bool `protobuf:"varint,2,opt,name=reset,proto3" json:"reset,omitempty"`
+	Reset_ bool `protobuf:"varint,2,opt,name=reset,proto3" json:"reset,omitzero"`
 }
 
 func (x *GetStatsRequest) Reset() {
@@ -80,8 +80,8 @@ type Stat struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Value int64  `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitempty"`
+	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitzero"`
+	Value int64  `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *Stat) Reset() {
@@ -133,7 +133,7 @@ type GetStatsResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Stat *Stat `protobuf:"bytes,1,opt,name=stat,proto3" json:"stat,omitempty"`
+	Stat *Stat `protobuf:"bytes,1,opt,name=stat,proto3" json:"stat,omitzero"`
 }
 
 func (x *GetStatsResponse) Reset() {
@@ -178,8 +178,8 @@ type QueryStatsRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Pattern string `protobuf:"bytes,1,opt,name=pattern,proto3" json:"pattern,omitempty"`
-	Reset_  bool   `protobuf:"varint,2,opt,name=reset,proto3" json:"reset,omitempty"`
+	Pattern string `protobuf:"bytes,1,opt,name=pattern,proto3" json:"pattern,omitzero"`
+	Reset_  bool   `protobuf:"varint,2,opt,name=reset,proto3" json:"reset,omitzero"`
 }
 
 func (x *QueryStatsRequest) Reset() {
@@ -231,7 +231,7 @@ type QueryStatsResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Stat []*Stat `protobuf:"bytes,1,rep,name=stat,proto3" json:"stat,omitempty"`
+	Stat []*Stat `protobuf:"bytes,1,rep,name=stat,proto3" json:"stat,omitzero"`
 }
 
 func (x *QueryStatsResponse) Reset() {
@@ -312,16 +312,16 @@ type SysStatsResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NumGoroutine uint32 `protobuf:"varint,1,opt,name=NumGoroutine,proto3" json:"NumGoroutine,omitempty"`
-	NumGC        uint32 `protobuf:"varint,2,opt,name=NumGC,proto3" json:"NumGC,omitempty"`
-	Alloc        uint64 `protobuf:"varint,3,opt,name=Alloc,proto3" json:"Alloc,omitempty"`
-	TotalAlloc   uint64 `protobuf:"varint,4,opt,name=TotalAlloc,proto3" json:"TotalAlloc,omitempty"`
-	Sys          uint64 `protobuf:"varint,5,opt,name=Sys,proto3" json:"Sys,omitempty"`
-	Mallocs      uint64 `protobuf:"varint,6,opt,name=Mallocs,proto3" json:"Mallocs,omitempty"`
-	Frees        uint64 `protobuf:"varint,7,opt,name=Frees,proto3" json:"Frees,omitempty"`
-	LiveObjects  uint64 `protobuf:"varint,8,opt,name=LiveObjects,proto3" json:"LiveObjects,omitempty"`
-	PauseTotalNs uint64 `protobuf:"varint,9,opt,name=PauseTotalNs,proto3" json:"PauseTotalNs,omitempty"`
-	Uptime       uint32 `protobuf:"varint,10,opt,name=Uptime,proto3" json:"Uptime,omitempty"`
+	NumGoroutine uint32 `protobuf:"varint,1,opt,name=NumGoroutine,proto3" json:"NumGoroutine,omitzero"`
+	NumGC        uint32 `protobuf:"varint,2,opt,name=NumGC,proto3" json:"NumGC,omitzero"`
+	Alloc        uint64 `protobuf:"varint,3,opt,name=Alloc,proto3" json:"Alloc,omitzero"`
+	TotalAlloc   uint64 `protobuf:"varint,4,opt,name=TotalAlloc,proto3" json:"TotalAlloc,omitzero"`
+	Sys          uint64 `protobuf:"varint,5,opt,name=Sys,proto3" json:"Sys,omitzero"`
+	Mallocs      uint64 `protobuf:"varint,6,opt,name=Mallocs,proto3" json:"Mallocs,omitzero"`
+	Frees        uint64 `protobuf:"varint,7,opt,name=Frees,proto3" json:"Frees,omitzero"`
+	LiveObjects  uint64 `protobuf:"varint,8,opt,name=LiveObjects,proto3" json:"LiveObjects,omitzero"`
+	PauseTotalNs uint64 `protobuf:"varint,9,opt,name=PauseTotalNs,proto3" json:"PauseTotalNs,omitzero"`
+	Uptime       uint32 `protobuf:"varint,10,opt,name=Uptime,proto3" json:"Uptime,omitzero"`
 }
 
 func (x *SysStatsResponse) Reset() {

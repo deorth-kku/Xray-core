@@ -80,11 +80,11 @@ type PeerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PublicKey    string   `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
-	PreSharedKey string   `protobuf:"bytes,2,opt,name=pre_shared_key,json=preSharedKey,proto3" json:"pre_shared_key,omitempty"`
-	Endpoint     string   `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
-	KeepAlive    uint32   `protobuf:"varint,4,opt,name=keep_alive,json=keepAlive,proto3" json:"keep_alive,omitempty"`
-	AllowedIps   []string `protobuf:"bytes,5,rep,name=allowed_ips,json=allowedIps,proto3" json:"allowed_ips,omitempty"`
+	PublicKey    string   `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitzero"`
+	PreSharedKey string   `protobuf:"bytes,2,opt,name=pre_shared_key,json=preSharedKey,proto3" json:"pre_shared_key,omitzero"`
+	Endpoint     string   `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitzero"`
+	KeepAlive    uint32   `protobuf:"varint,4,opt,name=keep_alive,json=keepAlive,proto3" json:"keep_alive,omitzero"`
+	AllowedIps   []string `protobuf:"bytes,5,rep,name=allowed_ips,json=allowedIps,proto3" json:"allowed_ips,omitzero"`
 }
 
 func (x *PeerConfig) Reset() {
@@ -157,15 +157,15 @@ type DeviceConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SecretKey      string                      `protobuf:"bytes,1,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
-	Endpoint       []string                    `protobuf:"bytes,2,rep,name=endpoint,proto3" json:"endpoint,omitempty"`
-	Peers          []*PeerConfig               `protobuf:"bytes,3,rep,name=peers,proto3" json:"peers,omitempty"`
-	Mtu            int32                       `protobuf:"varint,4,opt,name=mtu,proto3" json:"mtu,omitempty"`
-	NumWorkers     int32                       `protobuf:"varint,5,opt,name=num_workers,json=numWorkers,proto3" json:"num_workers,omitempty"`
-	Reserved       []byte                      `protobuf:"bytes,6,opt,name=reserved,proto3" json:"reserved,omitempty"`
-	DomainStrategy DeviceConfig_DomainStrategy `protobuf:"varint,7,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.proxy.wireguard.DeviceConfig_DomainStrategy" json:"domain_strategy,omitempty"`
-	IsClient       bool                        `protobuf:"varint,8,opt,name=is_client,json=isClient,proto3" json:"is_client,omitempty"`
-	NoKernelTun    bool                        `protobuf:"varint,9,opt,name=no_kernel_tun,json=noKernelTun,proto3" json:"no_kernel_tun,omitempty"`
+	SecretKey      string                      `protobuf:"bytes,1,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitzero"`
+	Endpoint       []string                    `protobuf:"bytes,2,rep,name=endpoint,proto3" json:"endpoint,omitzero"`
+	Peers          []*PeerConfig               `protobuf:"bytes,3,rep,name=peers,proto3" json:"peers,omitzero"`
+	Mtu            int32                       `protobuf:"varint,4,opt,name=mtu,proto3" json:"mtu,omitzero"`
+	NumWorkers     int32                       `protobuf:"varint,5,opt,name=num_workers,json=numWorkers,proto3" json:"num_workers,omitzero"`
+	Reserved       []byte                      `protobuf:"bytes,6,opt,name=reserved,proto3" json:"reserved,omitzero"`
+	DomainStrategy DeviceConfig_DomainStrategy `protobuf:"varint,7,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.proxy.wireguard.DeviceConfig_DomainStrategy" json:"domain_strategy,omitzero"`
+	IsClient       bool                        `protobuf:"varint,8,opt,name=is_client,json=isClient,proto3" json:"is_client,omitzero"`
+	NoKernelTun    bool                        `protobuf:"varint,9,opt,name=no_kernel_tun,json=noKernelTun,proto3" json:"no_kernel_tun,omitzero"`
 }
 
 func (x *DeviceConfig) Reset() {

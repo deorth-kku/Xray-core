@@ -28,10 +28,10 @@ type Config struct {
 
 	// Server is the DNS server address. If specified, this address overrides the
 	// original one.
-	Server      *net.Endpoint `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitempty"`
-	UserLevel   uint32        `protobuf:"varint,2,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
-	Non_IPQuery string        `protobuf:"bytes,3,opt,name=non_IP_query,json=nonIPQuery,proto3" json:"non_IP_query,omitempty"`
-	BlockTypes  []int32       `protobuf:"varint,4,rep,packed,name=block_types,json=blockTypes,proto3" json:"block_types,omitempty"`
+	Server      *net.Endpoint `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitzero"`
+	UserLevel   uint32        `protobuf:"varint,2,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitzero"`
+	Non_IPQuery string        `protobuf:"bytes,3,opt,name=non_IP_query,json=nonIPQuery,proto3" json:"non_IP_query,omitzero"`
+	BlockTypes  []int32       `protobuf:"varint,4,rep,packed,name=block_types,json=blockTypes,proto3" json:"block_types,omitzero"`
 }
 
 func (x *Config) Reset() {

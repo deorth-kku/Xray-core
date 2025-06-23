@@ -11,8 +11,8 @@ import (
 )
 
 type FakeDNSPoolElementConfig struct {
-	IPPool  string `json:"ipPool,omitempty"`
-	LRUSize int64  `json:"poolSize,omitempty"`
+	IPPool  string `json:"ipPool,omitzero"`
+	LRUSize int64  `json:"poolSize,omitzero"`
 }
 
 type FakeDNSConfig struct {

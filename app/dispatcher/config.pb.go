@@ -61,7 +61,7 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Settings *SessionConfig `protobuf:"bytes,1,opt,name=settings,proto3" json:"settings,omitempty"`
+	Settings *SessionConfig `protobuf:"bytes,1,opt,name=settings,proto3" json:"settings,omitzero"`
 }
 
 func (x *Config) Reset() {

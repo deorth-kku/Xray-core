@@ -29,18 +29,18 @@ type Config struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Inbound handler configurations. Must have at least one item.
-	Inbound []*InboundHandlerConfig `protobuf:"bytes,1,rep,name=inbound,proto3" json:"inbound,omitempty"`
+	Inbound []*InboundHandlerConfig `protobuf:"bytes,1,rep,name=inbound,proto3" json:"inbound,omitzero"`
 	// Outbound handler configurations. Must have at least one item. The first
 	// item is used as default for routing.
-	Outbound []*OutboundHandlerConfig `protobuf:"bytes,2,rep,name=outbound,proto3" json:"outbound,omitempty"`
+	Outbound []*OutboundHandlerConfig `protobuf:"bytes,2,rep,name=outbound,proto3" json:"outbound,omitzero"`
 	// App is for configurations of all features in Xray. A feature must
 	// implement the Feature interface, and its config type must be registered
 	// through common.RegisterConfig.
-	App []*serial.TypedMessage `protobuf:"bytes,4,rep,name=app,proto3" json:"app,omitempty"`
+	App []*serial.TypedMessage `protobuf:"bytes,4,rep,name=app,proto3" json:"app,omitzero"`
 	// Configuration for extensions. The config may not work if corresponding
 	// extension is not loaded into Xray. Xray will ignore such config during
 	// initialization.
-	Extension []*serial.TypedMessage `protobuf:"bytes,6,rep,name=extension,proto3" json:"extension,omitempty"`
+	Extension []*serial.TypedMessage `protobuf:"bytes,6,rep,name=extension,proto3" json:"extension,omitzero"`
 }
 
 func (x *Config) Reset() {
@@ -109,11 +109,11 @@ type InboundHandlerConfig struct {
 
 	// Tag of the inbound handler. The tag must be unique among all inbound
 	// handlers
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 	// Settings for how this inbound proxy is handled.
-	ReceiverSettings *serial.TypedMessage `protobuf:"bytes,2,opt,name=receiver_settings,json=receiverSettings,proto3" json:"receiver_settings,omitempty"`
+	ReceiverSettings *serial.TypedMessage `protobuf:"bytes,2,opt,name=receiver_settings,json=receiverSettings,proto3" json:"receiver_settings,omitzero"`
 	// Settings for inbound proxy. Must be one of the inbound proxies.
-	ProxySettings *serial.TypedMessage `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
+	ProxySettings *serial.TypedMessage `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitzero"`
 }
 
 func (x *InboundHandlerConfig) Reset() {
@@ -174,15 +174,15 @@ type OutboundHandlerConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Tag of this outbound handler.
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 	// Settings for how to dial connection for this outbound handler.
-	SenderSettings *serial.TypedMessage `protobuf:"bytes,2,opt,name=sender_settings,json=senderSettings,proto3" json:"sender_settings,omitempty"`
+	SenderSettings *serial.TypedMessage `protobuf:"bytes,2,opt,name=sender_settings,json=senderSettings,proto3" json:"sender_settings,omitzero"`
 	// Settings for this outbound proxy. Must be one of the outbound proxies.
-	ProxySettings *serial.TypedMessage `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
+	ProxySettings *serial.TypedMessage `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitzero"`
 	// If not zero, this outbound will be expired in seconds. Not used for now.
-	Expire int64 `protobuf:"varint,4,opt,name=expire,proto3" json:"expire,omitempty"`
+	Expire int64 `protobuf:"varint,4,opt,name=expire,proto3" json:"expire,omitzero"`
 	// Comment of this outbound handler. Not used for now.
-	Comment string `protobuf:"bytes,5,opt,name=comment,proto3" json:"comment,omitempty"`
+	Comment string `protobuf:"bytes,5,opt,name=comment,proto3" json:"comment,omitzero"`
 }
 
 func (x *OutboundHandlerConfig) Reset() {

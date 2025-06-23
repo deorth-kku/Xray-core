@@ -141,6 +141,6 @@ func (l *stringList) Set(v string) error {
 }
 
 type jsonCert struct {
-	Certificate []string `json:"certificate,omitempty"`
-	Key         []string `json:"key,omitempty"`
+	Certificate []string `json:"certificate,omitzero"`
+	Key         []string `json:"key,omitzero"`
 }

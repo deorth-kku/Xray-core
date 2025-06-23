@@ -6,7 +6,7 @@ import (
 )
 
 type MetricsConfig struct {
-	Tag string `json:"tag,omitempty"`
+	Tag string `json:"tag,omitzero"`
 }
 
 func (c *MetricsConfig) Build() (*metrics.Config, error) {

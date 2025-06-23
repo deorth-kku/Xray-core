@@ -78,7 +78,7 @@ type NetworkList struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Network []Network `protobuf:"varint,1,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
+	Network []Network `protobuf:"varint,1,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitzero"`
 }
 
 func (x *NetworkList) Reset() {

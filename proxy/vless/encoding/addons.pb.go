@@ -25,8 +25,8 @@ type Addons struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Flow string `protobuf:"bytes,1,opt,name=Flow,proto3" json:"Flow,omitempty"`
-	Seed []byte `protobuf:"bytes,2,opt,name=Seed,proto3" json:"Seed,omitempty"`
+	Flow string `protobuf:"bytes,1,opt,name=Flow,proto3" json:"Flow,omitzero"`
+	Seed []byte `protobuf:"bytes,2,opt,name=Seed,proto3" json:"Seed,omitzero"`
 }
 
 func (x *Addons) Reset() {

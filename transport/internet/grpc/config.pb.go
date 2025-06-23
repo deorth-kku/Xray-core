@@ -25,14 +25,14 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Authority           string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	ServiceName         string `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	MultiMode           bool   `protobuf:"varint,3,opt,name=multi_mode,json=multiMode,proto3" json:"multi_mode,omitempty"`
-	IdleTimeout         int32  `protobuf:"varint,4,opt,name=idle_timeout,json=idleTimeout,proto3" json:"idle_timeout,omitempty"`
-	HealthCheckTimeout  int32  `protobuf:"varint,5,opt,name=health_check_timeout,json=healthCheckTimeout,proto3" json:"health_check_timeout,omitempty"`
-	PermitWithoutStream bool   `protobuf:"varint,6,opt,name=permit_without_stream,json=permitWithoutStream,proto3" json:"permit_without_stream,omitempty"`
-	InitialWindowsSize  int32  `protobuf:"varint,7,opt,name=initial_windows_size,json=initialWindowsSize,proto3" json:"initial_windows_size,omitempty"`
-	UserAgent           string `protobuf:"bytes,8,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	Authority           string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitzero"`
+	ServiceName         string `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitzero"`
+	MultiMode           bool   `protobuf:"varint,3,opt,name=multi_mode,json=multiMode,proto3" json:"multi_mode,omitzero"`
+	IdleTimeout         int32  `protobuf:"varint,4,opt,name=idle_timeout,json=idleTimeout,proto3" json:"idle_timeout,omitzero"`
+	HealthCheckTimeout  int32  `protobuf:"varint,5,opt,name=health_check_timeout,json=healthCheckTimeout,proto3" json:"health_check_timeout,omitzero"`
+	PermitWithoutStream bool   `protobuf:"varint,6,opt,name=permit_without_stream,json=permitWithoutStream,proto3" json:"permit_without_stream,omitzero"`
+	InitialWindowsSize  int32  `protobuf:"varint,7,opt,name=initial_windows_size,json=initialWindowsSize,proto3" json:"initial_windows_size,omitzero"`
+	UserAgent           string `protobuf:"bytes,8,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitzero"`
 }
 
 func (x *Config) Reset() {

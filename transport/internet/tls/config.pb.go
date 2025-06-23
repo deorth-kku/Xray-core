@@ -75,18 +75,18 @@ type Certificate struct {
 	unknownFields protoimpl.UnknownFields
 
 	// TLS certificate in x509 format.
-	Certificate []byte `protobuf:"bytes,1,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	Certificate []byte `protobuf:"bytes,1,opt,name=certificate,proto3" json:"certificate,omitzero"`
 	// TLS key in x509 format.
-	Key          []byte            `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	Usage        Certificate_Usage `protobuf:"varint,3,opt,name=usage,proto3,enum=xray.transport.internet.tls.Certificate_Usage" json:"usage,omitempty"`
-	OcspStapling uint64            `protobuf:"varint,4,opt,name=ocsp_stapling,json=ocspStapling,proto3" json:"ocsp_stapling,omitempty"`
+	Key          []byte            `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitzero"`
+	Usage        Certificate_Usage `protobuf:"varint,3,opt,name=usage,proto3,enum=xray.transport.internet.tls.Certificate_Usage" json:"usage,omitzero"`
+	OcspStapling uint64            `protobuf:"varint,4,opt,name=ocsp_stapling,json=ocspStapling,proto3" json:"ocsp_stapling,omitzero"`
 	// TLS certificate path
-	CertificatePath string `protobuf:"bytes,5,opt,name=certificate_path,json=certificatePath,proto3" json:"certificate_path,omitempty"`
+	CertificatePath string `protobuf:"bytes,5,opt,name=certificate_path,json=certificatePath,proto3" json:"certificate_path,omitzero"`
 	// TLS Key path
-	KeyPath string `protobuf:"bytes,6,opt,name=key_path,json=keyPath,proto3" json:"key_path,omitempty"`
+	KeyPath string `protobuf:"bytes,6,opt,name=key_path,json=keyPath,proto3" json:"key_path,omitzero"`
 	// If true, one-Time Loading
-	OneTimeLoading bool `protobuf:"varint,7,opt,name=One_time_loading,json=OneTimeLoading,proto3" json:"One_time_loading,omitempty"`
-	BuildChain     bool `protobuf:"varint,8,opt,name=build_chain,json=buildChain,proto3" json:"build_chain,omitempty"`
+	OneTimeLoading bool `protobuf:"varint,7,opt,name=One_time_loading,json=OneTimeLoading,proto3" json:"One_time_loading,omitzero"`
+	BuildChain     bool `protobuf:"varint,8,opt,name=build_chain,json=buildChain,proto3" json:"build_chain,omitzero"`
 }
 
 func (x *Certificate) Reset() {
@@ -181,41 +181,41 @@ type Config struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Whether or not to allow self-signed certificates.
-	AllowInsecure bool `protobuf:"varint,1,opt,name=allow_insecure,json=allowInsecure,proto3" json:"allow_insecure,omitempty"`
+	AllowInsecure bool `protobuf:"varint,1,opt,name=allow_insecure,json=allowInsecure,proto3" json:"allow_insecure,omitzero"`
 	// List of certificates to be served on server.
-	Certificate []*Certificate `protobuf:"bytes,2,rep,name=certificate,proto3" json:"certificate,omitempty"`
+	Certificate []*Certificate `protobuf:"bytes,2,rep,name=certificate,proto3" json:"certificate,omitzero"`
 	// Override server name.
-	ServerName string `protobuf:"bytes,3,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
+	ServerName string `protobuf:"bytes,3,opt,name=server_name,json=serverName,proto3" json:"server_name,omitzero"`
 	// Lists of string as ALPN values.
-	NextProtocol []string `protobuf:"bytes,4,rep,name=next_protocol,json=nextProtocol,proto3" json:"next_protocol,omitempty"`
+	NextProtocol []string `protobuf:"bytes,4,rep,name=next_protocol,json=nextProtocol,proto3" json:"next_protocol,omitzero"`
 	// Whether or not to enable session (ticket) resumption.
-	EnableSessionResumption bool `protobuf:"varint,5,opt,name=enable_session_resumption,json=enableSessionResumption,proto3" json:"enable_session_resumption,omitempty"`
+	EnableSessionResumption bool `protobuf:"varint,5,opt,name=enable_session_resumption,json=enableSessionResumption,proto3" json:"enable_session_resumption,omitzero"`
 	// If true, root certificates on the system will not be loaded for
 	// verification.
-	DisableSystemRoot bool `protobuf:"varint,6,opt,name=disable_system_root,json=disableSystemRoot,proto3" json:"disable_system_root,omitempty"`
+	DisableSystemRoot bool `protobuf:"varint,6,opt,name=disable_system_root,json=disableSystemRoot,proto3" json:"disable_system_root,omitzero"`
 	// The minimum TLS version.
-	MinVersion string `protobuf:"bytes,7,opt,name=min_version,json=minVersion,proto3" json:"min_version,omitempty"`
+	MinVersion string `protobuf:"bytes,7,opt,name=min_version,json=minVersion,proto3" json:"min_version,omitzero"`
 	// The maximum TLS version.
-	MaxVersion string `protobuf:"bytes,8,opt,name=max_version,json=maxVersion,proto3" json:"max_version,omitempty"`
+	MaxVersion string `protobuf:"bytes,8,opt,name=max_version,json=maxVersion,proto3" json:"max_version,omitzero"`
 	// Specify cipher suites, except for TLS 1.3.
-	CipherSuites string `protobuf:"bytes,9,opt,name=cipher_suites,json=cipherSuites,proto3" json:"cipher_suites,omitempty"`
+	CipherSuites string `protobuf:"bytes,9,opt,name=cipher_suites,json=cipherSuites,proto3" json:"cipher_suites,omitzero"`
 	// TLS Client Hello fingerprint (uTLS).
-	Fingerprint      string `protobuf:"bytes,11,opt,name=fingerprint,proto3" json:"fingerprint,omitempty"`
-	RejectUnknownSni bool   `protobuf:"varint,12,opt,name=reject_unknown_sni,json=rejectUnknownSni,proto3" json:"reject_unknown_sni,omitempty"`
+	Fingerprint      string `protobuf:"bytes,11,opt,name=fingerprint,proto3" json:"fingerprint,omitzero"`
+	RejectUnknownSni bool   `protobuf:"varint,12,opt,name=reject_unknown_sni,json=rejectUnknownSni,proto3" json:"reject_unknown_sni,omitzero"`
 	// @Document A pinned certificate chain sha256 hash.
 	// @Document If the server's hash does not match this value, the connection will be aborted.
 	// @Document This value replace allow_insecure.
 	// @Critical
-	PinnedPeerCertificateChainSha256 [][]byte `protobuf:"bytes,13,rep,name=pinned_peer_certificate_chain_sha256,json=pinnedPeerCertificateChainSha256,proto3" json:"pinned_peer_certificate_chain_sha256,omitempty"`
+	PinnedPeerCertificateChainSha256 [][]byte `protobuf:"bytes,13,rep,name=pinned_peer_certificate_chain_sha256,json=pinnedPeerCertificateChainSha256,proto3" json:"pinned_peer_certificate_chain_sha256,omitzero"`
 	// @Document A pinned certificate public key sha256 hash.
 	// @Document If the server's public key hash does not match this value, the connection will be aborted.
 	// @Document This value replace allow_insecure.
 	// @Critical
-	PinnedPeerCertificatePublicKeySha256 [][]byte `protobuf:"bytes,14,rep,name=pinned_peer_certificate_public_key_sha256,json=pinnedPeerCertificatePublicKeySha256,proto3" json:"pinned_peer_certificate_public_key_sha256,omitempty"`
-	MasterKeyLog                         string   `protobuf:"bytes,15,opt,name=master_key_log,json=masterKeyLog,proto3" json:"master_key_log,omitempty"`
+	PinnedPeerCertificatePublicKeySha256 [][]byte `protobuf:"bytes,14,rep,name=pinned_peer_certificate_public_key_sha256,json=pinnedPeerCertificatePublicKeySha256,proto3" json:"pinned_peer_certificate_public_key_sha256,omitzero"`
+	MasterKeyLog                         string   `protobuf:"bytes,15,opt,name=master_key_log,json=masterKeyLog,proto3" json:"master_key_log,omitzero"`
 	// Lists of string as CurvePreferences values.
-	CurvePreferences   []string `protobuf:"bytes,16,rep,name=curve_preferences,json=curvePreferences,proto3" json:"curve_preferences,omitempty"`
-	ServerNameToVerify string   `protobuf:"bytes,17,opt,name=server_name_to_verify,json=serverNameToVerify,proto3" json:"server_name_to_verify,omitempty"`
+	CurvePreferences   []string `protobuf:"bytes,16,rep,name=curve_preferences,json=curvePreferences,proto3" json:"curve_preferences,omitzero"`
+	ServerNameToVerify string   `protobuf:"bytes,17,opt,name=server_name_to_verify,json=serverNameToVerify,proto3" json:"server_name_to_verify,omitzero"`
 }
 
 func (x *Config) Reset() {

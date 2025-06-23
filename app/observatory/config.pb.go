@@ -25,7 +25,7 @@ type ObservationResult struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Status []*OutboundStatus `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitempty"`
+	Status []*OutboundStatus `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitzero"`
 }
 
 func (x *ObservationResult) Reset() {
@@ -70,12 +70,12 @@ type HealthPingMeasurementResult struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	All       int64 `protobuf:"varint,1,opt,name=all,proto3" json:"all,omitempty"`
-	Fail      int64 `protobuf:"varint,2,opt,name=fail,proto3" json:"fail,omitempty"`
-	Deviation int64 `protobuf:"varint,3,opt,name=deviation,proto3" json:"deviation,omitempty"`
-	Average   int64 `protobuf:"varint,4,opt,name=average,proto3" json:"average,omitempty"`
-	Max       int64 `protobuf:"varint,5,opt,name=max,proto3" json:"max,omitempty"`
-	Min       int64 `protobuf:"varint,6,opt,name=min,proto3" json:"min,omitempty"`
+	All       int64 `protobuf:"varint,1,opt,name=all,proto3" json:"all,omitzero"`
+	Fail      int64 `protobuf:"varint,2,opt,name=fail,proto3" json:"fail,omitzero"`
+	Deviation int64 `protobuf:"varint,3,opt,name=deviation,proto3" json:"deviation,omitzero"`
+	Average   int64 `protobuf:"varint,4,opt,name=average,proto3" json:"average,omitzero"`
+	Max       int64 `protobuf:"varint,5,opt,name=max,proto3" json:"max,omitzero"`
+	Min       int64 `protobuf:"varint,6,opt,name=min,proto3" json:"min,omitzero"`
 }
 
 func (x *HealthPingMeasurementResult) Reset() {
@@ -157,24 +157,24 @@ type OutboundStatus struct {
 
 	// @Document Whether this outbound is usable
 	// @Restriction ReadOnlyForUser
-	Alive bool `protobuf:"varint,1,opt,name=alive,proto3" json:"alive,omitempty"`
+	Alive bool `protobuf:"varint,1,opt,name=alive,proto3" json:"alive,omitzero"`
 	// @Document The time for probe request to finish.
 	// @Type time.ms
 	// @Restriction ReadOnlyForUser
-	Delay int64 `protobuf:"varint,2,opt,name=delay,proto3" json:"delay,omitempty"`
+	Delay int64 `protobuf:"varint,2,opt,name=delay,proto3" json:"delay,omitzero"`
 	// @Document The last error caused this outbound failed to relay probe request
 	// @Restriction NotMachineReadable
-	LastErrorReason string `protobuf:"bytes,3,opt,name=last_error_reason,json=lastErrorReason,proto3" json:"last_error_reason,omitempty"`
+	LastErrorReason string `protobuf:"bytes,3,opt,name=last_error_reason,json=lastErrorReason,proto3" json:"last_error_reason,omitzero"`
 	// @Document The outbound tag for this Server
 	// @Type id.outboundTag
-	OutboundTag string `protobuf:"bytes,4,opt,name=outbound_tag,json=outboundTag,proto3" json:"outbound_tag,omitempty"`
+	OutboundTag string `protobuf:"bytes,4,opt,name=outbound_tag,json=outboundTag,proto3" json:"outbound_tag,omitzero"`
 	// @Document The time this outbound is known to be alive
 	// @Type id.outboundTag
-	LastSeenTime int64 `protobuf:"varint,5,opt,name=last_seen_time,json=lastSeenTime,proto3" json:"last_seen_time,omitempty"`
+	LastSeenTime int64 `protobuf:"varint,5,opt,name=last_seen_time,json=lastSeenTime,proto3" json:"last_seen_time,omitzero"`
 	// @Document The time this outbound is tried
 	// @Type id.outboundTag
-	LastTryTime int64                        `protobuf:"varint,6,opt,name=last_try_time,json=lastTryTime,proto3" json:"last_try_time,omitempty"`
-	HealthPing  *HealthPingMeasurementResult `protobuf:"bytes,7,opt,name=health_ping,json=healthPing,proto3" json:"health_ping,omitempty"`
+	LastTryTime int64                        `protobuf:"varint,6,opt,name=last_try_time,json=lastTryTime,proto3" json:"last_try_time,omitzero"`
+	HealthPing  *HealthPingMeasurementResult `protobuf:"bytes,7,opt,name=health_ping,json=healthPing,proto3" json:"health_ping,omitzero"`
 }
 
 func (x *OutboundStatus) Reset() {
@@ -263,14 +263,14 @@ type ProbeResult struct {
 
 	// @Document Whether this outbound is usable
 	// @Restriction ReadOnlyForUser
-	Alive bool `protobuf:"varint,1,opt,name=alive,proto3" json:"alive,omitempty"`
+	Alive bool `protobuf:"varint,1,opt,name=alive,proto3" json:"alive,omitzero"`
 	// @Document The time for probe request to finish.
 	// @Type time.ms
 	// @Restriction ReadOnlyForUser
-	Delay int64 `protobuf:"varint,2,opt,name=delay,proto3" json:"delay,omitempty"`
+	Delay int64 `protobuf:"varint,2,opt,name=delay,proto3" json:"delay,omitzero"`
 	// @Document The error caused this outbound failed to relay probe request
 	// @Restriction NotMachineReadable
-	LastErrorReason string `protobuf:"bytes,3,opt,name=last_error_reason,json=lastErrorReason,proto3" json:"last_error_reason,omitempty"`
+	LastErrorReason string `protobuf:"bytes,3,opt,name=last_error_reason,json=lastErrorReason,proto3" json:"last_error_reason,omitzero"`
 }
 
 func (x *ProbeResult) Reset() {
@@ -331,7 +331,7 @@ type Intensity struct {
 
 	// @Document The time interval for a probe request in ms.
 	// @Type time.ms
-	ProbeInterval uint32 `protobuf:"varint,1,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitempty"`
+	ProbeInterval uint32 `protobuf:"varint,1,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitzero"`
 }
 
 func (x *Intensity) Reset() {
@@ -377,10 +377,10 @@ type Config struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @Document The selectors for outbound under observation
-	SubjectSelector   []string `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitempty"`
-	ProbeUrl          string   `protobuf:"bytes,3,opt,name=probe_url,json=probeUrl,proto3" json:"probe_url,omitempty"`
-	ProbeInterval     int64    `protobuf:"varint,4,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitempty"`
-	EnableConcurrency bool     `protobuf:"varint,5,opt,name=enable_concurrency,json=enableConcurrency,proto3" json:"enable_concurrency,omitempty"`
+	SubjectSelector   []string `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitzero"`
+	ProbeUrl          string   `protobuf:"bytes,3,opt,name=probe_url,json=probeUrl,proto3" json:"probe_url,omitzero"`
+	ProbeInterval     int64    `protobuf:"varint,4,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitzero"`
+	EnableConcurrency bool     `protobuf:"varint,5,opt,name=enable_concurrency,json=enableConcurrency,proto3" json:"enable_concurrency,omitzero"`
 }
 
 func (x *Config) Reset() {

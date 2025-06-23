@@ -26,8 +26,8 @@ type RangeConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	From int32 `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitempty"`
-	To   int32 `protobuf:"varint,2,opt,name=to,proto3" json:"to,omitempty"`
+	From int32 `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitzero"`
+	To   int32 `protobuf:"varint,2,opt,name=to,proto3" json:"to,omitzero"`
 }
 
 func (x *RangeConfig) Reset() {
@@ -79,12 +79,12 @@ type XmuxConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	MaxConcurrency   *RangeConfig `protobuf:"bytes,1,opt,name=maxConcurrency,proto3" json:"maxConcurrency,omitempty"`
-	MaxConnections   *RangeConfig `protobuf:"bytes,2,opt,name=maxConnections,proto3" json:"maxConnections,omitempty"`
-	CMaxReuseTimes   *RangeConfig `protobuf:"bytes,3,opt,name=cMaxReuseTimes,proto3" json:"cMaxReuseTimes,omitempty"`
-	HMaxRequestTimes *RangeConfig `protobuf:"bytes,4,opt,name=hMaxRequestTimes,proto3" json:"hMaxRequestTimes,omitempty"`
-	HMaxReusableSecs *RangeConfig `protobuf:"bytes,5,opt,name=hMaxReusableSecs,proto3" json:"hMaxReusableSecs,omitempty"`
-	HKeepAlivePeriod int64        `protobuf:"varint,6,opt,name=hKeepAlivePeriod,proto3" json:"hKeepAlivePeriod,omitempty"`
+	MaxConcurrency   *RangeConfig `protobuf:"bytes,1,opt,name=maxConcurrency,proto3" json:"maxConcurrency,omitzero"`
+	MaxConnections   *RangeConfig `protobuf:"bytes,2,opt,name=maxConnections,proto3" json:"maxConnections,omitzero"`
+	CMaxReuseTimes   *RangeConfig `protobuf:"bytes,3,opt,name=cMaxReuseTimes,proto3" json:"cMaxReuseTimes,omitzero"`
+	HMaxRequestTimes *RangeConfig `protobuf:"bytes,4,opt,name=hMaxRequestTimes,proto3" json:"hMaxRequestTimes,omitzero"`
+	HMaxReusableSecs *RangeConfig `protobuf:"bytes,5,opt,name=hMaxReusableSecs,proto3" json:"hMaxReusableSecs,omitzero"`
+	HKeepAlivePeriod int64        `protobuf:"varint,6,opt,name=hKeepAlivePeriod,proto3" json:"hKeepAlivePeriod,omitzero"`
 }
 
 func (x *XmuxConfig) Reset() {
@@ -164,19 +164,19 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Host                 string                 `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	Path                 string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Mode                 string                 `protobuf:"bytes,3,opt,name=mode,proto3" json:"mode,omitempty"`
-	Headers              map[string]string      `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	XPaddingBytes        *RangeConfig           `protobuf:"bytes,5,opt,name=xPaddingBytes,proto3" json:"xPaddingBytes,omitempty"`
-	NoGRPCHeader         bool                   `protobuf:"varint,6,opt,name=noGRPCHeader,proto3" json:"noGRPCHeader,omitempty"`
-	NoSSEHeader          bool                   `protobuf:"varint,7,opt,name=noSSEHeader,proto3" json:"noSSEHeader,omitempty"`
-	ScMaxEachPostBytes   *RangeConfig           `protobuf:"bytes,8,opt,name=scMaxEachPostBytes,proto3" json:"scMaxEachPostBytes,omitempty"`
-	ScMinPostsIntervalMs *RangeConfig           `protobuf:"bytes,9,opt,name=scMinPostsIntervalMs,proto3" json:"scMinPostsIntervalMs,omitempty"`
-	ScMaxBufferedPosts   int64                  `protobuf:"varint,10,opt,name=scMaxBufferedPosts,proto3" json:"scMaxBufferedPosts,omitempty"`
-	ScStreamUpServerSecs *RangeConfig           `protobuf:"bytes,11,opt,name=scStreamUpServerSecs,proto3" json:"scStreamUpServerSecs,omitempty"`
-	Xmux                 *XmuxConfig            `protobuf:"bytes,12,opt,name=xmux,proto3" json:"xmux,omitempty"`
-	DownloadSettings     *internet.StreamConfig `protobuf:"bytes,13,opt,name=downloadSettings,proto3" json:"downloadSettings,omitempty"`
+	Host                 string                 `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitzero"`
+	Path                 string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitzero"`
+	Mode                 string                 `protobuf:"bytes,3,opt,name=mode,proto3" json:"mode,omitzero"`
+	Headers              map[string]string      `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitzero" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XPaddingBytes        *RangeConfig           `protobuf:"bytes,5,opt,name=xPaddingBytes,proto3" json:"xPaddingBytes,omitzero"`
+	NoGRPCHeader         bool                   `protobuf:"varint,6,opt,name=noGRPCHeader,proto3" json:"noGRPCHeader,omitzero"`
+	NoSSEHeader          bool                   `protobuf:"varint,7,opt,name=noSSEHeader,proto3" json:"noSSEHeader,omitzero"`
+	ScMaxEachPostBytes   *RangeConfig           `protobuf:"bytes,8,opt,name=scMaxEachPostBytes,proto3" json:"scMaxEachPostBytes,omitzero"`
+	ScMinPostsIntervalMs *RangeConfig           `protobuf:"bytes,9,opt,name=scMinPostsIntervalMs,proto3" json:"scMinPostsIntervalMs,omitzero"`
+	ScMaxBufferedPosts   int64                  `protobuf:"varint,10,opt,name=scMaxBufferedPosts,proto3" json:"scMaxBufferedPosts,omitzero"`
+	ScStreamUpServerSecs *RangeConfig           `protobuf:"bytes,11,opt,name=scStreamUpServerSecs,proto3" json:"scStreamUpServerSecs,omitzero"`
+	Xmux                 *XmuxConfig            `protobuf:"bytes,12,opt,name=xmux,proto3" json:"xmux,omitzero"`
+	DownloadSettings     *internet.StreamConfig `protobuf:"bytes,13,opt,name=downloadSettings,proto3" json:"downloadSettings,omitzero"`
 }
 
 func (x *Config) Reset() {

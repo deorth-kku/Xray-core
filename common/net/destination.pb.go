@@ -26,9 +26,9 @@ type Endpoint struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Network Network     `protobuf:"varint,1,opt,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
-	Address *IPOrDomain `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32      `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitempty"`
+	Network Network     `protobuf:"varint,1,opt,name=network,proto3,enum=xray.common.net.Network" json:"network,omitzero"`
+	Address *IPOrDomain `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitzero"`
+	Port    uint32      `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitzero"`
 }
 
 func (x *Endpoint) Reset() {

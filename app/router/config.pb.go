@@ -142,11 +142,11 @@ type Domain struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Domain matching type.
-	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.router.Domain_Type" json:"type,omitempty"`
+	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=xray.app.router.Domain_Type" json:"type,omitzero"`
 	// Domain value.
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitzero"`
 	// Attributes of this domain. May be used for filtering.
-	Attribute []*Domain_Attribute `protobuf:"bytes,3,rep,name=attribute,proto3" json:"attribute,omitempty"`
+	Attribute []*Domain_Attribute `protobuf:"bytes,3,rep,name=attribute,proto3" json:"attribute,omitzero"`
 }
 
 func (x *Domain) Reset() {
@@ -207,9 +207,9 @@ type CIDR struct {
 	unknownFields protoimpl.UnknownFields
 
 	// IP address, should be either 4 or 16 bytes.
-	Ip []byte `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
+	Ip []byte `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitzero"`
 	// Number of leading ones in the network mask.
-	Prefix uint32 `protobuf:"varint,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Prefix uint32 `protobuf:"varint,2,opt,name=prefix,proto3" json:"prefix,omitzero"`
 }
 
 func (x *CIDR) Reset() {
@@ -261,9 +261,9 @@ type GeoIP struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CountryCode  string  `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
-	Cidr         []*CIDR `protobuf:"bytes,2,rep,name=cidr,proto3" json:"cidr,omitempty"`
-	ReverseMatch bool    `protobuf:"varint,3,opt,name=reverse_match,json=reverseMatch,proto3" json:"reverse_match,omitempty"`
+	CountryCode  string  `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitzero"`
+	Cidr         []*CIDR `protobuf:"bytes,2,rep,name=cidr,proto3" json:"cidr,omitzero"`
+	ReverseMatch bool    `protobuf:"varint,3,opt,name=reverse_match,json=reverseMatch,proto3" json:"reverse_match,omitzero"`
 }
 
 func (x *GeoIP) Reset() {
@@ -322,7 +322,7 @@ type GeoIPList struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Entry []*GeoIP `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitempty"`
+	Entry []*GeoIP `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitzero"`
 }
 
 func (x *GeoIPList) Reset() {
@@ -367,8 +367,8 @@ type GeoSite struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CountryCode string    `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
-	Domain      []*Domain `protobuf:"bytes,2,rep,name=domain,proto3" json:"domain,omitempty"`
+	CountryCode string    `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitzero"`
+	Domain      []*Domain `protobuf:"bytes,2,rep,name=domain,proto3" json:"domain,omitzero"`
 }
 
 func (x *GeoSite) Reset() {
@@ -420,7 +420,7 @@ type GeoSiteList struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Entry []*GeoSite `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitempty"`
+	Entry []*GeoSite `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitzero"`
 }
 
 func (x *GeoSiteList) Reset() {
@@ -470,28 +470,28 @@ type RoutingRule struct {
 	//	*RoutingRule_Tag
 	//	*RoutingRule_BalancingTag
 	TargetTag isRoutingRule_TargetTag `protobuf_oneof:"target_tag"`
-	RuleTag   string                  `protobuf:"bytes,18,opt,name=rule_tag,json=ruleTag,proto3" json:"rule_tag,omitempty"`
+	RuleTag   string                  `protobuf:"bytes,18,opt,name=rule_tag,json=ruleTag,proto3" json:"rule_tag,omitzero"`
 	// List of domains for target domain matching.
-	Domain []*Domain `protobuf:"bytes,2,rep,name=domain,proto3" json:"domain,omitempty"`
+	Domain []*Domain `protobuf:"bytes,2,rep,name=domain,proto3" json:"domain,omitzero"`
 	// List of GeoIPs for target IP address matching. If this entry exists, the
 	// cidr above will have no effect. GeoIP fields with the same country code are
 	// supposed to contain exactly same content. They will be merged during
 	// runtime. For customized GeoIPs, please leave country code empty.
-	Geoip []*GeoIP `protobuf:"bytes,10,rep,name=geoip,proto3" json:"geoip,omitempty"`
+	Geoip []*GeoIP `protobuf:"bytes,10,rep,name=geoip,proto3" json:"geoip,omitzero"`
 	// List of ports.
-	PortList *net.PortList `protobuf:"bytes,14,opt,name=port_list,json=portList,proto3" json:"port_list,omitempty"`
+	PortList *net.PortList `protobuf:"bytes,14,opt,name=port_list,json=portList,proto3" json:"port_list,omitzero"`
 	// List of networks for matching.
-	Networks []net.Network `protobuf:"varint,13,rep,packed,name=networks,proto3,enum=xray.common.net.Network" json:"networks,omitempty"`
+	Networks []net.Network `protobuf:"varint,13,rep,packed,name=networks,proto3,enum=xray.common.net.Network" json:"networks,omitzero"`
 	// List of GeoIPs for source IP address matching. If this entry exists, the
 	// source_cidr above will have no effect.
-	SourceGeoip []*GeoIP `protobuf:"bytes,11,rep,name=source_geoip,json=sourceGeoip,proto3" json:"source_geoip,omitempty"`
+	SourceGeoip []*GeoIP `protobuf:"bytes,11,rep,name=source_geoip,json=sourceGeoip,proto3" json:"source_geoip,omitzero"`
 	// List of ports for source port matching.
-	SourcePortList *net.PortList     `protobuf:"bytes,16,opt,name=source_port_list,json=sourcePortList,proto3" json:"source_port_list,omitempty"`
-	UserEmail      []string          `protobuf:"bytes,7,rep,name=user_email,json=userEmail,proto3" json:"user_email,omitempty"`
-	InboundTag     []string          `protobuf:"bytes,8,rep,name=inbound_tag,json=inboundTag,proto3" json:"inbound_tag,omitempty"`
-	Protocol       []string          `protobuf:"bytes,9,rep,name=protocol,proto3" json:"protocol,omitempty"`
-	Attributes     map[string]string `protobuf:"bytes,15,rep,name=attributes,proto3" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	DomainMatcher  string            `protobuf:"bytes,17,opt,name=domain_matcher,json=domainMatcher,proto3" json:"domain_matcher,omitempty"`
+	SourcePortList *net.PortList     `protobuf:"bytes,16,opt,name=source_port_list,json=sourcePortList,proto3" json:"source_port_list,omitzero"`
+	UserEmail      []string          `protobuf:"bytes,7,rep,name=user_email,json=userEmail,proto3" json:"user_email,omitzero"`
+	InboundTag     []string          `protobuf:"bytes,8,rep,name=inbound_tag,json=inboundTag,proto3" json:"inbound_tag,omitzero"`
+	Protocol       []string          `protobuf:"bytes,9,rep,name=protocol,proto3" json:"protocol,omitzero"`
+	Attributes     map[string]string `protobuf:"bytes,15,rep,name=attributes,proto3" json:"attributes,omitzero" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	DomainMatcher  string            `protobuf:"bytes,17,opt,name=domain_matcher,json=domainMatcher,proto3" json:"domain_matcher,omitzero"`
 }
 
 func (x *RoutingRule) Reset() {
@@ -652,11 +652,11 @@ type BalancingRule struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag              string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	OutboundSelector []string             `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`
-	Strategy         string               `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
-	StrategySettings *serial.TypedMessage `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitempty"`
-	FallbackTag      string               `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitempty"`
+	Tag              string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	OutboundSelector []string             `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitzero"`
+	Strategy         string               `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitzero"`
+	StrategySettings *serial.TypedMessage `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitzero"`
+	FallbackTag      string               `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitzero"`
 }
 
 func (x *BalancingRule) Reset() {
@@ -729,9 +729,9 @@ type StrategyWeight struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Regexp bool    `protobuf:"varint,1,opt,name=regexp,proto3" json:"regexp,omitempty"`
-	Match  string  `protobuf:"bytes,2,opt,name=match,proto3" json:"match,omitempty"`
-	Value  float32 `protobuf:"fixed32,3,opt,name=value,proto3" json:"value,omitempty"`
+	Regexp bool    `protobuf:"varint,1,opt,name=regexp,proto3" json:"regexp,omitzero"`
+	Match  string  `protobuf:"bytes,2,opt,name=match,proto3" json:"match,omitzero"`
+	Value  float32 `protobuf:"fixed32,3,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *StrategyWeight) Reset() {
@@ -791,15 +791,15 @@ type StrategyLeastLoadConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// weight settings
-	Costs []*StrategyWeight `protobuf:"bytes,2,rep,name=costs,proto3" json:"costs,omitempty"`
+	Costs []*StrategyWeight `protobuf:"bytes,2,rep,name=costs,proto3" json:"costs,omitzero"`
 	// RTT baselines for selecting, int64 values of time.Duration
-	Baselines []int64 `protobuf:"varint,3,rep,packed,name=baselines,proto3" json:"baselines,omitempty"`
+	Baselines []int64 `protobuf:"varint,3,rep,packed,name=baselines,proto3" json:"baselines,omitzero"`
 	// expected nodes count to select
-	Expected int32 `protobuf:"varint,4,opt,name=expected,proto3" json:"expected,omitempty"`
+	Expected int32 `protobuf:"varint,4,opt,name=expected,proto3" json:"expected,omitzero"`
 	// max acceptable rtt, filter away high delay nodes. default 0
-	MaxRTT int64 `protobuf:"varint,5,opt,name=maxRTT,proto3" json:"maxRTT,omitempty"`
+	MaxRTT int64 `protobuf:"varint,5,opt,name=maxRTT,proto3" json:"maxRTT,omitzero"`
 	// acceptable failure rate
-	Tolerance float32 `protobuf:"fixed32,6,opt,name=tolerance,proto3" json:"tolerance,omitempty"`
+	Tolerance float32 `protobuf:"fixed32,6,opt,name=tolerance,proto3" json:"tolerance,omitzero"`
 }
 
 func (x *StrategyLeastLoadConfig) Reset() {
@@ -872,9 +872,9 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	DomainStrategy Config_DomainStrategy `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.app.router.Config_DomainStrategy" json:"domain_strategy,omitempty"`
-	Rule           []*RoutingRule        `protobuf:"bytes,2,rep,name=rule,proto3" json:"rule,omitempty"`
-	BalancingRule  []*BalancingRule      `protobuf:"bytes,3,rep,name=balancing_rule,json=balancingRule,proto3" json:"balancing_rule,omitempty"`
+	DomainStrategy Config_DomainStrategy `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.app.router.Config_DomainStrategy" json:"domain_strategy,omitzero"`
+	Rule           []*RoutingRule        `protobuf:"bytes,2,rep,name=rule,proto3" json:"rule,omitzero"`
+	BalancingRule  []*BalancingRule      `protobuf:"bytes,3,rep,name=balancing_rule,json=balancingRule,proto3" json:"balancing_rule,omitzero"`
 }
 
 func (x *Config) Reset() {
@@ -933,7 +933,7 @@ type Domain_Attribute struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitzero"`
 	// Types that are assignable to TypedValue:
 	//
 	//	*Domain_Attribute_BoolValue

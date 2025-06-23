@@ -77,8 +77,8 @@ type Account struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitzero"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitzero"`
 }
 
 func (x *Account) Reset() {
@@ -131,11 +131,11 @@ type ServerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AuthType   AuthType          `protobuf:"varint,1,opt,name=auth_type,json=authType,proto3,enum=xray.proxy.socks.AuthType" json:"auth_type,omitempty"`
-	Accounts   map[string]string `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Address    *net.IPOrDomain   `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
-	UdpEnabled bool              `protobuf:"varint,4,opt,name=udp_enabled,json=udpEnabled,proto3" json:"udp_enabled,omitempty"`
-	UserLevel  uint32            `protobuf:"varint,6,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
+	AuthType   AuthType          `protobuf:"varint,1,opt,name=auth_type,json=authType,proto3,enum=xray.proxy.socks.AuthType" json:"auth_type,omitzero"`
+	Accounts   map[string]string `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitzero" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Address    *net.IPOrDomain   `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitzero"`
+	UdpEnabled bool              `protobuf:"varint,4,opt,name=udp_enabled,json=udpEnabled,proto3" json:"udp_enabled,omitzero"`
+	UserLevel  uint32            `protobuf:"varint,6,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitzero"`
 }
 
 func (x *ServerConfig) Reset() {
@@ -210,7 +210,7 @@ type ClientConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Sever is a list of Socks server addresses.
-	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitempty"`
+	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitzero"`
 }
 
 func (x *ClientConfig) Reset() {

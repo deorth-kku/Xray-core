@@ -26,7 +26,7 @@ type DetourConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	To string `protobuf:"bytes,1,opt,name=to,proto3" json:"to,omitempty"`
+	To string `protobuf:"bytes,1,opt,name=to,proto3" json:"to,omitzero"`
 }
 
 func (x *DetourConfig) Reset() {
@@ -71,7 +71,7 @@ type DefaultConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Level uint32 `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitempty"`
+	Level uint32 `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitzero"`
 }
 
 func (x *DefaultConfig) Reset() {
@@ -116,9 +116,9 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User    []*protocol.User `protobuf:"bytes,1,rep,name=user,proto3" json:"user,omitempty"`
-	Default *DefaultConfig   `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitempty"`
-	Detour  *DetourConfig    `protobuf:"bytes,3,opt,name=detour,proto3" json:"detour,omitempty"` // 4 is for legacy setting
+	User    []*protocol.User `protobuf:"bytes,1,rep,name=user,proto3" json:"user,omitzero"`
+	Default *DefaultConfig   `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitzero"`
+	Detour  *DetourConfig    `protobuf:"bytes,3,opt,name=detour,proto3" json:"detour,omitzero"` // 4 is for legacy setting
 }
 
 func (x *Config) Reset() {

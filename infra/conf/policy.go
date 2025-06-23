@@ -5,14 +5,14 @@ import (
 )
 
 type Policy struct {
-	Handshake         *uint32 `json:"handshake,omitempty"`
-	ConnectionIdle    *uint32 `json:"connIdle,omitempty"`
-	UplinkOnly        *uint32 `json:"uplinkOnly,omitempty"`
-	DownlinkOnly      *uint32 `json:"downlinkOnly,omitempty"`
-	StatsUserUplink   bool    `json:"statsUserUplink,omitempty"`
-	StatsUserDownlink bool    `json:"statsUserDownlink,omitempty"`
-	StatsUserOnline   bool    `json:"statsUserOnline,omitempty"`
-	BufferSize        *int32  `json:"bufferSize,omitempty"`
+	Handshake         *uint32 `json:"handshake,omitzero"`
+	ConnectionIdle    *uint32 `json:"connIdle,omitzero"`
+	UplinkOnly        *uint32 `json:"uplinkOnly,omitzero"`
+	DownlinkOnly      *uint32 `json:"downlinkOnly,omitzero"`
+	StatsUserUplink   bool    `json:"statsUserUplink,omitzero"`
+	StatsUserDownlink bool    `json:"statsUserDownlink,omitzero"`
+	StatsUserOnline   bool    `json:"statsUserOnline,omitzero"`
+	BufferSize        *int32  `json:"bufferSize,omitzero"`
 }
 
 func (t *Policy) Build() (*policy.Policy, error) {
@@ -53,10 +53,10 @@ func (t *Policy) Build() (*policy.Policy, error) {
 }
 
 type SystemPolicy struct {
-	StatsInboundUplink    bool `json:"statsInboundUplink,omitempty"`
-	StatsInboundDownlink  bool `json:"statsInboundDownlink,omitempty"`
-	StatsOutboundUplink   bool `json:"statsOutboundUplink,omitempty"`
-	StatsOutboundDownlink bool `json:"statsOutboundDownlink,omitempty"`
+	StatsInboundUplink    bool `json:"statsInboundUplink,omitzero"`
+	StatsInboundDownlink  bool `json:"statsInboundDownlink,omitzero"`
+	StatsOutboundUplink   bool `json:"statsOutboundUplink,omitzero"`
+	StatsOutboundDownlink bool `json:"statsOutboundDownlink,omitzero"`
 }
 
 func (p *SystemPolicy) Build() (*policy.SystemPolicy, error) {
@@ -71,8 +71,8 @@ func (p *SystemPolicy) Build() (*policy.SystemPolicy, error) {
 }
 
 type PolicyConfig struct {
-	Levels map[uint32]*Policy `json:"levels,omitempty"`
-	System *SystemPolicy      `json:"system,omitempty"`
+	Levels map[uint32]*Policy `json:"levels,omitzero"`
+	System *SystemPolicy      `json:"system,omitzero"`
 }
 
 func (c *PolicyConfig) Build() (*policy.Config, error) {

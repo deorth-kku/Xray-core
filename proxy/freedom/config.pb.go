@@ -99,7 +99,7 @@ type DestinationOverride struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Server *protocol.ServerEndpoint `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitempty"`
+	Server *protocol.ServerEndpoint `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitzero"`
 }
 
 func (x *DestinationOverride) Reset() {
@@ -144,12 +144,12 @@ type Fragment struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PacketsFrom uint64 `protobuf:"varint,1,opt,name=packets_from,json=packetsFrom,proto3" json:"packets_from,omitempty"`
-	PacketsTo   uint64 `protobuf:"varint,2,opt,name=packets_to,json=packetsTo,proto3" json:"packets_to,omitempty"`
-	LengthMin   uint64 `protobuf:"varint,3,opt,name=length_min,json=lengthMin,proto3" json:"length_min,omitempty"`
-	LengthMax   uint64 `protobuf:"varint,4,opt,name=length_max,json=lengthMax,proto3" json:"length_max,omitempty"`
-	IntervalMin uint64 `protobuf:"varint,5,opt,name=interval_min,json=intervalMin,proto3" json:"interval_min,omitempty"`
-	IntervalMax uint64 `protobuf:"varint,6,opt,name=interval_max,json=intervalMax,proto3" json:"interval_max,omitempty"`
+	PacketsFrom uint64 `protobuf:"varint,1,opt,name=packets_from,json=packetsFrom,proto3" json:"packets_from,omitzero"`
+	PacketsTo   uint64 `protobuf:"varint,2,opt,name=packets_to,json=packetsTo,proto3" json:"packets_to,omitzero"`
+	LengthMin   uint64 `protobuf:"varint,3,opt,name=length_min,json=lengthMin,proto3" json:"length_min,omitzero"`
+	LengthMax   uint64 `protobuf:"varint,4,opt,name=length_max,json=lengthMax,proto3" json:"length_max,omitzero"`
+	IntervalMin uint64 `protobuf:"varint,5,opt,name=interval_min,json=intervalMin,proto3" json:"interval_min,omitzero"`
+	IntervalMax uint64 `protobuf:"varint,6,opt,name=interval_max,json=intervalMax,proto3" json:"interval_max,omitzero"`
 }
 
 func (x *Fragment) Reset() {
@@ -229,11 +229,11 @@ type Noise struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	LengthMin uint64 `protobuf:"varint,1,opt,name=length_min,json=lengthMin,proto3" json:"length_min,omitempty"`
-	LengthMax uint64 `protobuf:"varint,2,opt,name=length_max,json=lengthMax,proto3" json:"length_max,omitempty"`
-	DelayMin  uint64 `protobuf:"varint,3,opt,name=delay_min,json=delayMin,proto3" json:"delay_min,omitempty"`
-	DelayMax  uint64 `protobuf:"varint,4,opt,name=delay_max,json=delayMax,proto3" json:"delay_max,omitempty"`
-	Packet    []byte `protobuf:"bytes,5,opt,name=packet,proto3" json:"packet,omitempty"`
+	LengthMin uint64 `protobuf:"varint,1,opt,name=length_min,json=lengthMin,proto3" json:"length_min,omitzero"`
+	LengthMax uint64 `protobuf:"varint,2,opt,name=length_max,json=lengthMax,proto3" json:"length_max,omitzero"`
+	DelayMin  uint64 `protobuf:"varint,3,opt,name=delay_min,json=delayMin,proto3" json:"delay_min,omitzero"`
+	DelayMax  uint64 `protobuf:"varint,4,opt,name=delay_max,json=delayMax,proto3" json:"delay_max,omitzero"`
+	Packet    []byte `protobuf:"bytes,5,opt,name=packet,proto3" json:"packet,omitzero"`
 }
 
 func (x *Noise) Reset() {
@@ -306,12 +306,12 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	DomainStrategy      Config_DomainStrategy `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.proxy.freedom.Config_DomainStrategy" json:"domain_strategy,omitempty"`
-	DestinationOverride *DestinationOverride  `protobuf:"bytes,3,opt,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitempty"`
-	UserLevel           uint32                `protobuf:"varint,4,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
-	Fragment            *Fragment             `protobuf:"bytes,5,opt,name=fragment,proto3" json:"fragment,omitempty"`
-	ProxyProtocol       uint32                `protobuf:"varint,6,opt,name=proxy_protocol,json=proxyProtocol,proto3" json:"proxy_protocol,omitempty"`
-	Noises              []*Noise              `protobuf:"bytes,7,rep,name=noises,proto3" json:"noises,omitempty"`
+	DomainStrategy      Config_DomainStrategy `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.proxy.freedom.Config_DomainStrategy" json:"domain_strategy,omitzero"`
+	DestinationOverride *DestinationOverride  `protobuf:"bytes,3,opt,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitzero"`
+	UserLevel           uint32                `protobuf:"varint,4,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitzero"`
+	Fragment            *Fragment             `protobuf:"bytes,5,opt,name=fragment,proto3" json:"fragment,omitzero"`
+	ProxyProtocol       uint32                `protobuf:"varint,6,opt,name=proxy_protocol,json=proxyProtocol,proto3" json:"proxy_protocol,omitzero"`
+	Noises              []*Noise              `protobuf:"bytes,7,rep,name=noises,proto3" json:"noises,omitzero"`
 }
 
 func (x *Config) Reset() {

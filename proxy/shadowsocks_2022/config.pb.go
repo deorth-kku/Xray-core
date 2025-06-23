@@ -27,11 +27,11 @@ type ServerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Method  string        `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
-	Key     string        `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	Email   string        `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	Level   int32         `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitempty"`
-	Network []net.Network `protobuf:"varint,5,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
+	Method  string        `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitzero"`
+	Key     string        `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitzero"`
+	Email   string        `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitzero"`
+	Level   int32         `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitzero"`
+	Network []net.Network `protobuf:"varint,5,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitzero"`
 }
 
 func (x *ServerConfig) Reset() {
@@ -104,10 +104,10 @@ type MultiUserServerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Method  string           `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
-	Key     string           `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	Users   []*protocol.User `protobuf:"bytes,3,rep,name=users,proto3" json:"users,omitempty"`
-	Network []net.Network    `protobuf:"varint,4,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
+	Method  string           `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitzero"`
+	Key     string           `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitzero"`
+	Users   []*protocol.User `protobuf:"bytes,3,rep,name=users,proto3" json:"users,omitzero"`
+	Network []net.Network    `protobuf:"varint,4,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitzero"`
 }
 
 func (x *MultiUserServerConfig) Reset() {
@@ -173,11 +173,11 @@ type RelayDestination struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key     string          `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Address *net.IPOrDomain `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32          `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitempty"`
-	Email   string          `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
-	Level   int32           `protobuf:"varint,5,opt,name=level,proto3" json:"level,omitempty"`
+	Key     string          `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitzero"`
+	Address *net.IPOrDomain `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitzero"`
+	Port    uint32          `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitzero"`
+	Email   string          `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitzero"`
+	Level   int32           `protobuf:"varint,5,opt,name=level,proto3" json:"level,omitzero"`
 }
 
 func (x *RelayDestination) Reset() {
@@ -250,10 +250,10 @@ type RelayServerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Method       string              `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
-	Key          string              `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	Destinations []*RelayDestination `protobuf:"bytes,3,rep,name=destinations,proto3" json:"destinations,omitempty"`
-	Network      []net.Network       `protobuf:"varint,4,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
+	Method       string              `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitzero"`
+	Key          string              `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitzero"`
+	Destinations []*RelayDestination `protobuf:"bytes,3,rep,name=destinations,proto3" json:"destinations,omitzero"`
+	Network      []net.Network       `protobuf:"varint,4,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitzero"`
 }
 
 func (x *RelayServerConfig) Reset() {
@@ -319,7 +319,7 @@ type Account struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitzero"`
 }
 
 func (x *Account) Reset() {
@@ -364,12 +364,12 @@ type ClientConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address           *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Port              uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
-	Method            string          `protobuf:"bytes,3,opt,name=method,proto3" json:"method,omitempty"`
-	Key               string          `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitempty"`
-	UdpOverTcp        bool            `protobuf:"varint,5,opt,name=udp_over_tcp,json=udpOverTcp,proto3" json:"udp_over_tcp,omitempty"`
-	UdpOverTcpVersion uint32          `protobuf:"varint,6,opt,name=udp_over_tcp_version,json=udpOverTcpVersion,proto3" json:"udp_over_tcp_version,omitempty"`
+	Address           *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitzero"`
+	Port              uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitzero"`
+	Method            string          `protobuf:"bytes,3,opt,name=method,proto3" json:"method,omitzero"`
+	Key               string          `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitzero"`
+	UdpOverTcp        bool            `protobuf:"varint,5,opt,name=udp_over_tcp,json=udpOverTcp,proto3" json:"udp_over_tcp,omitzero"`
+	UdpOverTcpVersion uint32          `protobuf:"varint,6,opt,name=udp_over_tcp_version,json=udpOverTcpVersion,proto3" json:"udp_over_tcp_version,omitzero"`
 }
 
 func (x *ClientConfig) Reset() {

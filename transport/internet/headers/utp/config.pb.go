@@ -25,7 +25,7 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Version uint32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	Version uint32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitzero"`
 }
 
 func (x *Config) Reset() {

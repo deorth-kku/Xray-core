@@ -26,7 +26,7 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Vnext []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=vnext,proto3" json:"vnext,omitempty"`
+	Vnext []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=vnext,proto3" json:"vnext,omitzero"`
 }
 
 func (x *Config) Reset() {

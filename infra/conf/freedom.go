@@ -14,25 +14,25 @@ import (
 )
 
 type FreedomConfig struct {
-	DomainStrategy string    `json:"domainStrategy,omitempty"`
-	Redirect       string    `json:"redirect,omitempty"`
-	UserLevel      uint32    `json:"userLevel,omitempty"`
-	Fragment       *Fragment `json:"fragment,omitempty"`
-	Noise          *Noise    `json:"noise,omitempty"`
-	Noises         []*Noise  `json:"noises,omitempty"`
-	ProxyProtocol  uint32    `json:"proxyProtocol,omitempty"`
+	DomainStrategy string    `json:"domainStrategy,omitzero"`
+	Redirect       string    `json:"redirect,omitzero"`
+	UserLevel      uint32    `json:"userLevel,omitzero"`
+	Fragment       *Fragment `json:"fragment,omitzero"`
+	Noise          *Noise    `json:"noise,omitzero"`
+	Noises         []*Noise  `json:"noises,omitzero"`
+	ProxyProtocol  uint32    `json:"proxyProtocol,omitzero"`
 }
 
 type Fragment struct {
-	Packets  string      `json:"packets,omitempty"`
-	Length   *Int32Range `json:"length,omitempty"`
-	Interval *Int32Range `json:"interval,omitempty"`
+	Packets  string      `json:"packets,omitzero"`
+	Length   *Int32Range `json:"length,omitzero"`
+	Interval *Int32Range `json:"interval,omitzero"`
 }
 
 type Noise struct {
-	Type   string      `json:"type,omitempty"`
-	Packet string      `json:"packet,omitempty"`
-	Delay  *Int32Range `json:"delay,omitempty"`
+	Type   string      `json:"type,omitzero"`
+	Packet string      `json:"packet,omitzero"`
+	Delay  *Int32Range `json:"delay,omitzero"`
 }
 
 // Build implements Buildable

@@ -18,15 +18,15 @@ import (
 
 // StrategyConfig represents a strategy config
 type StrategyConfig struct {
-	Type     string           `json:"type,omitempty"`
-	Settings *json.RawMessage `json:"settings,omitempty"`
+	Type     string           `json:"type,omitzero"`
+	Settings *json.RawMessage `json:"settings,omitzero"`
 }
 
 type BalancingRule struct {
-	Tag         string         `json:"tag,omitempty"`
-	Selectors   StringList     `json:"selector,omitempty"`
-	Strategy    StrategyConfig `json:"strategy,omitempty"`
-	FallbackTag string         `json:"fallbackTag,omitempty"`
+	Tag         string         `json:"tag,omitzero"`
+	Selectors   StringList     `json:"selector,omitzero"`
+	Strategy    StrategyConfig `json:"strategy,omitzero"`
+	FallbackTag string         `json:"fallbackTag,omitzero"`
 }
 
 // Build builds the balancing rule
@@ -73,11 +73,11 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 }
 
 type RouterConfig struct {
-	RuleList       []json.RawMessage `json:"rules,omitempty"`
-	DomainStrategy *string           `json:"domainStrategy,omitempty"`
-	Balancers      []*BalancingRule  `json:"balancers,omitempty"`
+	RuleList       []json.RawMessage `json:"rules,omitzero"`
+	DomainStrategy *string           `json:"domainStrategy,omitzero"`
+	Balancers      []*BalancingRule  `json:"balancers,omitzero"`
 
-	DomainMatcher string `json:"domainMatcher,omitempty"`
+	DomainMatcher string `json:"domainMatcher,omitzero"`
 }
 
 func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
@@ -130,12 +130,12 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 }
 
 type RouterRule struct {
-	RuleTag     string `json:"ruleTag,omitempty"`
-	Type        string `json:"type,omitempty"`
-	OutboundTag string `json:"outboundTag,omitempty"`
-	BalancerTag string `json:"balancerTag,omitempty"`
+	RuleTag     string `json:"ruleTag,omitzero"`
+	Type        string `json:"type,omitzero"`
+	OutboundTag string `json:"outboundTag,omitzero"`
+	BalancerTag string `json:"balancerTag,omitzero"`
 
-	DomainMatcher string `json:"domainMatcher,omitempty"`
+	DomainMatcher string `json:"domainMatcher,omitzero"`
 }
 
 func ParseIP(s string) (*router.CIDR, error) {
@@ -524,17 +524,17 @@ func ToCidrList(ips StringList) ([]*router.GeoIP, error) {
 func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	type RawFieldRule struct {
 		RouterRule
-		Domain     *StringList       `json:"domain,omitempty"`
-		Domains    *StringList       `json:"domains,omitempty"`
-		IP         *StringList       `json:"ip,omitempty"`
-		Port       *PortList         `json:"port,omitempty"`
-		Network    *NetworkList      `json:"network,omitempty"`
-		SourceIP   *StringList       `json:"source,omitempty"`
-		SourcePort *PortList         `json:"sourcePort,omitempty"`
-		User       *StringList       `json:"user,omitempty"`
-		InboundTag *StringList       `json:"inboundTag,omitempty"`
-		Protocols  *StringList       `json:"protocol,omitempty"`
-		Attributes map[string]string `json:"attrs,omitempty"`
+		Domain     *StringList       `json:"domain,omitzero"`
+		Domains    *StringList       `json:"domains,omitzero"`
+		IP         *StringList       `json:"ip,omitzero"`
+		Port       *PortList         `json:"port,omitzero"`
+		Network    *NetworkList      `json:"network,omitzero"`
+		SourceIP   *StringList       `json:"source,omitzero"`
+		SourcePort *PortList         `json:"sourcePort,omitzero"`
+		User       *StringList       `json:"user,omitzero"`
+		InboundTag *StringList       `json:"inboundTag,omitzero"`
+		Protocols  *StringList       `json:"protocol,omitzero"`
+		Attributes map[string]string `json:"attrs,omitzero"`
 	}
 	rawFieldRule := new(RawFieldRule)
 	err := json.Unmarshal(msg, rawFieldRule)

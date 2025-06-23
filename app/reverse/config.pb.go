@@ -71,8 +71,8 @@ type Control struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	State  Control_State `protobuf:"varint,1,opt,name=state,proto3,enum=xray.app.reverse.Control_State" json:"state,omitempty"`
-	Random []byte        `protobuf:"bytes,99,opt,name=random,proto3" json:"random,omitempty"`
+	State  Control_State `protobuf:"varint,1,opt,name=state,proto3,enum=xray.app.reverse.Control_State" json:"state,omitzero"`
+	Random []byte        `protobuf:"bytes,99,opt,name=random,proto3" json:"random,omitzero"`
 }
 
 func (x *Control) Reset() {
@@ -124,8 +124,8 @@ type BridgeConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag    string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	Tag    string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitzero"`
 }
 
 func (x *BridgeConfig) Reset() {
@@ -177,8 +177,8 @@ type PortalConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag    string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	Tag    string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitzero"`
 }
 
 func (x *PortalConfig) Reset() {
@@ -230,8 +230,8 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BridgeConfig []*BridgeConfig `protobuf:"bytes,1,rep,name=bridge_config,json=bridgeConfig,proto3" json:"bridge_config,omitempty"`
-	PortalConfig []*PortalConfig `protobuf:"bytes,2,rep,name=portal_config,json=portalConfig,proto3" json:"portal_config,omitempty"`
+	BridgeConfig []*BridgeConfig `protobuf:"bytes,1,rep,name=bridge_config,json=bridgeConfig,proto3" json:"bridge_config,omitzero"`
+	PortalConfig []*PortalConfig `protobuf:"bytes,2,rep,name=portal_config,json=portalConfig,proto3" json:"portal_config,omitzero"`
 }
 
 func (x *Config) Reset() {

@@ -153,9 +153,9 @@ type TransportConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Transport protocol name.
-	ProtocolName string `protobuf:"bytes,3,opt,name=protocol_name,json=protocolName,proto3" json:"protocol_name,omitempty"`
+	ProtocolName string `protobuf:"bytes,3,opt,name=protocol_name,json=protocolName,proto3" json:"protocol_name,omitzero"`
 	// Specific transport protocol settings.
-	Settings *serial.TypedMessage `protobuf:"bytes,2,opt,name=settings,proto3" json:"settings,omitempty"`
+	Settings *serial.TypedMessage `protobuf:"bytes,2,opt,name=settings,proto3" json:"settings,omitzero"`
 }
 
 func (x *TransportConfig) Reset() {
@@ -207,16 +207,16 @@ type StreamConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address *net.IPOrDomain `protobuf:"bytes,8,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32          `protobuf:"varint,9,opt,name=port,proto3" json:"port,omitempty"`
+	Address *net.IPOrDomain `protobuf:"bytes,8,opt,name=address,proto3" json:"address,omitzero"`
+	Port    uint32          `protobuf:"varint,9,opt,name=port,proto3" json:"port,omitzero"`
 	// Effective network.
-	ProtocolName      string             `protobuf:"bytes,5,opt,name=protocol_name,json=protocolName,proto3" json:"protocol_name,omitempty"`
-	TransportSettings []*TransportConfig `protobuf:"bytes,2,rep,name=transport_settings,json=transportSettings,proto3" json:"transport_settings,omitempty"`
+	ProtocolName      string             `protobuf:"bytes,5,opt,name=protocol_name,json=protocolName,proto3" json:"protocol_name,omitzero"`
+	TransportSettings []*TransportConfig `protobuf:"bytes,2,rep,name=transport_settings,json=transportSettings,proto3" json:"transport_settings,omitzero"`
 	// Type of security. Must be a message name of the settings proto.
-	SecurityType string `protobuf:"bytes,3,opt,name=security_type,json=securityType,proto3" json:"security_type,omitempty"`
+	SecurityType string `protobuf:"bytes,3,opt,name=security_type,json=securityType,proto3" json:"security_type,omitzero"`
 	// Transport security settings. They can be either TLS or REALITY.
-	SecuritySettings []*serial.TypedMessage `protobuf:"bytes,4,rep,name=security_settings,json=securitySettings,proto3" json:"security_settings,omitempty"`
-	SocketSettings   *SocketConfig          `protobuf:"bytes,6,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitempty"`
+	SecuritySettings []*serial.TypedMessage `protobuf:"bytes,4,rep,name=security_settings,json=securitySettings,proto3" json:"security_settings,omitzero"`
+	SocketSettings   *SocketConfig          `protobuf:"bytes,6,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitzero"`
 }
 
 func (x *StreamConfig) Reset() {
@@ -303,8 +303,8 @@ type ProxyConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag                 string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	TransportLayerProxy bool   `protobuf:"varint,2,opt,name=transportLayerProxy,proto3" json:"transportLayerProxy,omitempty"`
+	Tag                 string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	TransportLayerProxy bool   `protobuf:"varint,2,opt,name=transportLayerProxy,proto3" json:"transportLayerProxy,omitzero"`
 }
 
 func (x *ProxyConfig) Reset() {
@@ -356,10 +356,10 @@ type CustomSockopt struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Level string `protobuf:"bytes,1,opt,name=level,proto3" json:"level,omitempty"`
-	Opt   string `protobuf:"bytes,2,opt,name=opt,proto3" json:"opt,omitempty"`
-	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
-	Type  string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Level string `protobuf:"bytes,1,opt,name=level,proto3" json:"level,omitzero"`
+	Opt   string `protobuf:"bytes,2,opt,name=opt,proto3" json:"opt,omitzero"`
+	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitzero"`
+	Type  string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitzero"`
 }
 
 func (x *CustomSockopt) Reset() {
@@ -427,30 +427,30 @@ type SocketConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Mark of the connection. If non-zero, the value will be set to SO_MARK.
-	Mark int32 `protobuf:"varint,1,opt,name=mark,proto3" json:"mark,omitempty"`
+	Mark int32 `protobuf:"varint,1,opt,name=mark,proto3" json:"mark,omitzero"`
 	// TFO is the state of TFO settings.
-	Tfo int32 `protobuf:"varint,2,opt,name=tfo,proto3" json:"tfo,omitempty"`
+	Tfo int32 `protobuf:"varint,2,opt,name=tfo,proto3" json:"tfo,omitzero"`
 	// TProxy is for enabling TProxy socket option.
-	Tproxy SocketConfig_TProxyMode `protobuf:"varint,3,opt,name=tproxy,proto3,enum=xray.transport.internet.SocketConfig_TProxyMode" json:"tproxy,omitempty"`
+	Tproxy SocketConfig_TProxyMode `protobuf:"varint,3,opt,name=tproxy,proto3,enum=xray.transport.internet.SocketConfig_TProxyMode" json:"tproxy,omitzero"`
 	// ReceiveOriginalDestAddress is for enabling IP_RECVORIGDSTADDR socket
 	// option. This option is for UDP only.
-	ReceiveOriginalDestAddress bool             `protobuf:"varint,4,opt,name=receive_original_dest_address,json=receiveOriginalDestAddress,proto3" json:"receive_original_dest_address,omitempty"`
-	BindAddress                []byte           `protobuf:"bytes,5,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
-	BindPort                   uint32           `protobuf:"varint,6,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`
-	AcceptProxyProtocol        bool             `protobuf:"varint,7,opt,name=accept_proxy_protocol,json=acceptProxyProtocol,proto3" json:"accept_proxy_protocol,omitempty"`
-	DomainStrategy             DomainStrategy   `protobuf:"varint,8,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.transport.internet.DomainStrategy" json:"domain_strategy,omitempty"`
-	DialerProxy                string           `protobuf:"bytes,9,opt,name=dialer_proxy,json=dialerProxy,proto3" json:"dialer_proxy,omitempty"`
-	TcpKeepAliveInterval       int32            `protobuf:"varint,10,opt,name=tcp_keep_alive_interval,json=tcpKeepAliveInterval,proto3" json:"tcp_keep_alive_interval,omitempty"`
-	TcpKeepAliveIdle           int32            `protobuf:"varint,11,opt,name=tcp_keep_alive_idle,json=tcpKeepAliveIdle,proto3" json:"tcp_keep_alive_idle,omitempty"`
-	TcpCongestion              string           `protobuf:"bytes,12,opt,name=tcp_congestion,json=tcpCongestion,proto3" json:"tcp_congestion,omitempty"`
-	Interface                  string           `protobuf:"bytes,13,opt,name=interface,proto3" json:"interface,omitempty"`
-	V6Only                     bool             `protobuf:"varint,14,opt,name=v6only,proto3" json:"v6only,omitempty"`
-	TcpWindowClamp             int32            `protobuf:"varint,15,opt,name=tcp_window_clamp,json=tcpWindowClamp,proto3" json:"tcp_window_clamp,omitempty"`
-	TcpUserTimeout             int32            `protobuf:"varint,16,opt,name=tcp_user_timeout,json=tcpUserTimeout,proto3" json:"tcp_user_timeout,omitempty"`
-	TcpMaxSeg                  int32            `protobuf:"varint,17,opt,name=tcp_max_seg,json=tcpMaxSeg,proto3" json:"tcp_max_seg,omitempty"`
-	Penetrate                  bool             `protobuf:"varint,18,opt,name=penetrate,proto3" json:"penetrate,omitempty"`
-	TcpMptcp                   bool             `protobuf:"varint,19,opt,name=tcp_mptcp,json=tcpMptcp,proto3" json:"tcp_mptcp,omitempty"`
-	CustomSockopt              []*CustomSockopt `protobuf:"bytes,20,rep,name=customSockopt,proto3" json:"customSockopt,omitempty"`
+	ReceiveOriginalDestAddress bool             `protobuf:"varint,4,opt,name=receive_original_dest_address,json=receiveOriginalDestAddress,proto3" json:"receive_original_dest_address,omitzero"`
+	BindAddress                []byte           `protobuf:"bytes,5,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitzero"`
+	BindPort                   uint32           `protobuf:"varint,6,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitzero"`
+	AcceptProxyProtocol        bool             `protobuf:"varint,7,opt,name=accept_proxy_protocol,json=acceptProxyProtocol,proto3" json:"accept_proxy_protocol,omitzero"`
+	DomainStrategy             DomainStrategy   `protobuf:"varint,8,opt,name=domain_strategy,json=domainStrategy,proto3,enum=xray.transport.internet.DomainStrategy" json:"domain_strategy,omitzero"`
+	DialerProxy                string           `protobuf:"bytes,9,opt,name=dialer_proxy,json=dialerProxy,proto3" json:"dialer_proxy,omitzero"`
+	TcpKeepAliveInterval       int32            `protobuf:"varint,10,opt,name=tcp_keep_alive_interval,json=tcpKeepAliveInterval,proto3" json:"tcp_keep_alive_interval,omitzero"`
+	TcpKeepAliveIdle           int32            `protobuf:"varint,11,opt,name=tcp_keep_alive_idle,json=tcpKeepAliveIdle,proto3" json:"tcp_keep_alive_idle,omitzero"`
+	TcpCongestion              string           `protobuf:"bytes,12,opt,name=tcp_congestion,json=tcpCongestion,proto3" json:"tcp_congestion,omitzero"`
+	Interface                  string           `protobuf:"bytes,13,opt,name=interface,proto3" json:"interface,omitzero"`
+	V6Only                     bool             `protobuf:"varint,14,opt,name=v6only,proto3" json:"v6only,omitzero"`
+	TcpWindowClamp             int32            `protobuf:"varint,15,opt,name=tcp_window_clamp,json=tcpWindowClamp,proto3" json:"tcp_window_clamp,omitzero"`
+	TcpUserTimeout             int32            `protobuf:"varint,16,opt,name=tcp_user_timeout,json=tcpUserTimeout,proto3" json:"tcp_user_timeout,omitzero"`
+	TcpMaxSeg                  int32            `protobuf:"varint,17,opt,name=tcp_max_seg,json=tcpMaxSeg,proto3" json:"tcp_max_seg,omitzero"`
+	Penetrate                  bool             `protobuf:"varint,18,opt,name=penetrate,proto3" json:"penetrate,omitzero"`
+	TcpMptcp                   bool             `protobuf:"varint,19,opt,name=tcp_mptcp,json=tcpMptcp,proto3" json:"tcp_mptcp,omitzero"`
+	CustomSockopt              []*CustomSockopt `protobuf:"bytes,20,rep,name=customSockopt,proto3" json:"customSockopt,omitzero"`
 }
 
 func (x *SocketConfig) Reset() {

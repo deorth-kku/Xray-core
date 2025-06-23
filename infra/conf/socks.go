@@ -11,8 +11,8 @@ import (
 )
 
 type SocksAccount struct {
-	Username string `json:"user,omitempty"`
-	Password string `json:"pass,omitempty"`
+	Username string `json:"user,omitzero"`
+	Password string `json:"pass,omitzero"`
 }
 
 func (v *SocksAccount) Build() *socks.Account {
@@ -28,11 +28,11 @@ const (
 )
 
 type SocksServerConfig struct {
-	AuthMethod string          `json:"auth,omitempty"`
-	Accounts   []*SocksAccount `json:"accounts,omitempty"`
-	UDP        bool            `json:"udp,omitempty"`
-	Host       *Address        `json:"ip,omitempty"`
-	UserLevel  uint32          `json:"userLevel,omitempty"`
+	AuthMethod string          `json:"auth,omitzero"`
+	Accounts   []*SocksAccount `json:"accounts,omitzero"`
+	UDP        bool            `json:"udp,omitzero"`
+	Host       *Address        `json:"ip,omitzero"`
+	UserLevel  uint32          `json:"userLevel,omitzero"`
 }
 
 func (v *SocksServerConfig) Build() (proto.Message, error) {
@@ -64,13 +64,13 @@ func (v *SocksServerConfig) Build() (proto.Message, error) {
 }
 
 type SocksRemoteConfig struct {
-	Address *Address          `json:"address,omitempty"`
-	Port    uint16            `json:"port,omitempty"`
-	Users   []json.RawMessage `json:"users,omitempty"`
+	Address *Address          `json:"address,omitzero"`
+	Port    uint16            `json:"port,omitzero"`
+	Users   []json.RawMessage `json:"users,omitzero"`
 }
 
 type SocksClientConfig struct {
-	Servers []*SocksRemoteConfig `json:"servers,omitempty"`
+	Servers []*SocksRemoteConfig `json:"servers,omitzero"`
 }
 
 func (v *SocksClientConfig) Build() (proto.Message, error) {

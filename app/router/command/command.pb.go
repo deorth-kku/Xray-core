@@ -30,18 +30,18 @@ type RoutingContext struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	InboundTag        string            `protobuf:"bytes,1,opt,name=InboundTag,proto3" json:"InboundTag,omitempty"`
-	Network           net.Network       `protobuf:"varint,2,opt,name=Network,proto3,enum=xray.common.net.Network" json:"Network,omitempty"`
-	SourceIPs         [][]byte          `protobuf:"bytes,3,rep,name=SourceIPs,proto3" json:"SourceIPs,omitempty"`
-	TargetIPs         [][]byte          `protobuf:"bytes,4,rep,name=TargetIPs,proto3" json:"TargetIPs,omitempty"`
-	SourcePort        uint32            `protobuf:"varint,5,opt,name=SourcePort,proto3" json:"SourcePort,omitempty"`
-	TargetPort        uint32            `protobuf:"varint,6,opt,name=TargetPort,proto3" json:"TargetPort,omitempty"`
-	TargetDomain      string            `protobuf:"bytes,7,opt,name=TargetDomain,proto3" json:"TargetDomain,omitempty"`
-	Protocol          string            `protobuf:"bytes,8,opt,name=Protocol,proto3" json:"Protocol,omitempty"`
-	User              string            `protobuf:"bytes,9,opt,name=User,proto3" json:"User,omitempty"`
-	Attributes        map[string]string `protobuf:"bytes,10,rep,name=Attributes,proto3" json:"Attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	OutboundGroupTags []string          `protobuf:"bytes,11,rep,name=OutboundGroupTags,proto3" json:"OutboundGroupTags,omitempty"`
-	OutboundTag       string            `protobuf:"bytes,12,opt,name=OutboundTag,proto3" json:"OutboundTag,omitempty"`
+	InboundTag        string            `protobuf:"bytes,1,opt,name=InboundTag,proto3" json:"InboundTag,omitzero"`
+	Network           net.Network       `protobuf:"varint,2,opt,name=Network,proto3,enum=xray.common.net.Network" json:"Network,omitzero"`
+	SourceIPs         [][]byte          `protobuf:"bytes,3,rep,name=SourceIPs,proto3" json:"SourceIPs,omitzero"`
+	TargetIPs         [][]byte          `protobuf:"bytes,4,rep,name=TargetIPs,proto3" json:"TargetIPs,omitzero"`
+	SourcePort        uint32            `protobuf:"varint,5,opt,name=SourcePort,proto3" json:"SourcePort,omitzero"`
+	TargetPort        uint32            `protobuf:"varint,6,opt,name=TargetPort,proto3" json:"TargetPort,omitzero"`
+	TargetDomain      string            `protobuf:"bytes,7,opt,name=TargetDomain,proto3" json:"TargetDomain,omitzero"`
+	Protocol          string            `protobuf:"bytes,8,opt,name=Protocol,proto3" json:"Protocol,omitzero"`
+	User              string            `protobuf:"bytes,9,opt,name=User,proto3" json:"User,omitzero"`
+	Attributes        map[string]string `protobuf:"bytes,10,rep,name=Attributes,proto3" json:"Attributes,omitzero" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	OutboundGroupTags []string          `protobuf:"bytes,11,rep,name=OutboundGroupTags,proto3" json:"OutboundGroupTags,omitzero"`
+	OutboundTag       string            `protobuf:"bytes,12,opt,name=OutboundTag,proto3" json:"OutboundTag,omitzero"`
 }
 
 func (x *RoutingContext) Reset() {
@@ -181,7 +181,7 @@ type SubscribeRoutingStatsRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	FieldSelectors []string `protobuf:"bytes,1,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitempty"`
+	FieldSelectors []string `protobuf:"bytes,1,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitzero"`
 }
 
 func (x *SubscribeRoutingStatsRequest) Reset() {
@@ -233,9 +233,9 @@ type TestRouteRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RoutingContext *RoutingContext `protobuf:"bytes,1,opt,name=RoutingContext,proto3" json:"RoutingContext,omitempty"`
-	FieldSelectors []string        `protobuf:"bytes,2,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitempty"`
-	PublishResult  bool            `protobuf:"varint,3,opt,name=PublishResult,proto3" json:"PublishResult,omitempty"`
+	RoutingContext *RoutingContext `protobuf:"bytes,1,opt,name=RoutingContext,proto3" json:"RoutingContext,omitzero"`
+	FieldSelectors []string        `protobuf:"bytes,2,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitzero"`
+	PublishResult  bool            `protobuf:"varint,3,opt,name=PublishResult,proto3" json:"PublishResult,omitzero"`
 }
 
 func (x *TestRouteRequest) Reset() {
@@ -294,7 +294,7 @@ type PrincipleTargetInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag []string `protobuf:"bytes,1,rep,name=tag,proto3" json:"tag,omitempty"`
+	Tag []string `protobuf:"bytes,1,rep,name=tag,proto3" json:"tag,omitzero"`
 }
 
 func (x *PrincipleTargetInfo) Reset() {
@@ -339,7 +339,7 @@ type OverrideInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitzero"`
 }
 
 func (x *OverrideInfo) Reset() {
@@ -384,8 +384,8 @@ type BalancerMsg struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Override        *OverrideInfo        `protobuf:"bytes,5,opt,name=override,proto3" json:"override,omitempty"`
-	PrincipleTarget *PrincipleTargetInfo `protobuf:"bytes,6,opt,name=principle_target,json=principleTarget,proto3" json:"principle_target,omitempty"`
+	Override        *OverrideInfo        `protobuf:"bytes,5,opt,name=override,proto3" json:"override,omitzero"`
+	PrincipleTarget *PrincipleTargetInfo `protobuf:"bytes,6,opt,name=principle_target,json=principleTarget,proto3" json:"principle_target,omitzero"`
 }
 
 func (x *BalancerMsg) Reset() {
@@ -437,7 +437,7 @@ type GetBalancerInfoRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 }
 
 func (x *GetBalancerInfoRequest) Reset() {
@@ -482,7 +482,7 @@ type GetBalancerInfoResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Balancer *BalancerMsg `protobuf:"bytes,1,opt,name=balancer,proto3" json:"balancer,omitempty"`
+	Balancer *BalancerMsg `protobuf:"bytes,1,opt,name=balancer,proto3" json:"balancer,omitzero"`
 }
 
 func (x *GetBalancerInfoResponse) Reset() {
@@ -527,8 +527,8 @@ type OverrideBalancerTargetRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BalancerTag string `protobuf:"bytes,1,opt,name=balancerTag,proto3" json:"balancerTag,omitempty"`
-	Target      string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	BalancerTag string `protobuf:"bytes,1,opt,name=balancerTag,proto3" json:"balancerTag,omitzero"`
+	Target      string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitzero"`
 }
 
 func (x *OverrideBalancerTargetRequest) Reset() {
@@ -616,8 +616,8 @@ type AddRuleRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Config       *serial.TypedMessage `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
-	ShouldAppend bool                 `protobuf:"varint,2,opt,name=shouldAppend,proto3" json:"shouldAppend,omitempty"`
+	Config       *serial.TypedMessage `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitzero"`
+	ShouldAppend bool                 `protobuf:"varint,2,opt,name=shouldAppend,proto3" json:"shouldAppend,omitzero"`
 }
 
 func (x *AddRuleRequest) Reset() {
@@ -705,7 +705,7 @@ type RemoveRuleRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RuleTag string `protobuf:"bytes,1,opt,name=ruleTag,proto3" json:"ruleTag,omitempty"`
+	RuleTag string `protobuf:"bytes,1,opt,name=ruleTag,proto3" json:"ruleTag,omitzero"`
 }
 
 func (x *RemoveRuleRequest) Reset() {

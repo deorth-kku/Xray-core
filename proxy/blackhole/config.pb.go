@@ -98,7 +98,7 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Response *serial.TypedMessage `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response *serial.TypedMessage `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitzero"`
 }
 
 func (x *Config) Reset() {

@@ -61,9 +61,9 @@ type ChannelConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Blocking        bool  `protobuf:"varint,1,opt,name=Blocking,proto3" json:"Blocking,omitempty"`
-	SubscriberLimit int32 `protobuf:"varint,2,opt,name=SubscriberLimit,proto3" json:"SubscriberLimit,omitempty"`
-	BufferSize      int32 `protobuf:"varint,3,opt,name=BufferSize,proto3" json:"BufferSize,omitempty"`
+	Blocking        bool  `protobuf:"varint,1,opt,name=Blocking,proto3" json:"Blocking,omitzero"`
+	SubscriberLimit int32 `protobuf:"varint,2,opt,name=SubscriberLimit,proto3" json:"SubscriberLimit,omitzero"`
+	BufferSize      int32 `protobuf:"varint,3,opt,name=BufferSize,proto3" json:"BufferSize,omitzero"`
 }
 
 func (x *ChannelConfig) Reset() {

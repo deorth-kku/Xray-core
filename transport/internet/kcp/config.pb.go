@@ -27,7 +27,7 @@ type MTU struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *MTU) Reset() {
@@ -73,7 +73,7 @@ type TTI struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *TTI) Reset() {
@@ -119,7 +119,7 @@ type UplinkCapacity struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *UplinkCapacity) Reset() {
@@ -165,7 +165,7 @@ type DownlinkCapacity struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *DownlinkCapacity) Reset() {
@@ -211,7 +211,7 @@ type WriteBuffer struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Buffer size in bytes.
-	Size uint32 `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	Size uint32 `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitzero"`
 }
 
 func (x *WriteBuffer) Reset() {
@@ -257,7 +257,7 @@ type ReadBuffer struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Buffer size in bytes.
-	Size uint32 `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	Size uint32 `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitzero"`
 }
 
 func (x *ReadBuffer) Reset() {
@@ -302,7 +302,7 @@ type ConnectionReuse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Enable bool `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitempty"`
+	Enable bool `protobuf:"varint,1,opt,name=enable,proto3" json:"enable,omitzero"`
 }
 
 func (x *ConnectionReuse) Reset() {
@@ -350,7 +350,7 @@ type EncryptionSeed struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Seed string `protobuf:"bytes,1,opt,name=seed,proto3" json:"seed,omitempty"`
+	Seed string `protobuf:"bytes,1,opt,name=seed,proto3" json:"seed,omitzero"`
 }
 
 func (x *EncryptionSeed) Reset() {
@@ -395,15 +395,15 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Mtu              *MTU                 `protobuf:"bytes,1,opt,name=mtu,proto3" json:"mtu,omitempty"`
-	Tti              *TTI                 `protobuf:"bytes,2,opt,name=tti,proto3" json:"tti,omitempty"`
-	UplinkCapacity   *UplinkCapacity      `protobuf:"bytes,3,opt,name=uplink_capacity,json=uplinkCapacity,proto3" json:"uplink_capacity,omitempty"`
-	DownlinkCapacity *DownlinkCapacity    `protobuf:"bytes,4,opt,name=downlink_capacity,json=downlinkCapacity,proto3" json:"downlink_capacity,omitempty"`
-	Congestion       bool                 `protobuf:"varint,5,opt,name=congestion,proto3" json:"congestion,omitempty"`
-	WriteBuffer      *WriteBuffer         `protobuf:"bytes,6,opt,name=write_buffer,json=writeBuffer,proto3" json:"write_buffer,omitempty"`
-	ReadBuffer       *ReadBuffer          `protobuf:"bytes,7,opt,name=read_buffer,json=readBuffer,proto3" json:"read_buffer,omitempty"`
-	HeaderConfig     *serial.TypedMessage `protobuf:"bytes,8,opt,name=header_config,json=headerConfig,proto3" json:"header_config,omitempty"`
-	Seed             *EncryptionSeed      `protobuf:"bytes,10,opt,name=seed,proto3" json:"seed,omitempty"`
+	Mtu              *MTU                 `protobuf:"bytes,1,opt,name=mtu,proto3" json:"mtu,omitzero"`
+	Tti              *TTI                 `protobuf:"bytes,2,opt,name=tti,proto3" json:"tti,omitzero"`
+	UplinkCapacity   *UplinkCapacity      `protobuf:"bytes,3,opt,name=uplink_capacity,json=uplinkCapacity,proto3" json:"uplink_capacity,omitzero"`
+	DownlinkCapacity *DownlinkCapacity    `protobuf:"bytes,4,opt,name=downlink_capacity,json=downlinkCapacity,proto3" json:"downlink_capacity,omitzero"`
+	Congestion       bool                 `protobuf:"varint,5,opt,name=congestion,proto3" json:"congestion,omitzero"`
+	WriteBuffer      *WriteBuffer         `protobuf:"bytes,6,opt,name=write_buffer,json=writeBuffer,proto3" json:"write_buffer,omitzero"`
+	ReadBuffer       *ReadBuffer          `protobuf:"bytes,7,opt,name=read_buffer,json=readBuffer,proto3" json:"read_buffer,omitzero"`
+	HeaderConfig     *serial.TypedMessage `protobuf:"bytes,8,opt,name=header_config,json=headerConfig,proto3" json:"header_config,omitzero"`
+	Seed             *EncryptionSeed      `protobuf:"bytes,10,opt,name=seed,proto3" json:"seed,omitzero"`
 }
 
 func (x *Config) Reset() {

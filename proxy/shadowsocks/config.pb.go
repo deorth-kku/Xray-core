@@ -85,9 +85,9 @@ type Account struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Password   string     `protobuf:"bytes,1,opt,name=password,proto3" json:"password,omitempty"`
-	CipherType CipherType `protobuf:"varint,2,opt,name=cipher_type,json=cipherType,proto3,enum=xray.proxy.shadowsocks.CipherType" json:"cipher_type,omitempty"`
-	IvCheck    bool       `protobuf:"varint,3,opt,name=iv_check,json=ivCheck,proto3" json:"iv_check,omitempty"`
+	Password   string     `protobuf:"bytes,1,opt,name=password,proto3" json:"password,omitzero"`
+	CipherType CipherType `protobuf:"varint,2,opt,name=cipher_type,json=cipherType,proto3,enum=xray.proxy.shadowsocks.CipherType" json:"cipher_type,omitzero"`
+	IvCheck    bool       `protobuf:"varint,3,opt,name=iv_check,json=ivCheck,proto3" json:"iv_check,omitzero"`
 }
 
 func (x *Account) Reset() {
@@ -146,8 +146,8 @@ type ServerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Users   []*protocol.User `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
-	Network []net.Network    `protobuf:"varint,2,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitempty"`
+	Users   []*protocol.User `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitzero"`
+	Network []net.Network    `protobuf:"varint,2,rep,packed,name=network,proto3,enum=xray.common.net.Network" json:"network,omitzero"`
 }
 
 func (x *ServerConfig) Reset() {
@@ -199,7 +199,7 @@ type ClientConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitempty"`
+	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitzero"`
 }
 
 func (x *ClientConfig) Reset() {

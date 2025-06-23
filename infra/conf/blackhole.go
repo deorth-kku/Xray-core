@@ -22,7 +22,7 @@ func (*HTTPResponse) Build() (proto.Message, error) {
 }
 
 type BlackholeConfig struct {
-	Response json.RawMessage `json:"response,omitempty"`
+	Response json.RawMessage `json:"response,omitzero"`
 }
 
 func (v *BlackholeConfig) Build() (proto.Message, error) {

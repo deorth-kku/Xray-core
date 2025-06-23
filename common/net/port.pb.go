@@ -27,9 +27,9 @@ type PortRange struct {
 	unknownFields protoimpl.UnknownFields
 
 	// The port that this range starts from.
-	From uint32 `protobuf:"varint,1,opt,name=From,proto3" json:"From,omitempty"`
+	From uint32 `protobuf:"varint,1,opt,name=From,proto3" json:"From,omitzero"`
 	// The port that this range ends with (inclusive).
-	To uint32 `protobuf:"varint,2,opt,name=To,proto3" json:"To,omitempty"`
+	To uint32 `protobuf:"varint,2,opt,name=To,proto3" json:"To,omitzero"`
 }
 
 func (x *PortRange) Reset() {
@@ -82,7 +82,7 @@ type PortList struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Range []*PortRange `protobuf:"bytes,1,rep,name=range,proto3" json:"range,omitempty"`
+	Range []*PortRange `protobuf:"bytes,1,rep,name=range,proto3" json:"range,omitzero"`
 }
 
 func (x *PortList) Reset() {

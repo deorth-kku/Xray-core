@@ -28,12 +28,12 @@ type Config struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Tag of the outbound handler that handles grpc connections.
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 	// Network address of commander grpc service.
-	Listen string `protobuf:"bytes,3,opt,name=listen,proto3" json:"listen,omitempty"`
+	Listen string `protobuf:"bytes,3,opt,name=listen,proto3" json:"listen,omitzero"`
 	// Services that supported by this server. All services must implement Service
 	// interface.
-	Service []*serial.TypedMessage `protobuf:"bytes,2,rep,name=service,proto3" json:"service,omitempty"`
+	Service []*serial.TypedMessage `protobuf:"bytes,2,rep,name=service,proto3" json:"service,omitzero"`
 }
 
 func (x *Config) Reset() {

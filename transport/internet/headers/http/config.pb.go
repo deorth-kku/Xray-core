@@ -26,10 +26,10 @@ type Header struct {
 	unknownFields protoimpl.UnknownFields
 
 	// "Accept", "Cookie", etc
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitzero"`
 	// Each entry must be valid in one piece. Random entry will be chosen if
 	// multiple entries present.
-	Value []string `protobuf:"bytes,2,rep,name=value,proto3" json:"value,omitempty"`
+	Value []string `protobuf:"bytes,2,rep,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *Header) Reset() {
@@ -82,7 +82,7 @@ type Version struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *Version) Reset() {
@@ -128,7 +128,7 @@ type Method struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *Method) Reset() {
@@ -174,12 +174,12 @@ type RequestConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Full HTTP version like "1.1".
-	Version *Version `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	Version *Version `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitzero"`
 	// GET, POST, CONNECT etc
-	Method *Method `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
+	Method *Method `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitzero"`
 	// URI like "/login.php"
-	Uri    []string  `protobuf:"bytes,3,rep,name=uri,proto3" json:"uri,omitempty"`
-	Header []*Header `protobuf:"bytes,4,rep,name=header,proto3" json:"header,omitempty"`
+	Uri    []string  `protobuf:"bytes,3,rep,name=uri,proto3" json:"uri,omitzero"`
+	Header []*Header `protobuf:"bytes,4,rep,name=header,proto3" json:"header,omitzero"`
 }
 
 func (x *RequestConfig) Reset() {
@@ -246,9 +246,9 @@ type Status struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Status code. Default "200".
-	Code string `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	Code string `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitzero"`
 	// Statue reason. Default "OK".
-	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitzero"`
 }
 
 func (x *Status) Reset() {
@@ -300,9 +300,9 @@ type ResponseConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Version *Version  `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	Status  *Status   `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	Header  []*Header `protobuf:"bytes,3,rep,name=header,proto3" json:"header,omitempty"`
+	Version *Version  `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitzero"`
+	Status  *Status   `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitzero"`
+	Header  []*Header `protobuf:"bytes,3,rep,name=header,proto3" json:"header,omitzero"`
 }
 
 func (x *ResponseConfig) Reset() {
@@ -363,10 +363,10 @@ type Config struct {
 
 	// Settings for authenticating requests. If not set, client side will not send
 	// authentication header, and server side will bypass authentication.
-	Request *RequestConfig `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
+	Request *RequestConfig `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitzero"`
 	// Settings for authenticating responses. If not set, client side will bypass
 	// authentication, and server side will not send authentication header.
-	Response *ResponseConfig `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+	Response *ResponseConfig `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitzero"`
 }
 
 func (x *Config) Reset() {

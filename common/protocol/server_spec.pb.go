@@ -26,9 +26,9 @@ type ServerEndpoint struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
-	User    []*User         `protobuf:"bytes,3,rep,name=user,proto3" json:"user,omitempty"`
+	Address *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitzero"`
+	Port    uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitzero"`
+	User    []*User         `protobuf:"bytes,3,rep,name=user,proto3" json:"user,omitzero"`
 }
 
 func (x *ServerEndpoint) Reset() {

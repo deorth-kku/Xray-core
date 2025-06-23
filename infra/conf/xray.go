@@ -50,11 +50,11 @@ var (
 )
 
 type SniffingConfig struct {
-	Enabled         bool        `json:"enabled,omitempty"`
-	DestOverride    *StringList `json:"destOverride,omitempty"`
-	DomainsExcluded *StringList `json:"domainsExcluded,omitempty"`
-	MetadataOnly    bool        `json:"metadataOnly,omitempty"`
-	RouteOnly       bool        `json:"routeOnly,omitempty"`
+	Enabled         bool        `json:"enabled,omitzero"`
+	DestOverride    *StringList `json:"destOverride,omitzero"`
+	DomainsExcluded *StringList `json:"domainsExcluded,omitzero"`
+	MetadataOnly    bool        `json:"metadataOnly,omitzero"`
+	RouteOnly       bool        `json:"routeOnly,omitzero"`
 }
 
 // Build implements Buildable.
@@ -96,10 +96,10 @@ func (c *SniffingConfig) Build() (*proxyman.SniffingConfig, error) {
 }
 
 type MuxConfig struct {
-	Enabled         bool   `json:"enabled,omitempty"`
-	Concurrency     int16  `json:"concurrency,omitempty"`
-	XudpConcurrency int16  `json:"xudpConcurrency,omitempty"`
-	XudpProxyUDP443 string `json:"xudpProxyUDP443,omitempty"`
+	Enabled         bool   `json:"enabled,omitzero"`
+	Concurrency     int16  `json:"concurrency,omitzero"`
+	XudpConcurrency int16  `json:"xudpConcurrency,omitzero"`
+	XudpProxyUDP443 string `json:"xudpProxyUDP443,omitzero"`
 }
 
 // Build creates MultiplexingConfig, Concurrency < 0 completely disables mux.
@@ -120,9 +120,9 @@ func (m *MuxConfig) Build() (*proxyman.MultiplexingConfig, error) {
 }
 
 type InboundDetourAllocationConfig struct {
-	Strategy    string  `json:"strategy,omitempty"`
-	Concurrency *uint32 `json:"concurrency,omitempty"`
-	RefreshMin  *uint32 `json:"refresh,omitempty"`
+	Strategy    string  `json:"strategy,omitzero"`
+	Concurrency *uint32 `json:"concurrency,omitzero"`
+	RefreshMin  *uint32 `json:"refresh,omitzero"`
 }
 
 // Build implements Buildable.
@@ -154,14 +154,14 @@ func (c *InboundDetourAllocationConfig) Build() (*proxyman.AllocationStrategy, e
 }
 
 type InboundDetourConfig struct {
-	Protocol       string                         `json:"protocol,omitempty"`
-	PortList       *PortList                      `json:"port,omitempty"`
-	ListenOn       *Address                       `json:"listen,omitempty"`
-	Settings       *json.RawMessage               `json:"settings,omitempty"`
-	Tag            string                         `json:"tag,omitempty"`
-	Allocation     *InboundDetourAllocationConfig `json:"allocate,omitempty"`
-	StreamSetting  *StreamConfig                  `json:"streamSettings,omitempty"`
-	SniffingConfig *SniffingConfig                `json:"sniffing,omitempty"`
+	Protocol       string                         `json:"protocol,omitzero"`
+	PortList       *PortList                      `json:"port,omitzero"`
+	ListenOn       *Address                       `json:"listen,omitzero"`
+	Settings       *json.RawMessage               `json:"settings,omitzero"`
+	Tag            string                         `json:"tag,omitzero"`
+	Allocation     *InboundDetourAllocationConfig `json:"allocate,omitzero"`
+	StreamSetting  *StreamConfig                  `json:"streamSettings,omitzero"`
+	SniffingConfig *SniffingConfig                `json:"sniffing,omitzero"`
 }
 
 // Build implements Buildable.
@@ -259,13 +259,13 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 }
 
 type OutboundDetourConfig struct {
-	Protocol      string           `json:"protocol,omitempty"`
-	SendThrough   *string          `json:"sendThrough,omitempty"`
-	Tag           string           `json:"tag,omitempty"`
-	Settings      *json.RawMessage `json:"settings,omitempty"`
-	StreamSetting *StreamConfig    `json:"streamSettings,omitempty"`
-	ProxySettings *ProxyConfig     `json:"proxySettings,omitempty"`
-	MuxSettings   *MuxConfig       `json:"mux,omitempty"`
+	Protocol      string           `json:"protocol,omitzero"`
+	SendThrough   *string          `json:"sendThrough,omitzero"`
+	Tag           string           `json:"tag,omitzero"`
+	Settings      *json.RawMessage `json:"settings,omitzero"`
+	StreamSetting *StreamConfig    `json:"streamSettings,omitzero"`
+	ProxySettings *ProxyConfig     `json:"proxySettings,omitzero"`
+	MuxSettings   *MuxConfig       `json:"mux,omitzero"`
 }
 
 func (c *OutboundDetourConfig) checkChainProxyConfig() error {
@@ -364,21 +364,21 @@ func (c *StatsConfig) Build() (*stats.Config, error) {
 type Config struct {
 	// Deprecated: Global transport config is no longer used
 	// left for returning error
-	Transport map[string]json.RawMessage `json:"transport,omitempty"`
+	Transport map[string]json.RawMessage `json:"transport,omitzero"`
 
-	LogConfig        *LogConfig              `json:"log,omitempty"`
-	RouterConfig     *RouterConfig           `json:"routing,omitempty"`
-	DNSConfig        *DNSConfig              `json:"dns,omitempty"`
-	InboundConfigs   []InboundDetourConfig   `json:"inbounds,omitempty"`
-	OutboundConfigs  []OutboundDetourConfig  `json:"outbounds,omitempty"`
-	Policy           *PolicyConfig           `json:"policy,omitempty"`
-	API              *APIConfig              `json:"api,omitempty"`
-	Metrics          *MetricsConfig          `json:"metrics,omitempty"`
-	Stats            *StatsConfig            `json:"stats,omitempty"`
-	Reverse          *ReverseConfig          `json:"reverse,omitempty"`
-	FakeDNS          *FakeDNSConfig          `json:"fakeDns,omitempty"`
-	Observatory      *ObservatoryConfig      `json:"observatory,omitempty"`
-	BurstObservatory *BurstObservatoryConfig `json:"burstObservatory,omitempty"`
+	LogConfig        *LogConfig              `json:"log,omitzero"`
+	RouterConfig     *RouterConfig           `json:"routing,omitzero"`
+	DNSConfig        *DNSConfig              `json:"dns,omitzero"`
+	InboundConfigs   []InboundDetourConfig   `json:"inbounds,omitzero"`
+	OutboundConfigs  []OutboundDetourConfig  `json:"outbounds,omitzero"`
+	Policy           *PolicyConfig           `json:"policy,omitzero"`
+	API              *APIConfig              `json:"api,omitzero"`
+	Metrics          *MetricsConfig          `json:"metrics,omitzero"`
+	Stats            *StatsConfig            `json:"stats,omitzero"`
+	Reverse          *ReverseConfig          `json:"reverse,omitzero"`
+	FakeDNS          *FakeDNSConfig          `json:"fakeDns,omitzero"`
+	Observatory      *ObservatoryConfig      `json:"observatory,omitzero"`
+	BurstObservatory *BurstObservatoryConfig `json:"burstObservatory,omitzero"`
 }
 
 func (c *Config) findInboundTag(tag string) int {

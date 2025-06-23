@@ -25,11 +25,11 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Host                string            `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	Path                string            `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Header              map[string]string `protobuf:"bytes,3,rep,name=header,proto3" json:"header,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	AcceptProxyProtocol bool              `protobuf:"varint,4,opt,name=accept_proxy_protocol,json=acceptProxyProtocol,proto3" json:"accept_proxy_protocol,omitempty"`
-	Ed                  uint32            `protobuf:"varint,5,opt,name=ed,proto3" json:"ed,omitempty"`
+	Host                string            `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitzero"`
+	Path                string            `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitzero"`
+	Header              map[string]string `protobuf:"bytes,3,rep,name=header,proto3" json:"header,omitzero" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	AcceptProxyProtocol bool              `protobuf:"varint,4,opt,name=accept_proxy_protocol,json=acceptProxyProtocol,proto3" json:"accept_proxy_protocol,omitzero"`
+	Ed                  uint32            `protobuf:"varint,5,opt,name=ed,proto3" json:"ed,omitzero"`
 }
 
 func (x *Config) Reset() {

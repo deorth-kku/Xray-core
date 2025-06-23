@@ -25,8 +25,8 @@ type FakeDnsPool struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	IpPool  string `protobuf:"bytes,1,opt,name=ip_pool,json=ipPool,proto3" json:"ip_pool,omitempty"` //CIDR of IP pool used as fake DNS IP
-	LruSize int64  `protobuf:"varint,2,opt,name=lruSize,proto3" json:"lruSize,omitempty"`            //Size of Pool for remembering relationship between domain name and IP address
+	IpPool  string `protobuf:"bytes,1,opt,name=ip_pool,json=ipPool,proto3" json:"ip_pool,omitzero"` //CIDR of IP pool used as fake DNS IP
+	LruSize int64  `protobuf:"varint,2,opt,name=lruSize,proto3" json:"lruSize,omitzero"`            //Size of Pool for remembering relationship between domain name and IP address
 }
 
 func (x *FakeDnsPool) Reset() {
@@ -78,7 +78,7 @@ type FakeDnsPoolMulti struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Pools []*FakeDnsPool `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
+	Pools []*FakeDnsPool `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitzero"`
 }
 
 func (x *FakeDnsPoolMulti) Reset() {

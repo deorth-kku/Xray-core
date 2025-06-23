@@ -26,12 +26,12 @@ type Fallback struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Alpn string `protobuf:"bytes,2,opt,name=alpn,proto3" json:"alpn,omitempty"`
-	Path string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
-	Type string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
-	Dest string `protobuf:"bytes,5,opt,name=dest,proto3" json:"dest,omitempty"`
-	Xver uint64 `protobuf:"varint,6,opt,name=xver,proto3" json:"xver,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitzero"`
+	Alpn string `protobuf:"bytes,2,opt,name=alpn,proto3" json:"alpn,omitzero"`
+	Path string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitzero"`
+	Type string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitzero"`
+	Dest string `protobuf:"bytes,5,opt,name=dest,proto3" json:"dest,omitzero"`
+	Xver uint64 `protobuf:"varint,6,opt,name=xver,proto3" json:"xver,omitzero"`
 }
 
 func (x *Fallback) Reset() {
@@ -111,11 +111,11 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Clients []*protocol.User `protobuf:"bytes,1,rep,name=clients,proto3" json:"clients,omitempty"`
+	Clients []*protocol.User `protobuf:"bytes,1,rep,name=clients,proto3" json:"clients,omitzero"`
 	// Decryption settings. Only applies to server side, and only accepts "none"
 	// for now.
-	Decryption string      `protobuf:"bytes,2,opt,name=decryption,proto3" json:"decryption,omitempty"`
-	Fallbacks  []*Fallback `protobuf:"bytes,3,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
+	Decryption string      `protobuf:"bytes,2,opt,name=decryption,proto3" json:"decryption,omitzero"`
+	Fallbacks  []*Fallback `protobuf:"bytes,3,rep,name=fallbacks,proto3" json:"fallbacks,omitzero"`
 }
 
 func (x *Config) Reset() {

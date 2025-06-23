@@ -28,7 +28,7 @@ type AddUserOperation struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User *protocol.User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	User *protocol.User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitzero"`
 }
 
 func (x *AddUserOperation) Reset() {
@@ -73,7 +73,7 @@ type RemoveUserOperation struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitzero"`
 }
 
 func (x *RemoveUserOperation) Reset() {
@@ -118,7 +118,7 @@ type AddInboundRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Inbound *core.InboundHandlerConfig `protobuf:"bytes,1,opt,name=inbound,proto3" json:"inbound,omitempty"`
+	Inbound *core.InboundHandlerConfig `protobuf:"bytes,1,opt,name=inbound,proto3" json:"inbound,omitzero"`
 }
 
 func (x *AddInboundRequest) Reset() {
@@ -199,7 +199,7 @@ type RemoveInboundRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 }
 
 func (x *RemoveInboundRequest) Reset() {
@@ -280,8 +280,8 @@ type AlterInboundRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag       string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Operation *serial.TypedMessage `protobuf:"bytes,2,opt,name=operation,proto3" json:"operation,omitempty"`
+	Tag       string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	Operation *serial.TypedMessage `protobuf:"bytes,2,opt,name=operation,proto3" json:"operation,omitzero"`
 }
 
 func (x *AlterInboundRequest) Reset() {
@@ -369,8 +369,8 @@ type GetInboundUserRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag   string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	Tag   string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitzero"`
 }
 
 func (x *GetInboundUserRequest) Reset() {
@@ -422,7 +422,7 @@ type GetInboundUserResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Users []*protocol.User `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	Users []*protocol.User `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitzero"`
 }
 
 func (x *GetInboundUserResponse) Reset() {
@@ -467,7 +467,7 @@ type GetInboundUsersCountResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Count int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Count int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitzero"`
 }
 
 func (x *GetInboundUsersCountResponse) Reset() {
@@ -512,7 +512,7 @@ type AddOutboundRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Outbound *core.OutboundHandlerConfig `protobuf:"bytes,1,opt,name=outbound,proto3" json:"outbound,omitempty"`
+	Outbound *core.OutboundHandlerConfig `protobuf:"bytes,1,opt,name=outbound,proto3" json:"outbound,omitzero"`
 }
 
 func (x *AddOutboundRequest) Reset() {
@@ -593,7 +593,7 @@ type RemoveOutboundRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
 }
 
 func (x *RemoveOutboundRequest) Reset() {
@@ -674,8 +674,8 @@ type AlterOutboundRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Tag       string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Operation *serial.TypedMessage `protobuf:"bytes,2,opt,name=operation,proto3" json:"operation,omitempty"`
+	Tag       string               `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitzero"`
+	Operation *serial.TypedMessage `protobuf:"bytes,2,opt,name=operation,proto3" json:"operation,omitzero"`
 }
 
 func (x *AlterOutboundRequest) Reset() {

@@ -26,12 +26,12 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	Address *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitzero"`
+	Port    uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitzero"`
 	// List of networks that the Dokodemo accepts.
-	Networks       []net.Network `protobuf:"varint,7,rep,packed,name=networks,proto3,enum=xray.common.net.Network" json:"networks,omitempty"`
-	FollowRedirect bool          `protobuf:"varint,5,opt,name=follow_redirect,json=followRedirect,proto3" json:"follow_redirect,omitempty"`
-	UserLevel      uint32        `protobuf:"varint,6,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
+	Networks       []net.Network `protobuf:"varint,7,rep,packed,name=networks,proto3,enum=xray.common.net.Network" json:"networks,omitzero"`
+	FollowRedirect bool          `protobuf:"varint,5,opt,name=follow_redirect,json=followRedirect,proto3" json:"follow_redirect,omitzero"`
+	UserLevel      uint32        `protobuf:"varint,6,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitzero"`
 }
 
 func (x *Config) Reset() {

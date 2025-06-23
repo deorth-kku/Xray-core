@@ -14,9 +14,9 @@ import (
 )
 
 type APIConfig struct {
-	Tag      string   `json:"tag,omitempty"`
-	Listen   string   `json:"listen,omitempty"`
-	Services []string `json:"services,omitempty"`
+	Tag      string   `json:"tag,omitzero"`
+	Listen   string   `json:"listen,omitzero"`
+	Services []string `json:"services,omitzero"`
 }
 
 func (c *APIConfig) Build() (*commander.Config, error) {

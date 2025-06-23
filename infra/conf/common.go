@@ -253,8 +253,8 @@ func (list *PortList) MarshalJSON() ([]byte, error) {
 }
 
 type User struct {
-	EmailString string `json:"email,omitempty"`
-	LevelByte   byte   `json:"level,omitempty"`
+	EmailString string `json:"email,omitzero"`
+	LevelByte   byte   `json:"level,omitzero"`
 }
 
 func (v *User) Build() *protocol.User {

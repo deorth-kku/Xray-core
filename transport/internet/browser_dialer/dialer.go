@@ -21,7 +21,7 @@ var webpage []byte
 type task struct {
 	Method string `json:"method"`
 	URL    string `json:"url"`
-	Extra  any    `json:"extra,omitempty"`
+	Extra  any    `json:"extra,omitzero"`
 }
 
 var conns chan *websocket.Conn
@@ -63,7 +63,7 @@ func HasBrowserDialer() bool {
 }
 
 type webSocketExtra struct {
-	Protocol string `json:"protocol,omitempty"`
+	Protocol string `json:"protocol,omitzero"`
 }
 
 func DialWS(uri string, ed []byte) (*websocket.Conn, error) {
@@ -82,8 +82,8 @@ func DialWS(uri string, ed []byte) (*websocket.Conn, error) {
 }
 
 type httpExtra struct {
-	Referrer string            `json:"referrer,omitempty"`
-	Headers  map[string]string `json:"headers,omitempty"`
+	Referrer string            `json:"referrer,omitzero"`
+	Headers  map[string]string `json:"headers,omitzero"`
 }
 
 func httpExtraFromHeaders(headers http.Header) *httpExtra {

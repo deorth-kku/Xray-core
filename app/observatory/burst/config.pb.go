@@ -26,8 +26,8 @@ type Config struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @Document The selectors for outbound under observation
-	SubjectSelector []string          `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitempty"`
-	PingConfig      *HealthPingConfig `protobuf:"bytes,3,opt,name=ping_config,json=pingConfig,proto3" json:"ping_config,omitempty"`
+	SubjectSelector []string          `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitzero"`
+	PingConfig      *HealthPingConfig `protobuf:"bytes,3,opt,name=ping_config,json=pingConfig,proto3" json:"ping_config,omitzero"`
 }
 
 func (x *Config) Reset() {
@@ -81,15 +81,15 @@ type HealthPingConfig struct {
 
 	// destination url, need 204 for success return
 	// default https://connectivitycheck.gstatic.com/generate_204
-	Destination string `protobuf:"bytes,1,opt,name=destination,proto3" json:"destination,omitempty"`
+	Destination string `protobuf:"bytes,1,opt,name=destination,proto3" json:"destination,omitzero"`
 	// connectivity check url
-	Connectivity string `protobuf:"bytes,2,opt,name=connectivity,proto3" json:"connectivity,omitempty"`
+	Connectivity string `protobuf:"bytes,2,opt,name=connectivity,proto3" json:"connectivity,omitzero"`
 	// health check interval, int64 values of time.Duration
-	Interval int64 `protobuf:"varint,3,opt,name=interval,proto3" json:"interval,omitempty"`
+	Interval int64 `protobuf:"varint,3,opt,name=interval,proto3" json:"interval,omitzero"`
 	// sampling count is the amount of recent ping results which are kept for calculation
-	SamplingCount int32 `protobuf:"varint,4,opt,name=samplingCount,proto3" json:"samplingCount,omitempty"`
+	SamplingCount int32 `protobuf:"varint,4,opt,name=samplingCount,proto3" json:"samplingCount,omitzero"`
 	// ping timeout, int64 values of time.Duration
-	Timeout int64 `protobuf:"varint,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Timeout int64 `protobuf:"varint,5,opt,name=timeout,proto3" json:"timeout,omitzero"`
 }
 
 func (x *HealthPingConfig) Reset() {

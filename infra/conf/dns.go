@@ -29,13 +29,13 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 	}
 
 	var advanced struct {
-		Address       *Address   `json:"address,omitempty"`
-		ClientIP      *Address   `json:"clientIp,omitempty"`
-		Port          uint16     `json:"port,omitempty"`
-		SkipFallback  bool       `json:"skipFallback,omitempty"`
-		Domains       []string   `json:"domains,omitempty"`
-		ExpectIPs     StringList `json:"expectIps,omitempty"`
-		QueryStrategy string     `json:"queryStrategy,omitempty"`
+		Address       *Address   `json:"address,omitzero"`
+		ClientIP      *Address   `json:"clientIp,omitzero"`
+		Port          uint16     `json:"port,omitzero"`
+		SkipFallback  bool       `json:"skipFallback,omitzero"`
+		Domains       []string   `json:"domains,omitzero"`
+		ExpectIPs     StringList `json:"expectIps,omitzero"`
+		QueryStrategy string     `json:"queryStrategy,omitzero"`
 	}
 	if err := json.Unmarshal(data, &advanced); err == nil {
 		c.Address = advanced.Address
@@ -129,14 +129,14 @@ var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
 
 // DNSConfig is a JSON serializable object for dns.Config.
 type DNSConfig struct {
-	Servers                []*NameServerConfig `json:"servers,omitempty"`
-	Hosts                  *HostsWrapper       `json:"hosts,omitempty"`
-	ClientIP               *Address            `json:"clientIp,omitempty"`
-	Tag                    string              `json:"tag,omitempty"`
-	QueryStrategy          string              `json:"queryStrategy,omitempty"`
-	DisableCache           bool                `json:"disableCache,omitempty"`
-	DisableFallback        bool                `json:"disableFallback,omitempty"`
-	DisableFallbackIfMatch bool                `json:"disableFallbackIfMatch,omitempty"`
+	Servers                []*NameServerConfig `json:"servers,omitzero"`
+	Hosts                  *HostsWrapper       `json:"hosts,omitzero"`
+	ClientIP               *Address            `json:"clientIp,omitzero"`
+	Tag                    string              `json:"tag,omitzero"`
+	QueryStrategy          string              `json:"queryStrategy,omitzero"`
+	DisableCache           bool                `json:"disableCache,omitzero"`
+	DisableFallback        bool                `json:"disableFallback,omitzero"`
+	DisableFallbackIfMatch bool                `json:"disableFallbackIfMatch,omitzero"`
 }
 
 type HostAddress struct {

@@ -27,9 +27,9 @@ type TypedMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	// The name of the message type, retrieved from protobuf API.
-	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitzero"`
 	// Serialized proto message.
-	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *TypedMessage) Reset() {

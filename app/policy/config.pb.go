@@ -25,7 +25,7 @@ type Second struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *Second) Reset() {
@@ -70,9 +70,9 @@ type Policy struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timeout *Policy_Timeout `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	Stats   *Policy_Stats   `protobuf:"bytes,2,opt,name=stats,proto3" json:"stats,omitempty"`
-	Buffer  *Policy_Buffer  `protobuf:"bytes,3,opt,name=buffer,proto3" json:"buffer,omitempty"`
+	Timeout *Policy_Timeout `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitzero"`
+	Stats   *Policy_Stats   `protobuf:"bytes,2,opt,name=stats,proto3" json:"stats,omitzero"`
+	Buffer  *Policy_Buffer  `protobuf:"bytes,3,opt,name=buffer,proto3" json:"buffer,omitzero"`
 }
 
 func (x *Policy) Reset() {
@@ -131,7 +131,7 @@ type SystemPolicy struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Stats *SystemPolicy_Stats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	Stats *SystemPolicy_Stats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitzero"`
 }
 
 func (x *SystemPolicy) Reset() {
@@ -176,8 +176,8 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Level  map[uint32]*Policy `protobuf:"bytes,1,rep,name=level,proto3" json:"level,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	System *SystemPolicy      `protobuf:"bytes,2,opt,name=system,proto3" json:"system,omitempty"`
+	Level  map[uint32]*Policy `protobuf:"bytes,1,rep,name=level,proto3" json:"level,omitzero" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	System *SystemPolicy      `protobuf:"bytes,2,opt,name=system,proto3" json:"system,omitzero"`
 }
 
 func (x *Config) Reset() {
@@ -230,10 +230,10 @@ type Policy_Timeout struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Handshake      *Second `protobuf:"bytes,1,opt,name=handshake,proto3" json:"handshake,omitempty"`
-	ConnectionIdle *Second `protobuf:"bytes,2,opt,name=connection_idle,json=connectionIdle,proto3" json:"connection_idle,omitempty"`
-	UplinkOnly     *Second `protobuf:"bytes,3,opt,name=uplink_only,json=uplinkOnly,proto3" json:"uplink_only,omitempty"`
-	DownlinkOnly   *Second `protobuf:"bytes,4,opt,name=downlink_only,json=downlinkOnly,proto3" json:"downlink_only,omitempty"`
+	Handshake      *Second `protobuf:"bytes,1,opt,name=handshake,proto3" json:"handshake,omitzero"`
+	ConnectionIdle *Second `protobuf:"bytes,2,opt,name=connection_idle,json=connectionIdle,proto3" json:"connection_idle,omitzero"`
+	UplinkOnly     *Second `protobuf:"bytes,3,opt,name=uplink_only,json=uplinkOnly,proto3" json:"uplink_only,omitzero"`
+	DownlinkOnly   *Second `protobuf:"bytes,4,opt,name=downlink_only,json=downlinkOnly,proto3" json:"downlink_only,omitzero"`
 }
 
 func (x *Policy_Timeout) Reset() {
@@ -299,9 +299,9 @@ type Policy_Stats struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserUplink   bool `protobuf:"varint,1,opt,name=user_uplink,json=userUplink,proto3" json:"user_uplink,omitempty"`
-	UserDownlink bool `protobuf:"varint,2,opt,name=user_downlink,json=userDownlink,proto3" json:"user_downlink,omitempty"`
-	UserOnline   bool `protobuf:"varint,3,opt,name=user_online,json=userOnline,proto3" json:"user_online,omitempty"`
+	UserUplink   bool `protobuf:"varint,1,opt,name=user_uplink,json=userUplink,proto3" json:"user_uplink,omitzero"`
+	UserDownlink bool `protobuf:"varint,2,opt,name=user_downlink,json=userDownlink,proto3" json:"user_downlink,omitzero"`
+	UserOnline   bool `protobuf:"varint,3,opt,name=user_online,json=userOnline,proto3" json:"user_online,omitzero"`
 }
 
 func (x *Policy_Stats) Reset() {
@@ -361,7 +361,7 @@ type Policy_Buffer struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Buffer size per connection, in bytes. -1 for unlimited buffer.
-	Connection int32 `protobuf:"varint,1,opt,name=connection,proto3" json:"connection,omitempty"`
+	Connection int32 `protobuf:"varint,1,opt,name=connection,proto3" json:"connection,omitzero"`
 }
 
 func (x *Policy_Buffer) Reset() {
@@ -406,10 +406,10 @@ type SystemPolicy_Stats struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	InboundUplink    bool `protobuf:"varint,1,opt,name=inbound_uplink,json=inboundUplink,proto3" json:"inbound_uplink,omitempty"`
-	InboundDownlink  bool `protobuf:"varint,2,opt,name=inbound_downlink,json=inboundDownlink,proto3" json:"inbound_downlink,omitempty"`
-	OutboundUplink   bool `protobuf:"varint,3,opt,name=outbound_uplink,json=outboundUplink,proto3" json:"outbound_uplink,omitempty"`
-	OutboundDownlink bool `protobuf:"varint,4,opt,name=outbound_downlink,json=outboundDownlink,proto3" json:"outbound_downlink,omitempty"`
+	InboundUplink    bool `protobuf:"varint,1,opt,name=inbound_uplink,json=inboundUplink,proto3" json:"inbound_uplink,omitzero"`
+	InboundDownlink  bool `protobuf:"varint,2,opt,name=inbound_downlink,json=inboundDownlink,proto3" json:"inbound_downlink,omitzero"`
+	OutboundUplink   bool `protobuf:"varint,3,opt,name=outbound_uplink,json=outboundUplink,proto3" json:"outbound_uplink,omitzero"`
+	OutboundDownlink bool `protobuf:"varint,4,opt,name=outbound_downlink,json=outboundDownlink,proto3" json:"outbound_downlink,omitzero"`
 }
 
 func (x *SystemPolicy_Stats) Reset() {

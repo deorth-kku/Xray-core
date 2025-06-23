@@ -15,9 +15,9 @@ import (
 )
 
 type VMessAccount struct {
-	ID          string `json:"id,omitempty"`
-	Security    string `json:"security,omitempty"`
-	Experiments string `json:"experiments,omitempty"`
+	ID          string `json:"id,omitzero"`
+	Security    string `json:"security,omitzero"`
+	Experiments string `json:"experiments,omitzero"`
 }
 
 // Build implements Buildable
@@ -47,7 +47,7 @@ func (a *VMessAccount) Build() *vmess.Account {
 }
 
 type VMessDetourConfig struct {
-	ToTag string `json:"to,omitempty"`
+	ToTag string `json:"to,omitzero"`
 }
 
 // Build implements Buildable
@@ -58,7 +58,7 @@ func (c *VMessDetourConfig) Build() *inbound.DetourConfig {
 }
 
 type VMessDefaultConfig struct {
-	Level byte `json:"level,omitempty"`
+	Level byte `json:"level,omitzero"`
 }
 
 // Build implements Buildable
@@ -69,9 +69,9 @@ func (c *VMessDefaultConfig) Build() *inbound.DefaultConfig {
 }
 
 type VMessInboundConfig struct {
-	Users        []json.RawMessage   `json:"clients,omitempty"`
-	Defaults     *VMessDefaultConfig `json:"default,omitempty"`
-	DetourConfig *VMessDetourConfig  `json:"detour,omitempty"`
+	Users        []json.RawMessage   `json:"clients,omitzero"`
+	Defaults     *VMessDefaultConfig `json:"default,omitzero"`
+	DetourConfig *VMessDetourConfig  `json:"detour,omitzero"`
 }
 
 // Build implements Buildable
@@ -111,13 +111,13 @@ func (c *VMessInboundConfig) Build() (proto.Message, error) {
 }
 
 type VMessOutboundTarget struct {
-	Address *Address          `json:"address,omitempty"`
-	Port    uint16            `json:"port,omitempty"`
-	Users   []json.RawMessage `json:"users,omitempty"`
+	Address *Address          `json:"address,omitzero"`
+	Port    uint16            `json:"port,omitzero"`
+	Users   []json.RawMessage `json:"users,omitzero"`
 }
 
 type VMessOutboundConfig struct {
-	Receivers []*VMessOutboundTarget `json:"vnext,omitempty"`
+	Receivers []*VMessOutboundTarget `json:"vnext,omitzero"`
 }
 
 // Build implements Buildable

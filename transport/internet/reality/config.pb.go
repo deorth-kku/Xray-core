@@ -25,24 +25,24 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Show         bool     `protobuf:"varint,1,opt,name=show,proto3" json:"show,omitempty"`
-	Dest         string   `protobuf:"bytes,2,opt,name=dest,proto3" json:"dest,omitempty"`
-	Type         string   `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	Xver         uint64   `protobuf:"varint,4,opt,name=xver,proto3" json:"xver,omitempty"`
-	ServerNames  []string `protobuf:"bytes,5,rep,name=server_names,json=serverNames,proto3" json:"server_names,omitempty"`
-	PrivateKey   []byte   `protobuf:"bytes,6,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
-	MinClientVer []byte   `protobuf:"bytes,7,opt,name=min_client_ver,json=minClientVer,proto3" json:"min_client_ver,omitempty"`
-	MaxClientVer []byte   `protobuf:"bytes,8,opt,name=max_client_ver,json=maxClientVer,proto3" json:"max_client_ver,omitempty"`
-	MaxTimeDiff  uint64   `protobuf:"varint,9,opt,name=max_time_diff,json=maxTimeDiff,proto3" json:"max_time_diff,omitempty"`
-	ShortIds     [][]byte `protobuf:"bytes,10,rep,name=short_ids,json=shortIds,proto3" json:"short_ids,omitempty"`
-	Fingerprint  string   `protobuf:"bytes,21,opt,name=Fingerprint,proto3" json:"Fingerprint,omitempty"`
-	ServerName   string   `protobuf:"bytes,22,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
-	PublicKey    []byte   `protobuf:"bytes,23,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
-	ShortId      []byte   `protobuf:"bytes,24,opt,name=short_id,json=shortId,proto3" json:"short_id,omitempty"`
-	SpiderX      string   `protobuf:"bytes,25,opt,name=spider_x,json=spiderX,proto3" json:"spider_x,omitempty"`
-	SpiderY      []int64  `protobuf:"varint,26,rep,packed,name=spider_y,json=spiderY,proto3" json:"spider_y,omitempty"`
-	MasterKeyLog string   `protobuf:"bytes,27,opt,name=master_key_log,json=masterKeyLog,proto3" json:"master_key_log,omitempty"`
-	CloseTimeout int64    `protobuf:"varint,28,opt,name=close_timeout,json=closeTimeout,proto3" json:"close_timeout,omitempty"`
+	Show         bool     `protobuf:"varint,1,opt,name=show,proto3" json:"show,omitzero"`
+	Dest         string   `protobuf:"bytes,2,opt,name=dest,proto3" json:"dest,omitzero"`
+	Type         string   `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitzero"`
+	Xver         uint64   `protobuf:"varint,4,opt,name=xver,proto3" json:"xver,omitzero"`
+	ServerNames  []string `protobuf:"bytes,5,rep,name=server_names,json=serverNames,proto3" json:"server_names,omitzero"`
+	PrivateKey   []byte   `protobuf:"bytes,6,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitzero"`
+	MinClientVer []byte   `protobuf:"bytes,7,opt,name=min_client_ver,json=minClientVer,proto3" json:"min_client_ver,omitzero"`
+	MaxClientVer []byte   `protobuf:"bytes,8,opt,name=max_client_ver,json=maxClientVer,proto3" json:"max_client_ver,omitzero"`
+	MaxTimeDiff  uint64   `protobuf:"varint,9,opt,name=max_time_diff,json=maxTimeDiff,proto3" json:"max_time_diff,omitzero"`
+	ShortIds     [][]byte `protobuf:"bytes,10,rep,name=short_ids,json=shortIds,proto3" json:"short_ids,omitzero"`
+	Fingerprint  string   `protobuf:"bytes,21,opt,name=Fingerprint,proto3" json:"Fingerprint,omitzero"`
+	ServerName   string   `protobuf:"bytes,22,opt,name=server_name,json=serverName,proto3" json:"server_name,omitzero"`
+	PublicKey    []byte   `protobuf:"bytes,23,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitzero"`
+	ShortId      []byte   `protobuf:"bytes,24,opt,name=short_id,json=shortId,proto3" json:"short_id,omitzero"`
+	SpiderX      string   `protobuf:"bytes,25,opt,name=spider_x,json=spiderX,proto3" json:"spider_x,omitzero"`
+	SpiderY      []int64  `protobuf:"varint,26,rep,packed,name=spider_y,json=spiderY,proto3" json:"spider_y,omitzero"`
+	MasterKeyLog string   `protobuf:"bytes,27,opt,name=master_key_log,json=masterKeyLog,proto3" json:"master_key_log,omitzero"`
+	CloseTimeout int64    `protobuf:"varint,28,opt,name=close_timeout,json=closeTimeout,proto3" json:"close_timeout,omitzero"`
 }
 
 func (x *Config) Reset() {

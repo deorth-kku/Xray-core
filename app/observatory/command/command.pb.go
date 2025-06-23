@@ -62,7 +62,7 @@ type GetOutboundStatusResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Status *observatory.ObservationResult `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Status *observatory.ObservationResult `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitzero"`
 }
 
 func (x *GetOutboundStatusResponse) Reset() {

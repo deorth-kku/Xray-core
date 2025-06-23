@@ -8,12 +8,12 @@ import (
 )
 
 type DNSOutboundConfig struct {
-	Network    Network  `json:"network,omitempty"`
-	Address    *Address `json:"address,omitempty"`
-	Port       uint16   `json:"port,omitempty"`
-	UserLevel  uint32   `json:"userLevel,omitempty"`
-	NonIPQuery string   `json:"nonIPQuery,omitempty"`
-	BlockTypes []int32  `json:"blockTypes,omitempty"`
+	Network    Network  `json:"network,omitzero"`
+	Address    *Address `json:"address,omitzero"`
+	Port       uint16   `json:"port,omitzero"`
+	UserLevel  uint32   `json:"userLevel,omitzero"`
+	NonIPQuery string   `json:"nonIPQuery,omitzero"`
+	BlockTypes []int32  `json:"blockTypes,omitzero"`
 }
 
 func (c *DNSOutboundConfig) Build() (proto.Message, error) {

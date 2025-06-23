@@ -26,8 +26,8 @@ type Account struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitzero"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitzero"`
 }
 
 func (x *Account) Reset() {
@@ -80,9 +80,9 @@ type ServerConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Accounts         map[string]string `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	AllowTransparent bool              `protobuf:"varint,3,opt,name=allow_transparent,json=allowTransparent,proto3" json:"allow_transparent,omitempty"`
-	UserLevel        uint32            `protobuf:"varint,4,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
+	Accounts         map[string]string `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitzero" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	AllowTransparent bool              `protobuf:"varint,3,opt,name=allow_transparent,json=allowTransparent,proto3" json:"allow_transparent,omitzero"`
+	UserLevel        uint32            `protobuf:"varint,4,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitzero"`
 }
 
 func (x *ServerConfig) Reset() {
@@ -141,8 +141,8 @@ type Header struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key   string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Key   string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitzero"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitzero"`
 }
 
 func (x *Header) Reset() {
@@ -196,8 +196,8 @@ type ClientConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Sever is a list of HTTP server addresses.
-	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitempty"`
-	Header []*Header                  `protobuf:"bytes,2,rep,name=header,proto3" json:"header,omitempty"`
+	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitzero"`
+	Header []*Header                  `protobuf:"bytes,2,rep,name=header,proto3" json:"header,omitzero"`
 }
 
 func (x *ClientConfig) Reset() {

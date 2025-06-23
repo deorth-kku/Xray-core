@@ -11,11 +11,11 @@ import (
 )
 
 type WireGuardPeerConfig struct {
-	PublicKey    string   `json:"publicKey,omitempty"`
-	PreSharedKey string   `json:"preSharedKey,omitempty"`
-	Endpoint     string   `json:"endpoint,omitempty"`
-	KeepAlive    uint32   `json:"keepAlive,omitempty"`
-	AllowedIPs   []string `json:"allowedIPs,omitempty"`
+	PublicKey    string   `json:"publicKey,omitzero"`
+	PreSharedKey string   `json:"preSharedKey,omitzero"`
+	Endpoint     string   `json:"endpoint,omitzero"`
+	KeepAlive    uint32   `json:"keepAlive,omitzero"`
+	AllowedIPs   []string `json:"allowedIPs,omitzero"`
 }
 
 func (c *WireGuardPeerConfig) Build() (proto.Message, error) {
@@ -49,16 +49,16 @@ func (c *WireGuardPeerConfig) Build() (proto.Message, error) {
 }
 
 type WireGuardConfig struct {
-	IsClient bool `json:",omitempty"`
+	IsClient bool `json:",omitzero"`
 
-	NoKernelTun    bool                   `json:"noKernelTun,omitempty"`
-	SecretKey      string                 `json:"secretKey,omitempty"`
-	Address        []string               `json:"address,omitempty"`
-	Peers          []*WireGuardPeerConfig `json:"peers,omitempty"`
-	MTU            int32                  `json:"mtu,omitempty"`
-	NumWorkers     int32                  `json:"workers,omitempty"`
-	Reserved       []byte                 `json:"reserved,omitempty"`
-	DomainStrategy string                 `json:"domainStrategy,omitempty"`
+	NoKernelTun    bool                   `json:"noKernelTun,omitzero"`
+	SecretKey      string                 `json:"secretKey,omitzero"`
+	Address        []string               `json:"address,omitzero"`
+	Peers          []*WireGuardPeerConfig `json:"peers,omitzero"`
+	MTU            int32                  `json:"mtu,omitzero"`
+	NumWorkers     int32                  `json:"workers,omitzero"`
+	Reserved       []byte                 `json:"reserved,omitzero"`
+	DomainStrategy string                 `json:"domainStrategy,omitzero"`
 }
 
 func (c *WireGuardConfig) Build() (proto.Message, error) {

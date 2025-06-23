@@ -52,7 +52,7 @@ func (WireguardAuthenticator) Build() (proto.Message, error) {
 }
 
 type DNSAuthenticator struct {
-	Domain string `json:"domain,omitempty"`
+	Domain string `json:"domain,omitzero"`
 }
 
 func (v *DNSAuthenticator) Build() (proto.Message, error) {
@@ -71,10 +71,10 @@ func (DTLSAuthenticator) Build() (proto.Message, error) {
 }
 
 type AuthenticatorRequest struct {
-	Version string                 `json:"version,omitempty"`
-	Method  string                 `json:"method,omitempty"`
-	Path    StringList             `json:"path,omitempty"`
-	Headers map[string]*StringList `json:"headers,omitempty"`
+	Version string                 `json:"version,omitzero"`
+	Method  string                 `json:"method,omitzero"`
+	Path    StringList             `json:"path,omitzero"`
+	Headers map[string]*StringList `json:"headers,omitzero"`
 }
 
 func sortMapKeys(m map[string]*StringList) []string {
@@ -147,10 +147,10 @@ func (v *AuthenticatorRequest) Build() (*http.RequestConfig, error) {
 }
 
 type AuthenticatorResponse struct {
-	Version string                 `json:"version,omitempty"`
-	Status  string                 `json:"status,omitempty"`
-	Reason  string                 `json:"reason,omitempty"`
-	Headers map[string]*StringList `json:"headers,omitempty"`
+	Version string                 `json:"version,omitzero"`
+	Status  string                 `json:"status,omitzero"`
+	Reason  string                 `json:"reason,omitzero"`
+	Headers map[string]*StringList `json:"headers,omitzero"`
 }
 
 func (v *AuthenticatorResponse) Build() (*http.ResponseConfig, error) {
@@ -215,8 +215,8 @@ func (v *AuthenticatorResponse) Build() (*http.ResponseConfig, error) {
 }
 
 type Authenticator struct {
-	Request  AuthenticatorRequest  `json:"request,omitempty"`
-	Response AuthenticatorResponse `json:"response,omitempty"`
+	Request  AuthenticatorRequest  `json:"request,omitzero"`
+	Response AuthenticatorResponse `json:"response,omitzero"`
 }
 
 func (v *Authenticator) Build() (proto.Message, error) {

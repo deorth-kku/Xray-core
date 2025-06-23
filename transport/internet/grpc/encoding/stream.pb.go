@@ -25,7 +25,7 @@ type Hunk struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitzero"`
 }
 
 func (x *Hunk) Reset() {
@@ -70,7 +70,7 @@ type MultiHunk struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Data [][]byte `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
+	Data [][]byte `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitzero"`
 }
 
 func (x *MultiHunk) Reset() {

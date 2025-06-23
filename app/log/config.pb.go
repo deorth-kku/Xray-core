@@ -78,13 +78,13 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ErrorLogType  LogType      `protobuf:"varint,1,opt,name=error_log_type,json=errorLogType,proto3,enum=xray.app.log.LogType" json:"error_log_type,omitempty"`
-	ErrorLogLevel log.Severity `protobuf:"varint,2,opt,name=error_log_level,json=errorLogLevel,proto3,enum=xray.common.log.Severity" json:"error_log_level,omitempty"`
-	ErrorLogPath  string       `protobuf:"bytes,3,opt,name=error_log_path,json=errorLogPath,proto3" json:"error_log_path,omitempty"`
-	AccessLogType LogType      `protobuf:"varint,4,opt,name=access_log_type,json=accessLogType,proto3,enum=xray.app.log.LogType" json:"access_log_type,omitempty"`
-	AccessLogPath string       `protobuf:"bytes,5,opt,name=access_log_path,json=accessLogPath,proto3" json:"access_log_path,omitempty"`
-	EnableDnsLog  bool         `protobuf:"varint,6,opt,name=enable_dns_log,json=enableDnsLog,proto3" json:"enable_dns_log,omitempty"`
-	MaskAddress   string       `protobuf:"bytes,7,opt,name=mask_address,json=maskAddress,proto3" json:"mask_address,omitempty"`
+	ErrorLogType  LogType      `protobuf:"varint,1,opt,name=error_log_type,json=errorLogType,proto3,enum=xray.app.log.LogType" json:"error_log_type,omitzero"`
+	ErrorLogLevel log.Severity `protobuf:"varint,2,opt,name=error_log_level,json=errorLogLevel,proto3,enum=xray.common.log.Severity" json:"error_log_level,omitzero"`
+	ErrorLogPath  string       `protobuf:"bytes,3,opt,name=error_log_path,json=errorLogPath,proto3" json:"error_log_path,omitzero"`
+	AccessLogType LogType      `protobuf:"varint,4,opt,name=access_log_type,json=accessLogType,proto3,enum=xray.app.log.LogType" json:"access_log_type,omitzero"`
+	AccessLogPath string       `protobuf:"bytes,5,opt,name=access_log_path,json=accessLogPath,proto3" json:"access_log_path,omitzero"`
+	EnableDnsLog  bool         `protobuf:"varint,6,opt,name=enable_dns_log,json=enableDnsLog,proto3" json:"enable_dns_log,omitzero"`
+	MaskAddress   string       `protobuf:"bytes,7,opt,name=mask_address,json=maskAddress,proto3" json:"mask_address,omitzero"`
 }
 
 func (x *Config) Reset() {
