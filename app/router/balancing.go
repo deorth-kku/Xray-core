@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	sync "sync"
-	"sync/atomic"
 
 	"github.com/xtls/xray-core/app/observatory"
 	"github.com/xtls/xray-core/common"
@@ -84,7 +83,9 @@ func (s *RoundRobinStrategy) PickOutbound(tags []string) string {
 }
 
 type Balancer struct {
-	selectors   atomic.Pointer[[]string]
+	selectors    []string
+	selectors_mu sync.RWMutex
+
 	strategy    BalancingStrategy
 	ohm         outbound.Manager
 	fallbackTag string
@@ -130,8 +131,9 @@ func (b *Balancer) SelectOutbounds() ([]string, error) {
 	if !ok {
 		return nil, errors.New("outbound.Manager is not a HandlerSelector")
 	}
-	tags := hs.Select(*b.selectors.Load())
-	return tags, nil
+	b.selectors_mu.RLock()
+	defer b.selectors_mu.RUnlock()
+	return hs.Select(b.selectors), nil
 }
 
 // GetPrincipleTarget implements routing.BalancerPrincipleTarget

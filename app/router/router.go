@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"slices"
 	sync "sync"
 
 	proxyman_outbound "github.com/xtls/xray-core/app/proxyman/outbound"
@@ -214,14 +215,14 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 	return nil, ctx, common.ErrNoClue
 }
 
-func (r *Router) ListBalancerSelectors(balancerTag string) (tags []string, err error) {
+func (r *Router) ListBalancerSelectors(balancerTag string) ([]string, error) {
 	balancer, ok := r.balancers[balancerTag]
 	if !ok {
-		err = errors.New("balancer ", balancerTag, " not found")
-		return
+		return nil, errors.New("balancer ", balancerTag, " not found")
 	}
-	tags = *balancer.selectors.Load()
-	return
+	balancer.selectors_mu.RLock()
+	defer balancer.selectors_mu.RUnlock()
+	return slices.Clone(balancer.selectors), nil
 }
 
 func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) error {
@@ -235,7 +236,9 @@ func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) er
 	}
 	manager.ClearTagsCache()
 
-	balancer.selectors.Store(&selectors)
+	balancer.selectors_mu.Lock()
+	defer balancer.selectors_mu.Unlock()
+	balancer.selectors = slices.Clone(selectors)
 	return nil
 }
 
