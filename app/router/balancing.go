@@ -2,9 +2,11 @@ package router
 
 import (
 	"context"
+	"slices"
 	sync "sync"
 
 	"github.com/xtls/xray-core/app/observatory"
+	proxyman_outbound "github.com/xtls/xray-core/app/proxyman/outbound"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/core"
@@ -134,6 +136,39 @@ func (b *Balancer) SelectOutbounds() ([]string, error) {
 	b.selectors_mu.RLock()
 	defer b.selectors_mu.RUnlock()
 	return hs.Select(b.selectors), nil
+}
+
+func (r *Router) PickBalancerOutbound(balancerTag string) (string, error) {
+	balancer, ok := r.balancers[balancerTag]
+	if !ok {
+		return "", errors.New("balancer ", balancerTag, " not found")
+	}
+	return balancer.PickOutbound()
+}
+
+func (r *Router) SelectBalancerOutbounds(balancerTag string) ([]string, error) {
+	balancer, ok := r.balancers[balancerTag]
+	if !ok {
+		return nil, errors.New("balancer ", balancerTag, " not found")
+	}
+	return balancer.SelectOutbounds()
+}
+
+func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) error {
+	balancer, ok := r.balancers[balancerTag]
+	if !ok {
+		return errors.New("balancer ", balancerTag, " not found")
+	}
+	manager, ok := balancer.ohm.(*proxyman_outbound.Manager)
+	if !ok {
+		return errors.New("outbound.Manager is not a Manager")
+	}
+	manager.ClearTagsCache()
+
+	balancer.selectors_mu.Lock()
+	defer balancer.selectors_mu.Unlock()
+	balancer.selectors = slices.Clone(selectors)
+	return nil
 }
 
 // GetPrincipleTarget implements routing.BalancerPrincipleTarget

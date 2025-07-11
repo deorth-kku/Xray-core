@@ -2,10 +2,8 @@ package router
 
 import (
 	"context"
-	"slices"
 	sync "sync"
 
-	proxyman_outbound "github.com/xtls/xray-core/app/proxyman/outbound"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/serial"
@@ -213,33 +211,6 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 	}
 
 	return nil, ctx, common.ErrNoClue
-}
-
-func (r *Router) ListBalancerSelectors(balancerTag string) ([]string, error) {
-	balancer, ok := r.balancers[balancerTag]
-	if !ok {
-		return nil, errors.New("balancer ", balancerTag, " not found")
-	}
-	balancer.selectors_mu.RLock()
-	defer balancer.selectors_mu.RUnlock()
-	return slices.Clone(balancer.selectors), nil
-}
-
-func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) error {
-	balancer, ok := r.balancers[balancerTag]
-	if !ok {
-		return errors.New("balancer ", balancerTag, " not found")
-	}
-	manager, ok := balancer.ohm.(*proxyman_outbound.Manager)
-	if !ok {
-		return errors.New("outbound.Manager is not a Manager")
-	}
-	manager.ClearTagsCache()
-
-	balancer.selectors_mu.Lock()
-	defer balancer.selectors_mu.Unlock()
-	balancer.selectors = slices.Clone(selectors)
-	return nil
 }
 
 // Start implements common.Runnable.

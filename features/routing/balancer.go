@@ -8,3 +8,9 @@ type BalancerOverrider interface {
 type BalancerPrincipleTarget interface {
 	GetPrincipleTarget(tag string) ([]string, error)
 }
+
+type BalancerManager interface {
+	SelectBalancerOutbounds(balancerTag string) ([]string, error)
+	SetBalancerSelectors(balancerTag string, selectors []string) error
+	PickBalancerOutbound(balancerTag string) (string, error)
+}
