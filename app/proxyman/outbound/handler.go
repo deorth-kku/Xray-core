@@ -371,6 +371,9 @@ func (h *Handler) Close() error {
 	common.CloseT(h.mux)
 	common.Close(h.proxy)
 	common.CloseT(h.xudp)
+	if h.streamSettings == nil {
+		return nil
+	}
 	switch h.streamSettings.ProtocolName {
 	case "grpc":
 		grpc.GrpcCloseConn(h.streamSettings)

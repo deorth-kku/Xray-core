@@ -35,7 +35,7 @@ func TestXrayDependency(t *testing.T) {
 	<-wait
 }
 
-func TestXrayClose(t *testing.T) {
+func protobufCfg() []byte {
 	port := tcp.PickPort()
 
 	userID := uuid.New()
@@ -83,8 +83,37 @@ func TestXrayClose(t *testing.T) {
 
 	cfgBytes, err := proto.Marshal(config)
 	common.Must(err)
+	return cfgBytes
+}
 
-	server, err := StartInstance("protobuf", cfgBytes)
+func TestXrayClose(t *testing.T) {
+	server, err := StartInstance("protobuf", protobufCfg())
 	common.Must(err)
+	server.Close()
+}
+
+func BenchmarkGetFeatureInterface(b *testing.B) {
+	server, err := StartInstance("protobuf", protobufCfg())
+	common.Must(err)
+	b.ResetTimer()
+	for b.Loop() {
+		_, ok := server.GetFeature(dns.ClientType()).(dns.Client)
+		if !ok {
+			b.Error("cannot get dns client")
+		}
+	}
+	server.Close()
+}
+
+func BenchmarkGetFeatureGeneric(b *testing.B) {
+	server, err := StartInstance("protobuf", protobufCfg())
+	common.Must(err)
+	b.ResetTimer()
+	for b.Loop() {
+		_, ok := GetFeature[dns.Client](server)
+		if !ok {
+			b.Error("cannot get dns client")
+		}
+	}
 	server.Close()
 }

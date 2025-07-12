@@ -82,8 +82,8 @@ func DestIpAddress() net.IP {
 }
 
 func lookupIP(ctx context.Context, domain string, strategy DomainStrategy, localAddr net.Address) ([]net.IP, error) {
-	dnsClient := dnsClientFromContext(ctx)
-	if dnsClient == nil {
+	dnsClient, ok := core.GetFeatureFromContext[dns.Client](ctx)
+	if !ok {
 		return nil, errors.New("DNS client not initialized").AtError()
 	}
 
@@ -107,8 +107,8 @@ func lookupIP(ctx context.Context, domain string, strategy DomainStrategy, local
 }
 
 func canLookupIP(ctx context.Context, dst net.Destination, sockopt *SocketConfig) bool {
-	dnsClient := dnsClientFromContext(ctx)
-	if dst.Address.Family().IsIP() || dnsClient == nil {
+	_, ok := core.GetFeatureFromContext[dns.Client](ctx)
+	if !ok || dst.Address.Family().IsIP() {
 		return false
 	}
 	return sockopt.DomainStrategy.hasStrategy()
@@ -262,8 +262,8 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	}
 
 	if len(sockopt.DialerProxy) > 0 {
-		obm := obmFromContext(ctx)
-		if obm == nil {
+		obm, ok := core.GetFeatureFromContext[outbound.Manager](ctx)
+		if !ok {
 			return nil, errors.New("there is no outbound manager for dialerProxy").AtError()
 		}
 		h := obm.GetHandler(sockopt.DialerProxy)
@@ -274,30 +274,4 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	}
 
 	return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
-}
-
-func obmFromContext(ctx context.Context) outbound.Manager {
-	ins := core.FromContext(ctx)
-	if ins == nil {
-		return nil
-	}
-	obmraw := ins.GetFeature(outbound.ManagerType())
-	if obmraw == nil {
-		return nil
-	}
-	obm, _ := obmraw.(outbound.Manager)
-	return obm
-}
-
-func dnsClientFromContext(ctx context.Context) dns.Client {
-	ins := core.FromContext(ctx)
-	if ins == nil {
-		return nil
-	}
-	dnsclientraw := ins.GetFeature(dns.ClientType())
-	if dnsclientraw == nil {
-		return nil
-	}
-	dnsclient, _ := dnsclientraw.(dns.Client)
-	return dnsclient
 }

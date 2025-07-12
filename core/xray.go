@@ -368,6 +368,24 @@ func (s *Instance) GetFeature(featureType interface{}) features.Feature {
 	return getFeature(s.features, reflect.TypeOf(featureType))
 }
 
+func GetFeature[T features.Feature](s *Instance) (t T, ok bool) {
+	for _, f := range s.features {
+		t, ok = f.(T)
+		if ok {
+			return
+		}
+	}
+	return
+}
+
+func GetFeatureFromContext[T features.Feature](ctx context.Context) (T, bool) {
+	i := FromContext(ctx)
+	if i == nil {
+		return *new(T), false
+	}
+	return GetFeature[T](i)
+}
+
 // Start starts the Xray instance, including all registered features. When Start returns error, the state of the instance is unknown.
 // A Xray instance can be started only once. Upon closing, the instance is not guaranteed to start again.
 //

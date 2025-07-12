@@ -11,13 +11,9 @@ import (
 
 //go:linkname loggerFromContext github.com/xtls/xray-core/common/errors.loggerFromContext
 func loggerFromContext(ctx context.Context) log.Handler {
-	i := core.FromContext(ctx)
-	if i == nil {
-		return nil
+	logger, ok := core.GetFeatureFromContext[*Instance](ctx)
+	if ok {
+		return logger
 	}
-	logger := i.GetFeature((*Instance)(nil))
-	if logger == nil {
-		return nil
-	}
-	return logger.(log.Handler)
+	return nil
 }
