@@ -1,6 +1,10 @@
 package common
 
-import "github.com/xtls/xray-core/common/errors"
+import (
+	"io"
+
+	"github.com/xtls/xray-core/common/errors"
+)
 
 // Closable is the interface for objects that can release its resources.
 //
@@ -25,6 +29,18 @@ func Close(obj interface{}) error {
 		return c.Close()
 	}
 	return nil
+}
+
+type comparableCloser interface {
+	comparable
+	io.Closer
+}
+
+func CloseT[T comparableCloser](obj T) error {
+	if obj == *new(T) {
+		return nil
+	}
+	return obj.Close()
 }
 
 // Interrupt calls Interrupt() if object implements Interruptible interface, or Close() if the object implements Closable interface.
