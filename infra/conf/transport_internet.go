@@ -333,7 +333,7 @@ func (c *SplitHTTPConfig) Build() (proto.Message, error) {
 
 func readFileOrString(f string, s []string) ([]byte, error) {
 	if len(f) > 0 {
-		return filesystem.ReadFile(f)
+		return filesystem.ReadCert(f)
 	}
 	if len(s) > 0 {
 		return []byte(strings.Join(s, "\n")), nil
@@ -410,6 +410,7 @@ type TLSConfig struct {
 	CurvePreferences                     *StringList      `json:"curvePreferences,omitzero"`
 	MasterKeyLog                         string           `json:"masterKeyLog,omitzero"`
 	ServerNameToVerify                   string           `json:"serverNameToVerify,omitzero"`
+	VerifyPeerCertInNames                []string         `json:"verifyPeerCertInNames,omitzero"`
 }
 
 // Build implements Buildable.
@@ -431,6 +432,13 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	if c.ALPN != nil && len(*c.ALPN) > 0 {
 		config.NextProtocol = []string(*c.ALPN)
 	}
+	if len(config.NextProtocol) > 1 {
+		for _, p := range config.NextProtocol {
+			if tcp.IsFromMitm(p) {
+				return nil, errors.New(`only one element is allowed in "alpn" when using "fromMitm" in it`)
+			}
+		}
+	}
 	if c.CurvePreferences != nil && len(*c.CurvePreferences) > 0 {
 		config.CurvePreferences = []string(*c.CurvePreferences)
 	}
@@ -441,7 +449,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	config.CipherSuites = c.CipherSuites
 	config.Fingerprint = strings.ToLower(c.Fingerprint)
 	if config.Fingerprint != "unsafe" && tls.GetFingerprint(config.Fingerprint) == nil {
-		return nil, errors.New(`unknown fingerprint: `, config.Fingerprint)
+		return nil, errors.New(`unknown "fingerprint": `, config.Fingerprint)
 	}
 	config.RejectUnknownSni = c.RejectUnknownSNI
 
@@ -468,12 +476,19 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 
 	config.MasterKeyLog = c.MasterKeyLog
-	config.ServerNameToVerify = c.ServerNameToVerify
-	if config.ServerNameToVerify != "" && config.Fingerprint == "unsafe" {
-		return nil, errors.New(`serverNameToVerify only works with uTLS for now`)
+
+	if c.ServerNameToVerify != "" {
+		return nil, errors.PrintRemovedFeatureError(`"serverNameToVerify"`, `"verifyPeerCertInNames"`)
 	}
+	config.VerifyPeerCertInNames = c.VerifyPeerCertInNames
 
 	return config, nil
+}
+
+type LimitFallback struct {
+	AfterBytes       uint64
+	BytesPerSec      uint64
+	BurstBytesPerSec uint64
 }
 
 type REALITYConfig struct {
@@ -489,6 +504,9 @@ type REALITYConfig struct {
 	MaxClientVer string          `json:"maxClientVer,omitzero"`
 	MaxTimeDiff  uint64          `json:"maxTimeDiff,omitzero"`
 	ShortIds     []string        `json:"shortIds,omitzero"`
+
+	LimitFallbackUpload   LimitFallback `json:"limitFallbackUpload,omitzero"`
+	LimitFallbackDownload LimitFallback `json:"limitFallbackDownload,omitzero"`
 
 	Fingerprint string `json:"fingerprint,omitzero"`
 	ServerName  string `json:"serverName,omitzero"`
@@ -589,6 +607,15 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 		config.Xver = c.Xver
 		config.ServerNames = c.ServerNames
 		config.MaxTimeDiff = c.MaxTimeDiff
+
+		config.LimitFallbackUpload = new(reality.LimitFallback)
+		config.LimitFallbackUpload.AfterBytes = c.LimitFallbackUpload.AfterBytes
+		config.LimitFallbackUpload.BytesPerSec = c.LimitFallbackUpload.BytesPerSec
+		config.LimitFallbackUpload.BurstBytesPerSec = c.LimitFallbackUpload.BurstBytesPerSec
+		config.LimitFallbackDownload = new(reality.LimitFallback)
+		config.LimitFallbackDownload.AfterBytes = c.LimitFallbackDownload.AfterBytes
+		config.LimitFallbackDownload.BytesPerSec = c.LimitFallbackDownload.BytesPerSec
+		config.LimitFallbackDownload.BurstBytesPerSec = c.LimitFallbackDownload.BurstBytesPerSec
 	} else {
 		config.Fingerprint = strings.ToLower(c.Fingerprint)
 		if config.Fingerprint == "unsafe" || config.Fingerprint == "hellogolang" {
@@ -601,10 +628,10 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 			return nil, errors.New(`non-empty "serverNames", please use "serverName" instead`)
 		}
 		if c.PublicKey == "" {
-			return nil, errors.New(`empty "publicKey"`)
+			return nil, errors.New(`empty "password"`)
 		}
 		if config.PublicKey, err = base64.RawURLEncoding.DecodeString(c.PublicKey); err != nil || len(config.PublicKey) != 32 {
-			return nil, errors.New(`invalid "publicKey": `, c.PublicKey)
+			return nil, errors.New(`invalid "password": `, c.PublicKey)
 		}
 		if len(c.ShortIds) != 0 {
 			return nil, errors.New(`non-empty "shortIds", please use "shortId" instead`)
@@ -674,30 +701,58 @@ func (p TransportProtocol) Build() (string, error) {
 }
 
 type CustomSockoptConfig struct {
-	Level string `json:"level,omitzero"`
-	Opt   string `json:"opt,omitzero"`
-	Value string `json:"value,omitzero"`
-	Type  string `json:"type,omitzero"`
+	Syetem  string `json:"system,omitzero"`
+	Network string `json:"network,omitzero"`
+	Level   string `json:"level,omitzero"`
+	Opt     string `json:"opt,omitzero"`
+	Value   string `json:"value,omitzero"`
+	Type    string `json:"type,omitzero"`
+}
+
+type HappyEyeballsConfig struct {
+	PrioritizeIPv6   bool   `json:"prioritizeIPv6,omitzero"`
+	TryDelayMs       uint64 `json:"tryDelayMs,omitzero"`
+	Interleave       uint32 `json:"interleave,omitzero"`
+	MaxConcurrentTry uint32 `json:"maxConcurrentTry,omitzero"`
+}
+
+func (h *HappyEyeballsConfig) UnmarshalJSON(data []byte) error {
+	var innerHappyEyeballsConfig = struct {
+		PrioritizeIPv6   bool   `json:"prioritizeIPv6"`
+		TryDelayMs       uint64 `json:"tryDelayMs"`
+		Interleave       uint32 `json:"interleave"`
+		MaxConcurrentTry uint32 `json:"maxConcurrentTry"`
+	}{PrioritizeIPv6: false, Interleave: 1, TryDelayMs: 0, MaxConcurrentTry: 4}
+	if err := json.Unmarshal(data, &innerHappyEyeballsConfig); err != nil {
+		return err
+	}
+	h.PrioritizeIPv6 = innerHappyEyeballsConfig.PrioritizeIPv6
+	h.TryDelayMs = innerHappyEyeballsConfig.TryDelayMs
+	h.Interleave = innerHappyEyeballsConfig.Interleave
+	h.MaxConcurrentTry = innerHappyEyeballsConfig.MaxConcurrentTry
+	return nil
 }
 
 type SocketConfig struct {
-	Mark                 int32                  `json:"mark,omitzero"`
-	TFO                  interface{}            `json:"tcpFastOpen,omitzero"`
-	TProxy               string                 `json:"tproxy,omitzero"`
-	AcceptProxyProtocol  bool                   `json:"acceptProxyProtocol,omitzero"`
-	DomainStrategy       string                 `json:"domainStrategy,omitzero"`
-	DialerProxy          string                 `json:"dialerProxy,omitzero"`
-	TCPKeepAliveInterval int32                  `json:"tcpKeepAliveInterval,omitzero"`
-	TCPKeepAliveIdle     int32                  `json:"tcpKeepAliveIdle,omitzero"`
-	TCPCongestion        string                 `json:"tcpCongestion,omitzero"`
-	TCPWindowClamp       int32                  `json:"tcpWindowClamp,omitzero"`
-	TCPMaxSeg            int32                  `json:"tcpMaxSeg,omitzero"`
-	Penetrate            bool                   `json:"penetrate,omitzero"`
-	TCPUserTimeout       int32                  `json:"tcpUserTimeout,omitzero"`
-	V6only               bool                   `json:"v6only,omitzero"`
-	Interface            string                 `json:"interface,omitzero"`
-	TcpMptcp             bool                   `json:"tcpMptcp,omitzero"`
-	CustomSockopt        []*CustomSockoptConfig `json:"customSockopt,omitzero"`
+	Mark                  int32                  `json:"mark,omitzero"`
+	TFO                   interface{}            `json:"tcpFastOpen,omitzero"`
+	TProxy                string                 `json:"tproxy,omitzero"`
+	AcceptProxyProtocol   bool                   `json:"acceptProxyProtocol,omitzero"`
+	DomainStrategy        string                 `json:"domainStrategy,omitzero"`
+	DialerProxy           string                 `json:"dialerProxy,omitzero"`
+	TCPKeepAliveInterval  int32                  `json:"tcpKeepAliveInterval,omitzero"`
+	TCPKeepAliveIdle      int32                  `json:"tcpKeepAliveIdle,omitzero"`
+	TCPCongestion         string                 `json:"tcpCongestion,omitzero"`
+	TCPWindowClamp        int32                  `json:"tcpWindowClamp,omitzero"`
+	TCPMaxSeg             int32                  `json:"tcpMaxSeg,omitzero"`
+	Penetrate             bool                   `json:"penetrate,omitzero"`
+	TCPUserTimeout        int32                  `json:"tcpUserTimeout,omitzero"`
+	V6only                bool                   `json:"v6only,omitzero"`
+	Interface             string                 `json:"interface,omitzero"`
+	TcpMptcp              bool                   `json:"tcpMptcp,omitzero"`
+	CustomSockopt         []*CustomSockoptConfig `json:"customSockopt,omitzero"`
+	AddressPortStrategy   string                 `json:"addressPortStrategy,omitzero"`
+	HappyEyeballsSettings *HappyEyeballsConfig   `json:"happyEyeballs,omitzero"`
 }
 
 // Build implements Buildable.
@@ -759,12 +814,42 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 
 	for _, copt := range c.CustomSockopt {
 		customSockopt := &internet.CustomSockopt{
-			Level: copt.Level,
-			Opt:   copt.Opt,
-			Value: copt.Value,
-			Type:  copt.Type,
+			System:  copt.Syetem,
+			Network: copt.Network,
+			Level:   copt.Level,
+			Opt:     copt.Opt,
+			Value:   copt.Value,
+			Type:    copt.Type,
 		}
 		customSockopts = append(customSockopts, customSockopt)
+	}
+
+	addressPortStrategy := internet.AddressPortStrategy_None
+	switch strings.ToLower(c.AddressPortStrategy) {
+	case "none", "":
+		addressPortStrategy = internet.AddressPortStrategy_None
+	case "srvportonly":
+		addressPortStrategy = internet.AddressPortStrategy_SrvPortOnly
+	case "srvaddressonly":
+		addressPortStrategy = internet.AddressPortStrategy_SrvAddressOnly
+	case "srvportandaddress":
+		addressPortStrategy = internet.AddressPortStrategy_SrvPortAndAddress
+	case "txtportonly":
+		addressPortStrategy = internet.AddressPortStrategy_TxtPortOnly
+	case "txtaddressonly":
+		addressPortStrategy = internet.AddressPortStrategy_TxtAddressOnly
+	case "txtportandaddress":
+		addressPortStrategy = internet.AddressPortStrategy_TxtPortAndAddress
+	default:
+		return nil, errors.New("unsupported address and port strategy: ", c.AddressPortStrategy)
+	}
+
+	var happyEyeballs = &internet.HappyEyeballsConfig{Interleave: 1, PrioritizeIpv6: false, TryDelayMs: 0, MaxConcurrentTry: 4}
+	if c.HappyEyeballsSettings != nil {
+		happyEyeballs.PrioritizeIpv6 = c.HappyEyeballsSettings.PrioritizeIPv6
+		happyEyeballs.Interleave = c.HappyEyeballsSettings.Interleave
+		happyEyeballs.TryDelayMs = c.HappyEyeballsSettings.TryDelayMs
+		happyEyeballs.MaxConcurrentTry = c.HappyEyeballsSettings.MaxConcurrentTry
 	}
 
 	return &internet.SocketConfig{
@@ -785,6 +870,8 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 		Interface:            c.Interface,
 		TcpMptcp:             c.TcpMptcp,
 		CustomSockopt:        customSockopts,
+		AddressPortStrategy:  addressPortStrategy,
+		HappyEyeballs:        happyEyeballs,
 	}, nil
 }
 

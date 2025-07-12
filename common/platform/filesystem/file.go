@@ -60,6 +60,13 @@ func ReadAsset(file string) (io.ReadCloser, error) {
 	return NewFileReader(platform.GetAssetLocation(file))
 }
 
+func ReadCert(file string) ([]byte, error) {
+	if filepath.IsAbs(file) {
+		return ReadFile(file)
+	}
+	return ReadFile(platform.GetCertLocation(file))
+}
+
 func CopyFile(dst string, src string) error {
 	bytes, err := ReadFile(src)
 	if err != nil {
