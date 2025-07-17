@@ -10,6 +10,7 @@ import (
 	"net/http/httptrace"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
@@ -43,6 +44,25 @@ func (c *DefaultDialerClient) IsClosed() bool {
 	return c.closed
 }
 
+const openStreamTimeout = 10 * time.Second /// hardcoded timeout for [DefaultDialerClient.OpenStream] since no timeout was provided in config
+
+func toReaderCloser(body io.Reader) io.ReadCloser {
+	rc, ok := body.(io.ReadCloser)
+	if !ok && body != nil {
+		rc = io.NopCloser(body)
+	}
+	return rc
+}
+
+func NewRequestWithContext(ctx context.Context, method string, url url.URL, body io.Reader, header http.Header) *http.Request {
+	return (&http.Request{
+		Method: method,
+		URL:    &url,
+		Body:   toReaderCloser(body),
+		Header: header,
+	}).WithContext(ctx)
+}
+
 func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body io.Reader, uploadOnly bool) (wrc io.ReadCloser, remoteAddr, localAddr gonet.Addr, err error) {
 	// this is done when the TCP/UDP connection to the server was established,
 	// and we can unblock the Dial function and print correct net addresses in
@@ -60,17 +80,17 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 	if body != nil {
 		method = "POST" // stream-up/one
 	}
-	req, err := http.NewRequestWithContext(context.WithoutCancel(ctx), method, url.String(), body)
-	if err != nil {
-		return
-	}
-	req.Header = c.transportConfig.GetRequestHeader(url)
+	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+	timer := time.AfterFunc(openStreamTimeout, cancel)
+	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader(url))
+
 	if method == "POST" && !c.transportConfig.NoGRPCHeader {
 		req.Header.Set("Content-Type", "application/grpc")
 	}
 
 	wrc = &WaitReadCloser{Wait: make(chan struct{})}
 	go func() {
+		defer timer.Stop()
 		resp, err := c.client.Do(req)
 		if err != nil {
 			if !uploadOnly { // stream-down is enough
@@ -98,12 +118,8 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 }
 
 func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, body io.Reader, contentLength int64) error {
-	req, err := http.NewRequestWithContext(context.WithoutCancel(ctx), "POST", url.String(), body)
-	if err != nil {
-		return err
-	}
+	req := NewRequestWithContext(context.WithoutCancel(ctx), "POST", url, body, c.transportConfig.GetRequestHeader(url))
 	req.ContentLength = contentLength
-	req.Header = c.transportConfig.GetRequestHeader(url)
 
 	if c.httpVersion != "1.1" {
 		resp, err := c.client.Do(req)
