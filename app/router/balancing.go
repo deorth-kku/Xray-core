@@ -139,7 +139,7 @@ func (b *Balancer) SelectOutbounds() ([]string, error) {
 }
 
 func (r *Router) PickBalancerOutbound(balancerTag string) (string, error) {
-	balancer, ok := r.balancers[balancerTag]
+	balancer, ok := r.getbalancer(balancerTag)
 	if !ok {
 		return "", errors.New("balancer ", balancerTag, " not found")
 	}
@@ -147,7 +147,7 @@ func (r *Router) PickBalancerOutbound(balancerTag string) (string, error) {
 }
 
 func (r *Router) SelectBalancerOutbounds(balancerTag string) ([]string, error) {
-	balancer, ok := r.balancers[balancerTag]
+	balancer, ok := r.getbalancer(balancerTag)
 	if !ok {
 		return nil, errors.New("balancer ", balancerTag, " not found")
 	}
@@ -155,7 +155,7 @@ func (r *Router) SelectBalancerOutbounds(balancerTag string) ([]string, error) {
 }
 
 func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) error {
-	balancer, ok := r.balancers[balancerTag]
+	balancer, ok := r.getbalancer(balancerTag)
 	if !ok {
 		return errors.New("balancer ", balancerTag, " not found")
 	}
@@ -173,7 +173,7 @@ func (r *Router) SetBalancerSelectors(balancerTag string, selectors []string) er
 
 // GetPrincipleTarget implements routing.BalancerPrincipleTarget
 func (r *Router) GetPrincipleTarget(tag string) ([]string, error) {
-	if b, ok := r.balancers[tag]; ok {
+	if b, ok := r.getbalancer(tag); ok {
 		if s, ok := b.strategy.(BalancingPrincipleTarget); ok {
 			candidates, err := b.SelectOutbounds()
 			if err != nil {
@@ -188,7 +188,7 @@ func (r *Router) GetPrincipleTarget(tag string) ([]string, error) {
 
 // SetOverrideTarget implements routing.BalancerOverrider
 func (r *Router) SetOverrideTarget(tag, target string) error {
-	if b, ok := r.balancers[tag]; ok {
+	if b, ok := r.getbalancer(tag); ok {
 		b.override.Put(target)
 		return nil
 	}
@@ -197,7 +197,7 @@ func (r *Router) SetOverrideTarget(tag, target string) error {
 
 // GetOverrideTarget implements routing.BalancerOverrider
 func (r *Router) GetOverrideTarget(tag string) (string, error) {
-	if b, ok := r.balancers[tag]; ok {
+	if b, ok := r.getbalancer(tag); ok {
 		return b.override.Get(), nil
 	}
 	return "", errors.New("cannot find tag")

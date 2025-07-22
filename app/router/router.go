@@ -24,7 +24,7 @@ type Router struct {
 	ctx        context.Context
 	ohm        outbound.Manager
 	dispatcher routing.Dispatcher
-	mu         sync.Mutex
+	mu         sync.RWMutex
 }
 
 // Route is an implementation of routing.Route.
@@ -78,6 +78,13 @@ func (r *Router) Init(ctx context.Context, config *Config, d dns.Client, ohm out
 	return nil
 }
 
+func (r *Router) getbalancer(tag string) (b *Balancer, ok bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	b, ok = r.balancers[tag]
+	return
+}
+
 // PickRoute implements routing.Router.
 func (r *Router) PickRoute(ctx routing.Context) (routing.Route, error) {
 	rule, ctx, err := r.pickRouteInternal(ctx)
@@ -93,7 +100,6 @@ func (r *Router) PickRoute(ctx routing.Context) (routing.Route, error) {
 
 // AddRule implements routing.Router.
 func (r *Router) AddRule(config *serial.TypedMessage, shouldAppend bool) error {
-
 	inst, err := config.GetInstance()
 	if err != nil {
 		return err
@@ -181,6 +187,13 @@ func (r *Router) RemoveRule(tag string) error {
 	return errors.New("empty tag name!")
 
 }
+
+func (r *Router) getrules() []*Rule {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.rules
+}
+
 func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context, error) {
 	// SkipDNSResolve is set from DNS module.
 	// the DOH remote server maybe a domain name,
@@ -191,7 +204,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 		ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
 	}
 
-	for _, rule := range r.rules {
+	for _, rule := range r.getrules() {
 		if rule.Apply(ctx) {
 			return rule, ctx, nil
 		}
@@ -204,7 +217,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 	ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
 
 	// Try applying rules again if we have IPs.
-	for _, rule := range r.rules {
+	for _, rule := range r.getrules() {
 		if rule.Apply(ctx) {
 			return rule, ctx, nil
 		}
