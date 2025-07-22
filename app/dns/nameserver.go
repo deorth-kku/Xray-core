@@ -26,7 +26,7 @@ type Server interface {
 
 // Client is the interface for DNS client.
 type Client struct {
-	Server        Server
+	server        Server
 	skipFallback  bool
 	domains       []string
 	expectedIPs   []*router.GeoIPMatcher
@@ -189,7 +189,7 @@ func NewClient(
 
 		checkSystem := ns.QueryStrategy == QueryStrategy_USE_SYS
 
-		client.Server = server
+		client.server = server
 		client.skipFallback = ns.SkipFallback
 		client.domains = rules
 		client.expectedIPs = expectedMatchers
@@ -208,7 +208,7 @@ func NewClient(
 
 // Name returns the server name the client manages.
 func (c *Client) Name() string {
-	return c.Server.Name()
+	return c.server.Name()
 }
 
 func (c *Client) IsFinalQuery() bool {
@@ -232,7 +232,7 @@ func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption
 
 	ctx, cancel := context.WithTimeout(ctx, c.timeoutMs)
 	ctx = session.ContextWithInbound(ctx, &session.Inbound{Tag: c.tag})
-	ips, ttl, err := c.Server.QueryIP(ctx, domain, option)
+	ips, ttl, err := c.server.QueryIP(ctx, domain, option)
 	cancel()
 
 	if err != nil {

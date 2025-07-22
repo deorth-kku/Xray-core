@@ -22,11 +22,22 @@ type Hosts interface {
 }
 
 func (d *DNS) SwapHosts(n Hosts) Hosts {
-	d.Mutex.Lock()
-	defer d.Mutex.Unlock()
-	old := d.hosts
-	d.hosts = n
-	return old
+	d.Lock()
+	defer d.Unlock()
+	d.hosts, n = n, d.hosts
+	return n
+}
+
+func (d *DNS) SwapServer(s Server) Server {
+	d.Lock()
+	defer d.Unlock()
+	for _, client := range d.clients {
+		if client.Name() == s.Name() {
+			client.server, s = s, client.server
+			return s
+		}
+	}
+	return nil
 }
 
 // DNS is a DNS rely server.
@@ -36,7 +47,7 @@ type DNS struct {
 	disableFallbackIfMatch bool
 	ipOption               *dns.IPOption
 	hosts                  Hosts
-	Clients                []*Client
+	clients                []*Client
 	ctx                    context.Context
 	domainMatcher          strmatcher.IndexMatcher
 	matcherInfos           []*DomainMatcherInfo
@@ -155,7 +166,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 	return &DNS{
 		hosts:                  hosts,
 		ipOption:               &ipOption,
-		Clients:                clients,
+		clients:                clients,
 		ctx:                    ctx,
 		domainMatcher:          domainMatcher,
 		matcherInfos:           matcherInfos,
@@ -186,7 +197,7 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 	if inbound == nil {
 		return false
 	}
-	for _, client := range s.Clients {
+	for _, client := range s.clients {
 		if client.tag == inbound.Tag {
 			return true
 		}
@@ -276,9 +287,9 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 }
 
 func (s *DNS) sortClients(domain string) []*Client {
-	clients := make([]*Client, 0, len(s.Clients))
-	clientUsed := make([]bool, len(s.Clients))
-	clientNames := make([]string, 0, len(s.Clients))
+	clients := make([]*Client, 0, len(s.clients))
+	clientUsed := make([]bool, len(s.clients))
+	clientNames := make([]string, 0, len(s.clients))
 	domainRules := []string{}
 
 	// Priority domain matching
@@ -289,7 +300,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	})
 	for _, match := range MatchSlice {
 		info := s.matcherInfos[match]
-		client := s.Clients[info.clientIdx]
+		client := s.clients[info.clientIdx]
 		domainRule := client.domains[info.domainRuleIdx]
 		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
 		if clientUsed[info.clientIdx] {
@@ -303,7 +314,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 
 	if !(s.disableFallback || s.disableFallbackIfMatch && hasMatch) {
 		// Default round-robin query
-		for idx, client := range s.Clients {
+		for idx, client := range s.clients {
 			if clientUsed[idx] || client.skipFallback {
 				continue
 			}
@@ -321,8 +332,8 @@ func (s *DNS) sortClients(domain string) []*Client {
 	}
 
 	if len(clients) == 0 {
-		clients = append(clients, s.Clients[0])
-		clientNames = append(clientNames, s.Clients[0].Name())
+		clients = append(clients, s.clients[0])
+		clientNames = append(clientNames, s.clients[0].Name())
 		errors.LogDebug(s.ctx, "domain ", domain, " will use the first DNS: ", clientNames)
 	}
 

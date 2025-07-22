@@ -45,5 +45,5 @@ func NewLocalNameServer() *LocalNameServer {
 
 // NewLocalDNSClient creates localdns client object for directly lookup in system DNS.
 func NewLocalDNSClient(ipOption dns.IPOption) *Client {
-	return &Client{Server: NewLocalNameServer(), ipOption: &ipOption}
+	return &Client{server: NewLocalNameServer(), ipOption: &ipOption}
 }
