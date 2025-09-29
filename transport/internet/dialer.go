@@ -25,11 +25,11 @@ type Dialer interface {
 	// Dial dials a system connection to the given destination.
 	Dial(ctx context.Context, destination net.Destination) (stat.Connection, error)
 
-	// Address returns the address used by this Dialer. Maybe nil if not known.
-	Address() net.Address
-
 	// DestIpAddress returns the ip of proxy server. It is useful in case of Android client, which prepare an IP before proxy connection is established
 	DestIpAddress() net.IP
+
+	// SetOutboundGateway set outbound gateway
+	SetOutboundGateway(ctx context.Context, ob *session.Outbound)
 }
 
 // dialFunc is an interface to dial network connection to a specific destination.
@@ -81,21 +81,21 @@ func DestIpAddress() net.IP {
 	return effectiveSystemDialer.DestIpAddress()
 }
 
-func lookupIP(ctx context.Context, domain string, strategy DomainStrategy, localAddr net.Address) ([]net.IP, error) {
+func LookupForIP(ctx context.Context, domain string, strategy DomainStrategy, localAddr net.Address) ([]net.IP, error) {
 	dnsClient, ok := core.GetFeatureFromContext[dns.Client](ctx)
 	if !ok {
 		return nil, errors.New("DNS client not initialized").AtError()
 	}
 
 	ips, _, err := dnsClient.LookupIP(domain, dns.IPOption{
-		IPv4Enable: (localAddr == nil || localAddr.Family().IsIPv4()) && strategy.preferIP4(),
-		IPv6Enable: (localAddr == nil || localAddr.Family().IsIPv6()) && strategy.preferIP6(),
+		IPv4Enable: (localAddr == nil && strategy.PreferIP4()) || (localAddr != nil && localAddr.Family().IsIPv4() && (strategy.PreferIP4() || strategy.FallbackIP4())),
+		IPv6Enable: (localAddr == nil && strategy.PreferIP6()) || (localAddr != nil && localAddr.Family().IsIPv6() && (strategy.PreferIP6() || strategy.FallbackIP6())),
 	})
 	{ // Resolve fallback
-		if (len(ips) == 0 || err != nil) && strategy.hasFallback() && localAddr == nil {
+		if (len(ips) == 0 || err != nil) && strategy.HasFallback() && localAddr == nil {
 			ips, _, err = dnsClient.LookupIP(domain, dns.IPOption{
-				IPv4Enable: strategy.fallbackIP4(),
-				IPv6Enable: strategy.fallbackIP6(),
+				IPv4Enable: strategy.FallbackIP4(),
+				IPv6Enable: strategy.FallbackIP6(),
 			})
 		}
 	}
@@ -111,7 +111,7 @@ func canLookupIP(ctx context.Context, dst net.Destination, sockopt *SocketConfig
 	if !ok || dst.Address.Family().IsIP() {
 		return false
 	}
-	return sockopt.DomainStrategy.hasStrategy()
+	return sockopt.DomainStrategy.HasStrategy()
 }
 
 func redirect(ctx context.Context, dst net.Destination, obt string, h outbound.Handler) net.Conn {
@@ -233,9 +233,18 @@ func checkAddressPortStrategy(ctx context.Context, dest net.Destination, sockopt
 func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
 	var src net.Address
 	outbounds := session.OutboundsFromContext(ctx)
+	var outboundName string
+	var origTargetAddr net.Address
 	if len(outbounds) > 0 {
 		ob := outbounds[len(outbounds)-1]
-		src = ob.Gateway
+		if sockopt == nil || len(sockopt.DialerProxy) == 0 {
+			src = ob.Gateway
+		}
+		outboundName = ob.Name
+		origTargetAddr = ob.OriginalTarget.Address
+		if origTargetAddr == nil {
+			origTargetAddr = ob.Target.Address
+		}
 	}
 	if sockopt == nil {
 		return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
@@ -247,17 +256,21 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	}
 
 	if canLookupIP(ctx, dest, sockopt) {
-		ips, err := lookupIP(ctx, dest.Address.String(), sockopt.DomainStrategy, src)
+		finalStrategy := sockopt.DomainStrategy
+		if outboundName == "freedom" && dest.Network == net.Network_UDP && origTargetAddr != nil && src == nil {
+			finalStrategy = finalStrategy.GetDynamicStrategy(origTargetAddr.Family())
+		}
+		ips, err := LookupForIP(ctx, dest.Address.String(), finalStrategy, src)
 		if err != nil {
 			errors.LogErrorInner(ctx, err, "failed to resolve ip")
-			if sockopt.DomainStrategy.forceIP() {
+			if sockopt.DomainStrategy.ForceIP() {
 				return nil, err
 			}
 		} else if sockopt.HappyEyeballs == nil || sockopt.HappyEyeballs.TryDelayMs == 0 || sockopt.HappyEyeballs.MaxConcurrentTry == 0 || len(ips) < 2 || len(sockopt.DialerProxy) > 0 || dest.Network != net.Network_TCP {
 			dest.Address = net.IPAddress(ips[dice.Roll(len(ips))])
 			errors.LogInfo(ctx, "replace destination with "+dest.String())
 		} else {
-			return TcpRaceDial(ctx, src, ips, dest.Port, sockopt)
+			return TcpRaceDial(ctx, src, ips, dest.Port, sockopt, dest.Address.String())
 		}
 	}
 

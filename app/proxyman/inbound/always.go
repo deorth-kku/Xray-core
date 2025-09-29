@@ -5,7 +5,6 @@ import (
 
 	"github.com/xtls/xray-core/app/proxyman"
 	"github.com/xtls/xray-core/common"
-	"github.com/xtls/xray-core/common/dice"
 	"github.com/xtls/xray-core/common/errors"
 	common_errors "github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/mux"
@@ -119,7 +118,7 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 				stream:          mss,
 				tag:             tag,
 				dispatcher:      h.mux,
-				sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
+				sniffingConfig:  receiverConfig.SniffingSettings,
 				uplinkCounter:   uplinkCounter,
 				downlinkCounter: downlinkCounter,
 				ctx:             ctx,
@@ -141,7 +140,7 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 						recvOrigDest:    receiverConfig.ReceiveOriginalDestination,
 						tag:             tag,
 						dispatcher:      h.mux,
-						sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
+						sniffingConfig:  receiverConfig.SniffingSettings,
 						uplinkCounter:   uplinkCounter,
 						downlinkCounter: downlinkCounter,
 						ctx:             ctx,
@@ -156,7 +155,7 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 						address:         address,
 						port:            net.Port(port),
 						dispatcher:      h.mux,
-						sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
+						sniffingConfig:  receiverConfig.SniffingSettings,
 						uplinkCounter:   uplinkCounter,
 						downlinkCounter: downlinkCounter,
 						stream:          mss,
@@ -192,14 +191,6 @@ func (h *AlwaysOnInboundHandler) Close() error {
 		return errors.New("failed to close all resources").Base(err)
 	}
 	return nil
-}
-
-func (h *AlwaysOnInboundHandler) GetRandomInboundProxy() (interface{}, net.Port, int) {
-	if len(h.workers) == 0 {
-		return nil, 0, 0
-	}
-	w := h.workers[dice.Roll(len(h.workers))]
-	return w.Proxy(), w.Port(), 9999
 }
 
 func (h *AlwaysOnInboundHandler) Tag() string {

@@ -17,7 +17,7 @@ import (
 // Manager manages all inbound handlers.
 type Manager struct {
 	access          sync.RWMutex
-	untaggedHandler []inbound.Handler
+	untaggedHandlers []inbound.Handler
 	taggedHandlers  map[string]inbound.Handler
 	running         bool
 }
@@ -47,7 +47,7 @@ func (m *Manager) AddHandler(ctx context.Context, handler inbound.Handler) error
 		}
 		m.taggedHandlers[tag] = handler
 	} else {
-		m.untaggedHandler = append(m.untaggedHandler, handler)
+		m.untaggedHandlers = append(m.untaggedHandlers, handler)
 	}
 
 	if m.running {
@@ -98,8 +98,8 @@ func (m *Manager) ListHandlers(ctx context.Context) []inbound.Handler {
 	m.access.RLock()
 	defer m.access.RUnlock()
 
-	var response []inbound.Handler
-	copy(m.untaggedHandler, response)
+	response := make([]inbound.Handler, len(m.untaggedHandlers))
+	copy(response, m.untaggedHandlers)
 
 	for _, v := range m.taggedHandlers {
 		response = append(response, v)
@@ -121,7 +121,7 @@ func (m *Manager) Start() error {
 		}
 	}
 
-	for _, handler := range m.untaggedHandler {
+	for _, handler := range m.untaggedHandlers {
 		if err := handler.Start(); err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func (m *Manager) Close() error {
 			errs = append(errs, err)
 		}
 	}
-	for _, handler := range m.untaggedHandler {
+	for _, handler := range m.untaggedHandlers {
 		if err := handler.Close(); err != nil {
 			errs = append(errs, err)
 		}
@@ -182,15 +182,7 @@ func NewHandler(ctx context.Context, config *core.InboundHandlerConfig) (inbound
 		ctx = session.ContextWithAllowedNetwork(ctx, net.Network_UDP)
 	}
 
-	allocStrategy := receiverSettings.AllocationStrategy
-	if allocStrategy == nil || allocStrategy.Type == proxyman.AllocationStrategy_Always {
-		return NewAlwaysOnInboundHandler(ctx, tag, receiverSettings, proxySettings)
-	}
-
-	if allocStrategy.Type == proxyman.AllocationStrategy_Random {
-		return NewDynamicInboundHandler(ctx, tag, receiverSettings, proxySettings)
-	}
-	return nil, errors.New("unknown allocation strategy: ", receiverSettings.AllocationStrategy.Type).AtError()
+	return NewAlwaysOnInboundHandler(ctx, tag, receiverSettings, proxySettings)
 }
 
 func init() {

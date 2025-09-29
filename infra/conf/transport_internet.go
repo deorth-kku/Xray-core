@@ -394,23 +394,27 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                             bool             `json:"allowInsecure,omitzero"`
-	Certs                                []*TLSCertConfig `json:"certificates,omitzero"`
-	ServerName                           string           `json:"serverName,omitzero"`
-	ALPN                                 *StringList      `json:"alpn,omitzero"`
-	EnableSessionResumption              bool             `json:"enableSessionResumption,omitzero"`
-	DisableSystemRoot                    bool             `json:"disableSystemRoot,omitzero"`
-	MinVersion                           string           `json:"minVersion,omitzero"`
-	MaxVersion                           string           `json:"maxVersion,omitzero"`
-	CipherSuites                         string           `json:"cipherSuites,omitzero"`
-	Fingerprint                          string           `json:"fingerprint,omitzero"`
-	RejectUnknownSNI                     bool             `json:"rejectUnknownSni,omitzero"`
-	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256,omitzero"`
-	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256,omitzero"`
-	CurvePreferences                     *StringList      `json:"curvePreferences,omitzero"`
-	MasterKeyLog                         string           `json:"masterKeyLog,omitzero"`
-	ServerNameToVerify                   string           `json:"serverNameToVerify,omitzero"`
-	VerifyPeerCertInNames                []string         `json:"verifyPeerCertInNames,omitzero"`
+	Insecure                             bool             `json:"allowInsecure"`
+	Certs                                []*TLSCertConfig `json:"certificates"`
+	ServerName                           string           `json:"serverName"`
+	ALPN                                 *StringList      `json:"alpn"`
+	EnableSessionResumption              bool             `json:"enableSessionResumption"`
+	DisableSystemRoot                    bool             `json:"disableSystemRoot"`
+	MinVersion                           string           `json:"minVersion"`
+	MaxVersion                           string           `json:"maxVersion"`
+	CipherSuites                         string           `json:"cipherSuites"`
+	Fingerprint                          string           `json:"fingerprint"`
+	RejectUnknownSNI                     bool             `json:"rejectUnknownSni"`
+	PinnedPeerCertificateChainSha256     *[]string        `json:"pinnedPeerCertificateChainSha256"`
+	PinnedPeerCertificatePublicKeySha256 *[]string        `json:"pinnedPeerCertificatePublicKeySha256"`
+	CurvePreferences                     *StringList      `json:"curvePreferences"`
+	MasterKeyLog                         string           `json:"masterKeyLog"`
+	ServerNameToVerify                   string           `json:"serverNameToVerify"`
+	VerifyPeerCertInNames                []string         `json:"verifyPeerCertInNames"`
+	ECHServerKeys                        string           `json:"echServerKeys"`
+	ECHConfigList                        string           `json:"echConfigList"`
+	ECHForceQuery                        string           `json:"echForceQuery"`
+	ECHSocketSettings                    *SocketConfig    `json:"echSockopt"`
 }
 
 // Build implements Buildable.
@@ -434,7 +438,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 	if len(config.NextProtocol) > 1 {
 		for _, p := range config.NextProtocol {
-			if tcp.IsFromMitm(p) {
+			if tls.IsFromMitm(p) {
 				return nil, errors.New(`only one element is allowed in "alpn" when using "fromMitm" in it`)
 			}
 		}
@@ -482,6 +486,29 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 	config.VerifyPeerCertInNames = c.VerifyPeerCertInNames
 
+	if c.ECHServerKeys != "" {
+		EchPrivateKey, err := base64.StdEncoding.DecodeString(c.ECHServerKeys)
+		if err != nil {
+			return nil, errors.New("invalid ECH Config", c.ECHServerKeys)
+		}
+		config.EchServerKeys = EchPrivateKey
+	}
+	switch c.ECHForceQuery {
+	case "none", "half", "full", "":
+		config.EchForceQuery = c.ECHForceQuery
+	default:
+		return nil, errors.New(`invalid "echForceQuery": `, c.ECHForceQuery)
+	}
+	config.EchForceQuery = c.ECHForceQuery
+	config.EchConfigList = c.ECHConfigList
+	if c.ECHSocketSettings != nil {
+		ss, err := c.ECHSocketSettings.Build()
+		if err != nil {
+			return nil, errors.New("Failed to build ech sockopt.").Base(err)
+		}
+		config.EchSocketSettings = ss
+	}
+
 	return config, nil
 }
 
@@ -492,27 +519,30 @@ type LimitFallback struct {
 }
 
 type REALITYConfig struct {
-	MasterKeyLog string          `json:"masterKeyLog,omitzero"`
-	Show         bool            `json:"show,omitzero"`
-	Target       json.RawMessage `json:"target,omitzero"`
-	Dest         json.RawMessage `json:"dest,omitzero"`
-	Type         string          `json:"type,omitzero"`
-	Xver         uint64          `json:"xver,omitzero"`
-	ServerNames  []string        `json:"serverNames,omitzero"`
-	PrivateKey   string          `json:"privateKey,omitzero"`
-	MinClientVer string          `json:"minClientVer,omitzero"`
-	MaxClientVer string          `json:"maxClientVer,omitzero"`
-	MaxTimeDiff  uint64          `json:"maxTimeDiff,omitzero"`
-	ShortIds     []string        `json:"shortIds,omitzero"`
+	MasterKeyLog string          `json:"masterKeyLog"`
+	Show         bool            `json:"show"`
+	Target       json.RawMessage `json:"target"`
+	Dest         json.RawMessage `json:"dest"`
+	Type         string          `json:"type"`
+	Xver         uint64          `json:"xver"`
+	ServerNames  []string        `json:"serverNames"`
+	PrivateKey   string          `json:"privateKey"`
+	MinClientVer string          `json:"minClientVer"`
+	MaxClientVer string          `json:"maxClientVer"`
+	MaxTimeDiff  uint64          `json:"maxTimeDiff"`
+	ShortIds     []string        `json:"shortIds"`
+	Mldsa65Seed  string          `json:"mldsa65Seed"`
 
 	LimitFallbackUpload   LimitFallback `json:"limitFallbackUpload,omitzero"`
 	LimitFallbackDownload LimitFallback `json:"limitFallbackDownload,omitzero"`
 
-	Fingerprint string `json:"fingerprint,omitzero"`
-	ServerName  string `json:"serverName,omitzero"`
-	PublicKey   string `json:"publicKey,omitzero"`
-	ShortId     string `json:"shortId,omitzero"`
-	SpiderX     string `json:"spiderX,omitzero"`
+	Fingerprint   string `json:"fingerprint"`
+	ServerName    string `json:"serverName"`
+	Password      string `json:"password"`
+	PublicKey     string `json:"publicKey"`
+	ShortId       string `json:"shortId"`
+	Mldsa65Verify string `json:"mldsa65Verify"`
+	SpiderX       string `json:"spiderX"`
 }
 
 func (c *REALITYConfig) Build() (proto.Message, error) {
@@ -542,7 +572,7 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 				}
 			default:
 				if _, err = strconv.Atoi(s); err == nil {
-					s = "127.0.0.1:" + s
+					s = "localhost:" + s
 				}
 				if _, _, err = net.SplitHostPort(s); err == nil {
 					c.Type = "tcp"
@@ -608,6 +638,15 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 		config.ServerNames = c.ServerNames
 		config.MaxTimeDiff = c.MaxTimeDiff
 
+		if c.Mldsa65Seed != "" {
+			if c.Mldsa65Seed == c.PrivateKey {
+				return nil, errors.New(`"mldsa65Seed" and "privateKey" can not be the same value: `, c.Mldsa65Seed)
+			}
+			if config.Mldsa65Seed, err = base64.RawURLEncoding.DecodeString(c.Mldsa65Seed); err != nil || len(config.Mldsa65Seed) != 32 {
+				return nil, errors.New(`invalid "mldsa65Seed": `, c.Mldsa65Seed)
+			}
+		}
+
 		config.LimitFallbackUpload = new(reality.LimitFallback)
 		config.LimitFallbackUpload.AfterBytes = c.LimitFallbackUpload.AfterBytes
 		config.LimitFallbackUpload.BytesPerSec = c.LimitFallbackUpload.BytesPerSec
@@ -639,6 +678,11 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 		config.ShortId = make([]byte, 8)
 		if _, err = hex.Decode(config.ShortId, []byte(c.ShortId)); err != nil {
 			return nil, errors.New(`invalid "shortId": `, c.ShortId)
+		}
+		if c.Mldsa65Verify != "" {
+			if config.Mldsa65Verify, err = base64.RawURLEncoding.DecodeString(c.Mldsa65Verify); err != nil || len(config.Mldsa65Verify) != 1952 {
+				return nil, errors.New(`invalid "mldsa65Verify": `, c.Mldsa65Verify)
+			}
 		}
 		if c.SpiderX == "" {
 			c.SpiderX = "/"
