@@ -32,6 +32,15 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
+type httpsResolver interface {
+	LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, error)
+}
+
+var (
+	serverReg             = utils.NewTypedSyncMap[string, httpsResolver]()
+	RegisterHTTPSResolver = serverReg.Store
+)
+
 func ApplyECH(c *Config, config *tls.Config) error {
 	var ECHConfig []byte
 	var err error
@@ -71,7 +80,27 @@ func ApplyECH(c *Config, config *tls.Config) error {
 			config.EncryptedClientHelloConfigList = ECHConfig
 		}()
 		// direct base64 config
-		if strings.Contains(c.EchConfigList, "://") {
+		resolver, ok := serverReg.Load(c.EchConfigList)
+		if ok {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			rsp, err := resolver.LookupHTTPS(ctx, nameToQuery)
+			if err != nil {
+				return errors.New("Failed to query ECH DNS record for domain: ", nameToQuery, " at server: ", DNSServer).Base(err)
+			}
+			for _, answer := range rsp {
+				if answer.Hdr.Name != dns.Fqdn(nameToQuery) {
+					continue
+				}
+				for _, v := range answer.Value {
+					if echConfig, ok := v.(*dns.SVCBECHConfig); ok {
+						errors.LogDebug(context.Background(), "Get ECH config:", echConfig.String(), " TTL:", answer.Hdr.Ttl)
+						ECHConfig = echConfig.ECH
+						return nil
+					}
+				}
+			}
+		} else if strings.Contains(c.EchConfigList, "://") {
 			// query config from dns
 			parts := strings.Split(c.EchConfigList, "+")
 			if len(parts) == 2 {
