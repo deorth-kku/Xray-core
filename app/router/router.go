@@ -115,6 +115,7 @@ func (r *Router) ReloadRules(config *Config, shouldAppend bool) error {
 	defer r.mu.Unlock()
 
 	if !shouldAppend {
+		r.domainStrategy = config.DomainStrategy
 		r.balancers = make(map[string]*Balancer, len(config.BalancingRule))
 		r.rules = make([]*Rule, 0, len(config.Rule))
 	}
