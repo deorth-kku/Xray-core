@@ -188,7 +188,7 @@ func checkAddressPortStrategy(ctx context.Context, dest net.Destination, sockopt
 		if len(parts) != 3 {
 			return nil, errors.New("invalid address format", dest.Address.String())
 		}
-		_, srvRecords, err := gonet.DefaultResolver.LookupSRV(context.Background(), parts[0][1:], parts[1][1:], parts[2])
+		_, srvRecords, err := gonet.DefaultResolver.LookupSRV(ctx, parts[0][1:], parts[1][1:], parts[2])
 		if err != nil {
 			return nil, errors.New("failed to lookup SRV record").Base(err)
 		}
@@ -250,9 +250,13 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 		return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
 	}
 
-	if newDest, err := checkAddressPortStrategy(ctx, dest, sockopt); err == nil && newDest != nil {
-		errors.LogInfo(ctx, "replace destination with "+newDest.String())
-		dest = *newDest
+	if newDest, err := checkAddressPortStrategy(ctx, dest, sockopt); err == nil {
+		if newDest != nil {
+			errors.LogInfo(ctx, "replace destination with "+newDest.String())
+			dest = *newDest
+		}
+	} else {
+		errors.LogErrorInner(ctx, err, "failed to replace destination")
 	}
 
 	if canLookupIP(ctx, dest, sockopt) {
