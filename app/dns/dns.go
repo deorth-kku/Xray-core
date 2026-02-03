@@ -291,6 +291,18 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 	return nil, 0, dns.ErrEmptyResponse
 }
 
+func (s *DNS) NameClients(domain string) []string {
+	clients := s.sortClients(domain)
+	if clients == nil {
+		return nil
+	}
+	names := make([]string, len(clients))
+	for i, c := range clients {
+		names[i] = c.Name()
+	}
+	return names
+}
+
 func (s *DNS) sortClients(domain string) []*Client {
 	clients := make([]*Client, 0, len(s.clients))
 	clientUsed := make([]bool, len(s.clients))
