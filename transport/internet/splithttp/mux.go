@@ -41,6 +41,18 @@ func NewXmuxManager(xmuxConfig XmuxConfig, newConnFunc func() XmuxConn) *XmuxMan
 	}
 }
 
+func (m *XmuxManager) CloseAll() (l int) {
+	for _, c := range m.xmuxClients {
+		closer, ok := c.XmuxConn.(interface{ CloseIdleConnections() })
+		if ok {
+			l++
+			closer.CloseIdleConnections()
+		}
+	}
+	m.xmuxClients = nil
+	return
+}
+
 func (m *XmuxManager) newXmuxClient() *XmuxClient {
 	xmuxClient := &XmuxClient{
 		XmuxConn:  m.newConnFunc(),

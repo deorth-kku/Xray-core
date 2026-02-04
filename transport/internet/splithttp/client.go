@@ -10,7 +10,6 @@ import (
 	"net/http/httptrace"
 	"net/url"
 	"sync"
-	"time"
 
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
@@ -40,11 +39,13 @@ type DefaultDialerClient struct {
 	dialUploadConn func(ctxInner context.Context) (net.Conn, error)
 }
 
+func (c *DefaultDialerClient) CloseIdleConnections() {
+	c.client.CloseIdleConnections()
+}
+
 func (c *DefaultDialerClient) IsClosed() bool {
 	return c.closed
 }
-
-const openStreamTimeout = 10 * time.Second /// hardcoded timeout for [DefaultDialerClient.OpenStream] since no timeout was provided in config
 
 func toReaderCloser(body io.Reader) io.ReadCloser {
 	rc, ok := body.(io.ReadCloser)
@@ -80,9 +81,7 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 	if body != nil {
 		method = "POST" // stream-up/one
 	}
-	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
-	timer := time.AfterFunc(openStreamTimeout, cancel)
-	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader(url))
+	req := NewRequestWithContext(ctx, method, url, body, c.transportConfig.GetRequestHeader(url)) // i don't get it. why does the request need to be detach from context cancel, RPRX?
 
 	if method == "POST" && !c.transportConfig.NoGRPCHeader {
 		req.Header.Set("Content-Type", "application/grpc")
@@ -90,7 +89,6 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 
 	wrc = &WaitReadCloser{Wait: make(chan struct{})}
 	go func() {
-		defer timer.Stop()
 		resp, err := c.client.Do(req)
 		if err != nil {
 			if !uploadOnly { // stream-down is enough
