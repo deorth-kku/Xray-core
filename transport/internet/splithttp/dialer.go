@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -263,6 +264,7 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 		uploadRawPool:  &sync.Pool{},
 		dialUploadConn: dialContext,
 	}
+	runtime.AddCleanup(client, (*http.Client).CloseIdleConnections, client.client)
 	return client
 }
 
