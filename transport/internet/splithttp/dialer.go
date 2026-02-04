@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -39,6 +40,28 @@ var (
 	globalDialerMap    map[dialerConf]*XmuxManager
 	globalDialerAccess sync.Mutex
 )
+
+func DeleteXmuxManager(conf *internet.MemoryStreamConfig) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	for k := range globalDialerMap {
+		if k.MemoryStreamConfig == conf {
+			delete(globalDialerMap, k)
+		}
+	}
+}
+
+func XmuxManagerCount() int {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	return len(globalDialerMap)
+}
+
+func ClearXmuxManagers() {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	globalDialerMap = nil
+}
 
 func getHTTPClient(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (DialerClient, *XmuxClient) {
 	realityConfig := reality.ConfigFromStreamSettings(streamSettings)
@@ -237,6 +260,7 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 		dialUploadConn: dialContext,
 	}
 
+	runtime.AddCleanup(client, (*http.Client).CloseIdleConnections, client.client)
 	return client
 }
 
