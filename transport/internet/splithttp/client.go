@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
+	"runtime"
 	"sync"
 
 	"github.com/xtls/xray-core/common"
@@ -81,13 +82,15 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 	if body != nil {
 		method = "POST" // stream-up/one
 	}
-	req := NewRequestWithContext(ctx, method, url, body, c.transportConfig.GetRequestHeader(url)) // i don't get it. why does the request need to be detach from context cancel, RPRX?
+	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+	stop := context.AfterFunc(ctx, cancel)
+	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader(url))
 
 	if method == "POST" && !c.transportConfig.NoGRPCHeader {
 		req.Header.Set("Content-Type", "application/grpc")
 	}
-
-	wrc = &WaitReadCloser{Wait: make(chan struct{})}
+	wrc0 := &WaitReadCloser{Wait: make(chan struct{})}
+	wrc = wrc0
 	go func() {
 		resp, err := c.client.Do(req)
 		if err != nil {
@@ -99,6 +102,7 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 			wrc.Close()
 			return
 		}
+		stop()
 		if resp.StatusCode != 200 && !uploadOnly {
 			errors.LogInfo(ctx, "unexpected status ", resp.StatusCode)
 		}
@@ -108,7 +112,8 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 			wrc.Close()
 			return
 		}
-		wrc.(*WaitReadCloser).Set(resp.Body)
+		wrc0.Set(resp.Body)
+		runtime.AddCleanup(wrc0, closerCleanup, resp.Body)
 	}()
 
 	<-gotConn.Wait()

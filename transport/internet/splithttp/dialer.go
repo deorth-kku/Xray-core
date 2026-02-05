@@ -222,8 +222,13 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 						return nil, err
 					}
 				}
-
-				return quic.DialEarly(ctx, udpConn, udpAddr, tlsCfg, cfg)
+				qconn, err := quic.DialEarly(ctx, udpConn, udpAddr, tlsCfg, cfg)
+				if qconn == nil || err != nil {
+					conn.Close()
+				} else {
+					runtime.AddCleanup(qconn, closerCleanup, udpConn)
+				}
+				return qconn, err
 			},
 		}
 	} else if httpVersion == "2" {
@@ -266,6 +271,10 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 	}
 	runtime.AddCleanup(client, (*http.Client).CloseIdleConnections, client.client)
 	return client
+}
+
+func closerCleanup[T io.Closer](closer T) {
+	closer.Close()
 }
 
 func init() {
