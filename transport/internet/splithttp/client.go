@@ -40,8 +40,15 @@ type DefaultDialerClient struct {
 	dialUploadConn func(ctxInner context.Context) (net.Conn, error)
 }
 
-func (c *DefaultDialerClient) CloseIdleConnections() {
-	c.client.CloseIdleConnections()
+func (c *DefaultDialerClient) Close() error {
+	c.closed = true
+	switch closer := c.client.Transport.(type) {
+	case io.Closer:
+		return closer.Close()
+	case closeIdler:
+		closer.CloseIdleConnections()
+	}
+	return nil
 }
 
 func (c *DefaultDialerClient) IsClosed() bool {

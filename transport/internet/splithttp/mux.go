@@ -5,9 +5,11 @@ import (
 	"crypto/rand"
 	"math"
 	"math/big"
+	"slices"
 	"sync/atomic"
 	"time"
 
+	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
 )
 
@@ -43,10 +45,8 @@ func NewXmuxManager(xmuxConfig XmuxConfig, newConnFunc func() XmuxConn) *XmuxMan
 
 func (m *XmuxManager) CloseAll() (l int) {
 	for _, c := range m.xmuxClients {
-		closer, ok := c.XmuxConn.(interface{ CloseIdleConnections() })
-		if ok {
+		if common.Close(c.XmuxConn) == nil {
 			l++
-			closer.CloseIdleConnections()
 		}
 	}
 	m.xmuxClients = nil
@@ -73,22 +73,22 @@ func (m *XmuxManager) newXmuxClient() *XmuxClient {
 }
 
 func (m *XmuxManager) GetXmuxClient(ctx context.Context) *XmuxClient { // when locking
-	for i := 0; i < len(m.xmuxClients); {
-		xmuxClient := m.xmuxClients[i]
-		if xmuxClient.XmuxConn.IsClosed() ||
+	m.xmuxClients = slices.DeleteFunc(m.xmuxClients, func(xmuxClient *XmuxClient) bool {
+		isClosed := xmuxClient.XmuxConn.IsClosed()
+		if isClosed ||
 			xmuxClient.leftUsage == 0 ||
 			xmuxClient.LeftRequests.Load() <= 0 ||
 			(xmuxClient.UnreusableAt != time.Time{} && time.Now().After(xmuxClient.UnreusableAt)) {
-			errors.LogDebug(ctx, "XMUX: removing xmuxClient, IsClosed() = ", xmuxClient.XmuxConn.IsClosed(),
+			errors.LogDebugInner(ctx, common.Close(xmuxClient.XmuxConn),
+				"XMUX: removing xmuxClient, IsClosed() = ", isClosed,
 				", OpenUsage = ", xmuxClient.OpenUsage.Load(),
 				", leftUsage = ", xmuxClient.leftUsage,
 				", LeftRequests = ", xmuxClient.LeftRequests.Load(),
 				", UnreusableAt = ", xmuxClient.UnreusableAt)
-			m.xmuxClients = append(m.xmuxClients[:i], m.xmuxClients[i+1:]...)
-		} else {
-			i++
+			return true
 		}
-	}
+		return false
+	})
 
 	if len(m.xmuxClients) == 0 {
 		errors.LogDebug(ctx, "XMUX: creating xmuxClient because xmuxClients is empty")
