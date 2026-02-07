@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common/buf"
 	. "github.com/xtls/xray-core/transport/internet/kcp"
 )

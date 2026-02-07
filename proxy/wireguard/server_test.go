@@ -2,10 +2,12 @@ package wireguard_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"runtime/debug"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/proxy/wireguard"
 )

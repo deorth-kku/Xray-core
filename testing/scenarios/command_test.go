@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/xtls/xray-core/app/commander"
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/policy"
 	"github.com/xtls/xray-core/app/proxyman"
 	"github.com/xtls/xray-core/app/proxyman/command"
@@ -426,7 +427,7 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 					Receiver: &protocol.ServerEndpoint{
 						Address: net.NewIPOrDomain(net.LocalHostIP),
 						Port:    uint32(serverPort),
-						User:    &protocol.User{
+						User: &protocol.User{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id: u2.String(),
 								SecuritySettings: &protocol.SecurityConfig{
@@ -599,7 +600,7 @@ func TestCommanderStats(t *testing.T) {
 					Receiver: &protocol.ServerEndpoint{
 						Address: net.NewIPOrDomain(net.LocalHostIP),
 						Port:    uint32(serverPort),
-						User:    &protocol.User{
+						User: &protocol.User{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id: userID.String(),
 								SecuritySettings: &protocol.SecurityConfig{

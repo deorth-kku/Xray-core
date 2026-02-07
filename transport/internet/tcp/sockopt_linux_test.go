@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/testing/servers/tcp"
 	"github.com/xtls/xray-core/transport/internet"

@@ -3,6 +3,7 @@ package tls_test
 import (
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	. "github.com/xtls/xray-core/common/protocol/tls"
 )
 

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/protocol/tls/cert"

@@ -5,6 +5,7 @@ import (
 	"context"
 	"runtime"
 	"strings"
+	_ "unsafe"
 
 	c "github.com/xtls/xray-core/common/ctx"
 	"github.com/xtls/xray-core/common/log"
@@ -170,6 +171,7 @@ func LogErrorInner(ctx context.Context, inner error, msg ...interface{}) {
 	doLog(ctx, inner, log.Severity_Error, msg...)
 }
 
+//go:linkname loggerFromContext github.com/xtls/xray-core/app/log.loggerFromContext
 func loggerFromContext(ctx context.Context) log.Handler
 
 func Log(ctx context.Context, msg log.Message) {

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/policy"
 	"github.com/xtls/xray-core/app/proxyman"
 	. "github.com/xtls/xray-core/app/proxyman/outbound"

@@ -3,6 +3,7 @@ package reverse_test
 import (
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/reverse"
 	"github.com/xtls/xray-core/common"
 )

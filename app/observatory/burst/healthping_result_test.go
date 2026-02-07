@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/observatory/burst"
 )
 

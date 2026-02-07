@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/buf"
 	. "github.com/xtls/xray-core/transport/pipe"

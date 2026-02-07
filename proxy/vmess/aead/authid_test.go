@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	_ "github.com/xtls/xray-core/app/log"
 )
 
 func TestCreateAuthID(t *testing.T) {

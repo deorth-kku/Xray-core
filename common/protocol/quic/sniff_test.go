@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/common/protocol/quic"

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/router"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/net"

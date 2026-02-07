@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/router"
 	. "github.com/xtls/xray-core/app/router/command"
 	"github.com/xtls/xray-core/app/stats"

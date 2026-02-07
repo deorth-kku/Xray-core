@@ -9,6 +9,7 @@ import (
 	"github.com/miekg/dns"
 	"github.com/xtls/xray-core/app/dispatcher"
 	dnsapp "github.com/xtls/xray-core/app/dns"
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/policy"
 	"github.com/xtls/xray-core/app/proxyman"
 	_ "github.com/xtls/xray-core/app/proxyman/inbound"
