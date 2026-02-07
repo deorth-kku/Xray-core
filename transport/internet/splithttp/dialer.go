@@ -269,12 +269,6 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 		uploadRawPool:  &sync.Pool{},
 		dialUploadConn: dialContext,
 	}
-	switch closer := transport.(type) {
-	case io.Closer:
-		runtime.AddCleanup(client, closerCleanup, closer)
-	case closeIdler:
-		runtime.AddCleanup(client, closeIdler.CloseIdleConnections, closer)
-	}
 	return client
 }
 

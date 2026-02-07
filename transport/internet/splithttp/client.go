@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
-	"runtime"
 	"sync"
 
 	"github.com/xtls/xray-core/common"
@@ -120,7 +119,6 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 			return
 		}
 		wrc0.Set(resp.Body)
-		runtime.AddCleanup(wrc0, closerCleanup, resp.Body)
 	}()
 
 	<-gotConn.Wait()
