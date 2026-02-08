@@ -273,3 +273,8 @@ func (c *FakePacketConn) SetReadBuffer(bytes int) error {
 	// random warnings about UDP buffers to stdout
 	return nil
 }
+
+func (c *FakePacketConn) SetWriteBuffer(bytes int) error {
+	// same as above
+	return nil
+}
