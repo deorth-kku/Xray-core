@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	go_errors "errors"
+	gonet "net"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -28,6 +29,7 @@ type ClassicNameServer struct {
 	address         *net.Destination
 	requests        map[uint16]*udpDnsRequest
 	udpServer       *udp.Dispatcher
+	resolver        *gonet.Resolver
 	requestsCleanup *task.Periodic
 	reqID           uint32
 	clientIP        net.IP
@@ -56,6 +58,16 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 		Execute:  s.RequestsCleanup,
 	}
 	s.udpServer = udp.NewDispatcher(dispatcher, s.HandleResponse)
+	s.resolver = &net.Resolver{
+		Dial: func(ctx context.Context, _, _ string) (gonet.Conn, error) {
+			errors.LogDebug(ctx, "DNS: creating udp conn for system resolver lookup, addr:", address.NetAddr())
+			link, err := dispatcher.Dispatch(ctx, address)
+			if err != nil {
+				return nil, err
+			}
+			return cncConnUDP(link), nil
+		},
+	}
 	errors.LogInfo(context.Background(), "DNS: created UDP client initialized for ", address.NetAddr())
 	return s
 }
@@ -214,4 +226,16 @@ func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, option d
 	errors.Log(ctx, &log.DNSLog{Server: s.Name(), Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
 	return ips, ttl, err
 
+}
+
+// current cache system only has support for IP query. no cache for LookupTXT for now
+func (s *ClassicNameServer) LookupTXT(ctx context.Context, name string) ([]string, error) {
+	errors.LogDebug(ctx, s.Name(), " DNS: querying TXT for: ", name)
+	return s.resolver.LookupTXT(ctx, name)
+}
+
+// current cache system only has support for IP query. no cache for LookupSRV for now
+func (s *ClassicNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
+	errors.LogDebug(ctx, s.Name(), " DNS: querying SRV for: ", service, proto, name)
+	return s.resolver.LookupSRV(ctx, service, proto, name)
 }

@@ -10,9 +10,12 @@ import (
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/log"
 	"github.com/xtls/xray-core/common/net"
+	"github.com/xtls/xray-core/common/net/cnc"
 	"github.com/xtls/xray-core/common/session"
 	"github.com/xtls/xray-core/core"
 	dns_feature "github.com/xtls/xray-core/features/dns"
+	"github.com/xtls/xray-core/transport"
+	"github.com/xtls/xray-core/transport/internet"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -262,4 +265,32 @@ func toDnsContext(ctx context.Context, addr string) context.Context {
 		Reason: "",
 	})
 	return dnsCtx
+}
+
+func linkcc(link *transport.Link) cnc.ConnectionOption {
+	cc := common.ChainedClosable{}
+	if cw, ok := link.Writer.(common.Closable); ok {
+		cc = append(cc, cw)
+	}
+	if cr, ok := link.Reader.(common.Closable); ok {
+		cc = append(cc, cr)
+	}
+	return cnc.ConnectionOnClose(cc)
+}
+
+func cncConn(link *transport.Link) net.Conn {
+	return cnc.NewConnection(
+		cnc.ConnectionInputMulti(link.Writer),
+		cnc.ConnectionOutputMulti(link.Reader),
+		linkcc(link),
+	)
+}
+
+func cncConnUDP(link *transport.Link) net.Conn {
+	return &internet.FakePacketConn{
+		Conn: cnc.NewConnection(
+			cnc.ConnectionInputMulti(link.Writer),
+			cnc.ConnectionOutputMultiUDP(link.Reader),
+			linkcc(link),
+		)}
 }

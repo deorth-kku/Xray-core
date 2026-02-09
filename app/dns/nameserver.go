@@ -17,12 +17,7 @@ import (
 )
 
 // Server is the interface for Name Server.
-type Server interface {
-	// Name of the Client.
-	Name() string
-	// QueryIP sends IP queries to its configured server.
-	QueryIP(ctx context.Context, domain string, option dns.IPOption) ([]net.IP, uint32, error)
-}
+type Server = dns.Resolver
 
 // Client is the interface for DNS client.
 type Client struct {

@@ -13,12 +13,10 @@ import (
 	"time"
 
 	utls "github.com/refraction-networking/utls"
-	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/crypto"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/log"
 	"github.com/xtls/xray-core/common/net"
-	"github.com/xtls/xray-core/common/net/cnc"
 	"github.com/xtls/xray-core/common/protocol/dns"
 	"github.com/xtls/xray-core/common/session"
 	dns_feature "github.com/xtls/xray-core/features/dns"
@@ -75,18 +73,7 @@ func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher, h2c bool, dis
 					if err != nil {
 						return nil, err
 					}
-					cc := common.ChainedClosable{}
-					if cw, ok := link.Writer.(common.Closable); ok {
-						cc = append(cc, cw)
-					}
-					if cr, ok := link.Reader.(common.Closable); ok {
-						cc = append(cc, cr)
-					}
-					conn = cnc.NewConnection(
-						cnc.ConnectionInputMulti(link.Writer),
-						cnc.ConnectionOutputMulti(link.Reader),
-						cnc.ConnectionOnClose(cc),
-					)
+					conn = cncConn(link)
 				} else {
 					log.Record(&log.AccessMessage{
 						From:   "DNS",

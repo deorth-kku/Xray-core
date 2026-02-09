@@ -5,6 +5,7 @@ import (
 	"context"
 	go_errors "errors"
 	"fmt"
+	"iter"
 	"sort"
 	"strings"
 	"sync"
@@ -17,36 +18,13 @@ import (
 	"github.com/xtls/xray-core/features/dns"
 )
 
-type Hosts interface {
-	Lookup(domain string, option dns.IPOption) ([]net.Address, error)
-}
-
-func (d *DNS) SwapHosts(n Hosts) Hosts {
-	d.Lock()
-	defer d.Unlock()
-	d.hosts, n = n, d.hosts
-	return n
-}
-
-func (d *DNS) SwapServer(s Server) Server {
-	d.Lock()
-	defer d.Unlock()
-	for _, client := range d.clients {
-		if client.Name() == s.Name() {
-			client.server, s = s, client.server
-			return s
-		}
-	}
-	return nil
-}
-
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
 	disableFallback        bool
 	disableFallbackIfMatch bool
 	ipOption               *dns.IPOption
-	hosts                  Hosts
+	hosts                  *StaticHosts
 	clients                []*Client
 	ctx                    context.Context
 	domainMatcher          strmatcher.IndexMatcher
@@ -205,8 +183,13 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 	return false
 }
 
-// LookupIP implements dns.Client.
-func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, error) {
+// LookupIP implements [Server]
+func (*DNS) Name() string {
+	return "relay"
+}
+
+// LookupIP implements [Server]
+func (s *DNS) QueryIP(ctx context.Context, domain string, option dns.IPOption) ([]net.IP, uint32, error) {
 	// Normalize the FQDN form query
 	domain = strings.TrimSuffix(domain, ".")
 	if domain == "" {
@@ -238,10 +221,10 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 	case len(addrs) == 0: // Domain recorded, but no valid IP returned (e.g. IPv4 address with only IPv6 enabled)
 		return nil, 0, dns.ErrEmptyResponse
 	case len(addrs) == 1 && addrs[0].Family().IsDomain(): // Domain replacement
-		errors.LogInfo(s.ctx, "domain replaced: ", domain, " -> ", addrs[0].Domain())
+		errors.LogInfo(ctx, "domain replaced: ", domain, " -> ", addrs[0].Domain())
 		domain = addrs[0].Domain()
 	default: // Successfully found ip records in static host
-		errors.LogInfo(s.ctx, "returning ", len(addrs), " IP(s) for domain ", domain, " -> ", addrs)
+		errors.LogInfo(ctx, "returning ", len(addrs), " IP(s) for domain ", domain, " -> ", addrs)
 		ips, err := toNetIP(addrs)
 		if err != nil {
 			return nil, 0, err
@@ -253,11 +236,11 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 	var errs []error
 	for _, client := range s.sortClients(domain) {
 		if !option.FakeEnable && strings.EqualFold(client.Name(), "FakeDNS") {
-			errors.LogDebug(s.ctx, "skip DNS resolution for domain ", domain, " at server ", client.Name())
+			errors.LogDebug(ctx, "skip DNS resolution for domain ", domain, " at server ", client.Name())
 			continue
 		}
 
-		ips, ttl, err := client.QueryIP(s.ctx, domain, option)
+		ips, ttl, err := client.QueryIP(ctx, domain, option)
 
 		if len(ips) > 0 {
 			if ttl == 0 {
@@ -266,7 +249,7 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 			return ips, ttl, nil
 		}
 
-		errors.LogInfoInner(s.ctx, err, "failed to lookup ip for domain ", domain, " at server ", client.Name())
+		errors.LogInfoInner(ctx, err, "failed to lookup ip for domain ", domain, " at server ", client.Name())
 		if err == nil {
 			err = dns.ErrEmptyResponse
 		}
@@ -291,16 +274,20 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 	return nil, 0, dns.ErrEmptyResponse
 }
 
-func (s *DNS) NameClients(domain string) []string {
+// LookupIP implements dns.Client.
+func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, error) {
+	return s.QueryIP(s.ctx, domain, option)
+}
+
+func (s *DNS) RangeResolver(domain string) iter.Seq[Server] {
 	clients := s.sortClients(domain)
-	if clients == nil {
-		return nil
+	return func(yield func(Server) bool) {
+		for _, v := range clients {
+			if !yield(v) {
+				return
+			}
+		}
 	}
-	names := make([]string, len(clients))
-	for i, c := range clients {
-		names[i] = c.Name()
-	}
-	return names
 }
 
 func (s *DNS) sortClients(domain string) []*Client {

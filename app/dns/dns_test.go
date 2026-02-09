@@ -23,6 +23,11 @@ import (
 	"github.com/xtls/xray-core/testing/servers/udp"
 )
 
+var (
+	_ feature_dns.Resolver = (*DNS)(nil)
+	_ core.ResolverRanger  = (*DNS)(nil)
+)
+
 type staticHandler struct{}
 
 func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {

@@ -13,6 +13,7 @@ import (
 	"github.com/xtls/xray-core/common/session"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/dns"
+	"github.com/xtls/xray-core/features/dns/localdns"
 	"github.com/xtls/xray-core/features/outbound"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet/stat"
@@ -141,6 +142,14 @@ func redirect(ctx context.Context, dst net.Destination, obt string, h outbound.H
 
 }
 
+func getResolverWithFallback[T dns.Resolver](ctx context.Context, name string) T {
+	rs := core.GetResolverFromContext[T](ctx, name)
+	if len(rs) == 0 {
+		return dns.Resolver(localdns.New()).(T)
+	}
+	return rs[0]
+}
+
 func checkAddressPortStrategy(ctx context.Context, dest net.Destination, sockopt *SocketConfig) (*net.Destination, error) {
 	if sockopt.AddressPortStrategy == AddressPortStrategy_None {
 		return nil, nil
@@ -187,8 +196,9 @@ func checkAddressPortStrategy(ctx context.Context, dest net.Destination, sockopt
 		if len(parts) != 3 {
 			return nil, errors.New("invalid address format", dest.Address.String())
 		}
-		_, srvRecords, err := getResolver(ctx, dest.Address.String()).LookupSRV(ctx, parts[0][1:], parts[1][1:], parts[2])
+		_, srvRecords, err := getResolverWithFallback[dns.SRVResolver](ctx, dest.Address.String()).LookupSRV(ctx, parts[0][1:], parts[1][1:], parts[2])
 		if err != nil {
+			errors.LogError(ctx, "failed to lookup SRV record: "+err.Error())
 			return nil, errors.New("failed to lookup SRV record").Base(err)
 		}
 		errors.LogDebug(ctx, "SRV record: "+fmt.Sprintf("addr=%s, port=%d, priority=%d, weight=%d", srvRecords[0].Target, srvRecords[0].Port, srvRecords[0].Priority, srvRecords[0].Weight))
@@ -202,10 +212,10 @@ func checkAddressPortStrategy(ctx context.Context, dest net.Destination, sockopt
 	}
 	if OverrideBy == "txt" {
 		errors.LogDebug(ctx, "query TXT record for "+dest.Address.String())
-		txtRecords, err := getResolver(ctx, dest.Address.String()).LookupTXT(ctx, dest.Address.String())
+		txtRecords, err := getResolverWithFallback[dns.TXTResolver](ctx, dest.Address.String()).LookupTXT(ctx, dest.Address.String())
 		if err != nil {
-			errors.LogError(ctx, "failed to lookup SRV record: "+err.Error())
-			return nil, errors.New("failed to lookup SRV record").Base(err)
+			errors.LogError(ctx, "failed to lookup TXT record: "+err.Error())
+			return nil, errors.New("failed to lookup TXT record").Base(err)
 		}
 		for _, txtRecord := range txtRecords {
 			errors.LogDebug(ctx, "TXT record: "+txtRecord)

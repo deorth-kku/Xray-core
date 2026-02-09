@@ -13,7 +13,6 @@ import (
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/log"
 	"github.com/xtls/xray-core/common/net"
-	"github.com/xtls/xray-core/common/net/cnc"
 	"github.com/xtls/xray-core/common/protocol/dns"
 	"github.com/xtls/xray-core/common/session"
 	dns_feature "github.com/xtls/xray-core/features/dns"
@@ -48,10 +47,7 @@ func NewTCPNameServer(
 			return nil, err
 		}
 
-		return cnc.NewConnection(
-			cnc.ConnectionInputMulti(link.Writer),
-			cnc.ConnectionOutputMulti(link.Reader),
-		), nil
+		return cncConn(link), nil
 	}
 
 	return s, nil

@@ -1,6 +1,10 @@
 package dns
 
 import (
+	"context"
+	gonet "net"
+
+	"github.com/miekg/dns"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/serial"
@@ -69,4 +73,24 @@ func RCodeFromError(err error) uint16 {
 		return uint16(r)
 	}
 	return 0
+}
+
+type Resolver interface {
+	Name() string
+	QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, uint32, error)
+}
+
+type HTTPSResolver interface {
+	Resolver
+	LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, error)
+}
+
+type SRVResolver interface {
+	Resolver
+	LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error)
+}
+
+type TXTResolver interface {
+	Resolver
+	LookupTXT(ctx context.Context, name string) ([]string, error)
 }

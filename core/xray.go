@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"iter"
 	"reflect"
 	"sync"
 
@@ -368,6 +369,18 @@ func (s *Instance) GetFeature(featureType interface{}) features.Feature {
 	return getFeature(s.features, reflect.TypeOf(featureType))
 }
 
+// it's not safe to call UpdateFeature while the Instance is running
+func UpdateFeature[T features.Feature](s *Instance, new T) (old T, ok bool) {
+	for i, f := range s.features {
+		old, ok = f.(T)
+		if ok {
+			s.features[i] = new
+			return
+		}
+	}
+	return
+}
+
 func GetFeature[T features.Feature](s *Instance) (t T, ok bool) {
 	for _, f := range s.features {
 		t, ok = f.(T)
@@ -384,6 +397,39 @@ func GetFeatureFromContext[T features.Feature](ctx context.Context) (T, bool) {
 		return *new(T), false
 	}
 	return GetFeature[T](i)
+}
+
+type ResolverRanger interface {
+	RangeResolver(domain string) iter.Seq[dns.Resolver]
+}
+
+func GetResolver[R dns.Resolver](s *Instance, name string) []R {
+	feat, ok := GetFeature[dns.Client](s)
+	if !ok {
+		return nil
+	}
+	switch v := feat.(type) {
+	case ResolverRanger:
+		var list []R
+		for r := range v.RangeResolver(name) {
+			if resolver, ok := r.(R); ok {
+				list = append(list, resolver)
+			}
+		}
+		return list
+	case R:
+		return []R{v}
+	default:
+		return nil
+	}
+}
+
+func GetResolverFromContext[R dns.Resolver](ctx context.Context, name string) []R {
+	i := FromContext(ctx)
+	if i == nil {
+		return nil
+	}
+	return GetResolver[R](i, name)
 }
 
 // Start starts the Xray instance, including all registered features. When Start returns error, the state of the instance is unknown.
