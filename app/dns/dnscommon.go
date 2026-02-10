@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/miekg/dns"
+	miekg_dns "github.com/miekg/dns"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/log"
@@ -14,6 +16,7 @@ import (
 	"github.com/xtls/xray-core/common/session"
 	"github.com/xtls/xray-core/core"
 	dns_feature "github.com/xtls/xray-core/features/dns"
+	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
 	"golang.org/x/net/dns/dnsmessage"
@@ -293,4 +296,57 @@ func cncConnUDP(link *transport.Link) net.Conn {
 			cnc.ConnectionOutputMultiUDP(link.Reader),
 			linkcc(link),
 		)}
+}
+
+type roundTripper func(ctx context.Context, data []byte) ([]byte, error)
+
+func (r roundTripper) roundTrip(ctx context.Context, msg *dns.Msg) (*dns.Msg, error) {
+	data, err := msg.Pack()
+	if err != nil {
+		return nil, err
+	}
+	data, err = r(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	msg = new(dns.Msg)
+	err = msg.Unpack(data)
+	return msg, err
+}
+
+func (r roundTripper) LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, error) {
+	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(host), dns.TypeHTTPS))
+	if err != nil {
+		return nil, err
+	}
+	var records []*dns.HTTPS
+	for _, answer := range rsp.Answer {
+		if a, ok := answer.(*dns.HTTPS); ok {
+			records = append(records, a)
+		}
+	}
+	if len(records) == 0 {
+		return nil, dns_feature.ErrEmptyResponse
+	}
+	return records, nil
+}
+
+type DialContext = func(ctx context.Context, dest net.Destination) (net.Conn, error)
+
+func DispatcherDial(dispatcher routing.Dispatcher) DialContext {
+	return func(ctx context.Context, dest net.Destination) (net.Conn, error) {
+		link, err := dispatcher.Dispatch(ctx, dest)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+		if err != nil {
+			return nil, err
+		}
+		if dest.Network == net.Network_UDP {
+			return cncConnUDP(link), nil
+		}
+		return cncConn(link), nil
+	}
 }

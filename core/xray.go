@@ -373,7 +373,7 @@ func (s *Instance) GetFeature(featureType interface{}) features.Feature {
 func UpdateFeature[T features.Feature](s *Instance, new T) (old T, ok bool) {
 	for i, f := range s.features {
 		old, ok = f.(T)
-		if ok {
+		if ok && old.Type() == new.Type() {
 			s.features[i] = new
 			return
 		}

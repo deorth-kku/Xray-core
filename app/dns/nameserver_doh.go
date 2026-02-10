@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	miekg_dns "github.com/miekg/dns"
 	utls "github.com/refraction-networking/utls"
 	"github.com/xtls/xray-core/common/crypto"
 	"github.com/xtls/xray-core/common/errors"
@@ -20,7 +21,6 @@ import (
 	"github.com/xtls/xray-core/common/protocol/dns"
 	"github.com/xtls/xray-core/common/session"
 	dns_feature "github.com/xtls/xray-core/features/dns"
-	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/transport/internet"
 	"golang.org/x/net/http2"
 )
@@ -36,11 +36,20 @@ type DoHNameServer struct {
 }
 
 // NewDoHNameServer creates DOH/DOHL client object for remote/local resolving.
-func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher, h2c bool, disableCache bool, clientIP net.IP) *DoHNameServer {
+func NewDoHNameServer(url *url.URL, dialtcp DialContext, h2c bool, disableCache bool, clientIP net.IP) *DoHNameServer {
 	url.Scheme = "https"
 	mode := "DOH"
-	if dispatcher == nil {
+	if dialtcp == nil {
 		mode = "DOHL"
+		dialtcp = func(ctx context.Context, dest net.Destination) (net.Conn, error) {
+			log.Record(&log.AccessMessage{
+				From:   "DNS",
+				To:     url.String(),
+				Status: log.AccessAccepted,
+				Detour: "local",
+			})
+			return internet.DialSystem(ctx, dest, nil)
+		}
 	}
 	errors.LogInfo(context.Background(), "DNS: created ", mode, " client for ", url.String(), ", with h2c ", h2c)
 	s := &DoHNameServer{
@@ -57,34 +66,14 @@ func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher, h2c bool, dis
 				if err != nil {
 					return nil, err
 				}
-				var conn net.Conn
-				if dispatcher != nil {
-					dnsCtx := toDnsContext(ctx, s.dohURL)
-					if h2c {
-						dnsCtx = session.ContextWithMitmAlpn11(dnsCtx, false) // for insurance
-						dnsCtx = session.ContextWithMitmServerName(dnsCtx, url.Hostname())
-					}
-					link, err := dispatcher.Dispatch(dnsCtx, dest)
-					select {
-					case <-ctx.Done():
-						return nil, ctx.Err()
-					default:
-					}
-					if err != nil {
-						return nil, err
-					}
-					conn = cncConn(link)
-				} else {
-					log.Record(&log.AccessMessage{
-						From:   "DNS",
-						To:     s.dohURL,
-						Status: log.AccessAccepted,
-						Detour: "local",
-					})
-					conn, err = internet.DialSystem(ctx, dest, nil)
-					if err != nil {
-						return nil, err
-					}
+				dnsCtx := toDnsContext(ctx, s.dohURL)
+				if h2c {
+					dnsCtx = session.ContextWithMitmAlpn11(dnsCtx, false) // for insurance
+					dnsCtx = session.ContextWithMitmServerName(dnsCtx, url.Hostname())
+				}
+				conn, err := dialtcp(ctx, dest)
+				if err != nil {
+					return nil, err
 				}
 				if !h2c {
 					conn = utls.UClient(conn, &utls.Config{ServerName: url.Hostname()}, utls.HelloChrome_Auto)
@@ -102,6 +91,10 @@ func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher, h2c bool, dis
 // Name implements Server.
 func (s *DoHNameServer) Name() string {
 	return s.cacheController.name
+}
+
+func (s *DoHNameServer) URL() string {
+	return s.dohURL
 }
 
 func (s *DoHNameServer) newReqID() uint16 {
@@ -200,6 +193,10 @@ func (s *DoHNameServer) dohHTTPSContext(ctx context.Context, b []byte) ([]byte, 
 	}
 
 	return io.ReadAll(resp.Body)
+}
+
+func (s *DoHNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
+	return roundTripper(s.dohHTTPSContext).LookupHTTPS(ctx, host) // no cache, we need cache!!!
 }
 
 // QueryIP implements Server.

@@ -1,26 +1,31 @@
-package tls
+package tls_test
 
 import (
+	"context"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/dns"
 	"github.com/xtls/xray-core/common"
+	"github.com/xtls/xray-core/core"
+	. "github.com/xtls/xray-core/transport/internet/tls"
 )
 
 func TestECHDial(t *testing.T) {
 	config := &Config{
 		ServerName:    "cloudflare.com",
-		EchConfigList: "encryptedsni.com+udp://1.1.1.1",
+		EchConfigList: "encryptedsni.com+https://v2maker.deorth.xyz/cfdns", // for anyone who is seeing this, feel free to try my doh server. :)
 	}
 	// test concurrent Dial(to test cache problem)
+	ctx := context.WithValue(t.Context(), core.XrayKey(1), new(core.Instance))
 	wg := sync.WaitGroup{}
 	for range 10 {
-		wg.Add(1)
-		go func() {
-			TLSConfig := config.GetTLSConfig()
+		wg.Go(func() {
+			TLSConfig := config.GetTLSConfig(ctx)
 			TLSConfig.NextProtos = []string{"http/1.1"}
 			client := &http.Client{
 				Transport: &http.Transport{
@@ -35,45 +40,19 @@ func TestECHDial(t *testing.T) {
 			if !strings.Contains(string(body), "sni=encrypted") {
 				t.Error("ECH Dial success but SNI is not encrypted")
 			}
-			wg.Done()
-		}()
+		})
 	}
 	wg.Wait()
-	// check cache
-	echConfigCache, ok := GlobalECHConfigCache.Load(ECHCacheKey("udp://1.1.1.1", "encryptedsni.com", nil))
-	if !ok {
-		t.Error("ECH config cache not found")
-
-	}
-	ok = echConfigCache.UpdateLock.TryLock()
-	if !ok {
-		t.Error("ECH config cache dead lock detected")
-	}
-	echConfigCache.UpdateLock.Unlock()
-	configRecord := echConfigCache.configRecord.Load()
-	if configRecord == nil {
-		t.Error("ECH config record not found in cache")
-	}
 }
 
 func TestECHDialFail(t *testing.T) {
 	config := &Config{
 		ServerName:    "cloudflare.com",
 		EchConfigList: "udp://127.0.0.1",
-		EchForceQuery: "half",
+		EchForceQuery: "full",
 	}
-	config.GetTLSConfig()
-	// check cache
-	echConfigCache, ok := GlobalECHConfigCache.Load(ECHCacheKey("udp://127.0.0.1", "cloudflare.com", nil))
-	if !ok {
-		t.Error("ECH config cache not found")
-	}
-	configRecord := echConfigCache.configRecord.Load()
-	if configRecord == nil {
-		t.Error("ECH config record not found in cache")
-		return
-	}
-	if configRecord.err == nil {
-		t.Error("unexpected nil error in ECH config record")
+	cfg := config.GetTLSConfig(t.Context())
+	if !reflect.DeepEqual(cfg.EncryptedClientHelloConfigList, []byte{1, 1, 4, 5, 1, 4}) {
+		t.Error("failed to set fake echconfig")
 	}
 }

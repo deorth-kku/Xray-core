@@ -345,10 +345,10 @@ func (r *RandCarrier) Read(p []byte) (n int, err error) {
 }
 
 // GetTLSConfig converts this Config into tls.Config.
-func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
+func (c *Config) GetTLSConfig(ctx context.Context, opts ...Option) *tls.Config {
 	root, err := c.getCertPool()
 	if err != nil {
-		errors.LogErrorInner(context.Background(), err, "failed to load system root certificate")
+		errors.LogErrorInner(ctx, err, "failed to load system root certificate")
 	}
 
 	if c == nil {
@@ -398,7 +398,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 	}
 
 	if len(c.CurvePreferences) > 0 {
-		config.CurvePreferences = ParseCurveName(c.CurvePreferences)
+		config.CurvePreferences = ParseCurveName(ctx, c.CurvePreferences)
 	}
 
 	if len(config.NextProtos) == 0 {
@@ -442,18 +442,18 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 	if len(c.MasterKeyLog) > 0 && c.MasterKeyLog != "none" {
 		writer, err := os.OpenFile(c.MasterKeyLog, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 		if err != nil {
-			errors.LogErrorInner(context.Background(), err, "failed to open ", c.MasterKeyLog, " as master key log")
+			errors.LogErrorInner(ctx, err, "failed to open ", c.MasterKeyLog, " as master key log")
 		} else {
 			config.KeyLogWriter = writer
 		}
 	}
 	if len(c.EchConfigList) > 0 || len(c.EchServerKeys) > 0 {
-		err := ApplyECH(c, config)
+		err := ApplyECH(ctx, c, config)
 		if err != nil {
 			if c.EchForceQuery == "full" {
-				errors.LogError(context.Background(), err)
+				errors.LogErrorInner(ctx, err, "cannot apply ech")
 			} else {
-				errors.LogInfo(context.Background(), err)
+				errors.LogInfoInner(ctx, err, "cannot apply ech")
 			}
 		}
 	}
@@ -503,7 +503,7 @@ func ConfigFromStreamSettings(settings *internet.MemoryStreamConfig) *Config {
 	return config
 }
 
-func ParseCurveName(curveNames []string) []tls.CurveID {
+func ParseCurveName(ctx context.Context, curveNames []string) []tls.CurveID {
 	curveMap := map[string]tls.CurveID{
 		"curvep256":      tls.CurveP256,
 		"curvep384":      tls.CurveP384,
@@ -517,7 +517,7 @@ func ParseCurveName(curveNames []string) []tls.CurveID {
 		if curveID, ok := curveMap[strings.ToLower(name)]; ok {
 			curveIDs = append(curveIDs, curveID)
 		} else {
-			errors.LogWarning(context.Background(), "unsupported curve name: "+name)
+			errors.LogWarning(ctx, "unsupported curve name: "+name)
 		}
 	}
 	return curveIDs

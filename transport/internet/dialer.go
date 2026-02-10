@@ -82,18 +82,18 @@ func DestIpAddress() net.IP {
 }
 
 func LookupForIP(ctx context.Context, domain string, strategy DomainStrategy, localAddr net.Address) ([]net.IP, error) {
-	dnsClient, ok := core.GetFeatureFromContext[dns.Client](ctx)
+	r, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
 	if !ok {
 		return nil, errors.New("DNS client not initialized").AtError()
 	}
 
-	ips, _, err := dnsClient.LookupIP(domain, dns.IPOption{
+	ips, _, err := r.QueryIP(ctx, domain, dns.IPOption{
 		IPv4Enable: (localAddr == nil && strategy.PreferIP4()) || (localAddr != nil && localAddr.Family().IsIPv4() && (strategy.PreferIP4() || strategy.FallbackIP4())),
 		IPv6Enable: (localAddr == nil && strategy.PreferIP6()) || (localAddr != nil && localAddr.Family().IsIPv6() && (strategy.PreferIP6() || strategy.FallbackIP6())),
 	})
 	{ // Resolve fallback
 		if (len(ips) == 0 || err != nil) && strategy.HasFallback() && localAddr == nil {
-			ips, _, err = dnsClient.LookupIP(domain, dns.IPOption{
+			ips, _, err = r.QueryIP(ctx, domain, dns.IPOption{
 				IPv4Enable: strategy.FallbackIP4(),
 				IPv6Enable: strategy.FallbackIP6(),
 			})
@@ -104,14 +104,6 @@ func LookupForIP(ctx context.Context, domain string, strategy DomainStrategy, lo
 		return nil, dns.ErrEmptyResponse
 	}
 	return ips, err
-}
-
-func canLookupIP(ctx context.Context, dst net.Destination, sockopt *SocketConfig) bool {
-	_, ok := core.GetFeatureFromContext[dns.Client](ctx)
-	if !ok || dst.Address.Family().IsIP() {
-		return false
-	}
-	return sockopt.DomainStrategy.HasStrategy()
 }
 
 func redirect(ctx context.Context, dst net.Destination, obt string, h outbound.Handler) net.Conn {
@@ -268,7 +260,7 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 		errors.LogErrorInner(ctx, err, "failed to replace destination")
 	}
 
-	if canLookupIP(ctx, dest, sockopt) {
+	if !dest.Address.Family().IsIP() && sockopt.DomainStrategy.HasStrategy() { // need to lookup ip, otherwise dial as is
 		finalStrategy := sockopt.DomainStrategy
 		if outboundName == "freedom" && dest.Network == net.Network_UDP && origTargetAddr != nil && src == nil {
 			finalStrategy = finalStrategy.GetDynamicStrategy(origTargetAddr.Family())

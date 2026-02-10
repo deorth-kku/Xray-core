@@ -58,7 +58,7 @@ func NewListener(ctx context.Context, address net.Address, port net.Port, stream
 	}
 
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
-		l.tlsConfig = config.GetTLSConfig()
+		l.tlsConfig = config.GetTLSConfig(ctx)
 	}
 
 	hub, err := udp.ListenUDP(ctx, address, port, streamSettings, udp.HubCapacity(1024))

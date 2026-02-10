@@ -22,7 +22,7 @@ func TestCertificateIssuing(t *testing.T) {
 		},
 	}
 
-	tlsConfig := c.GetTLSConfig()
+	tlsConfig := c.GetTLSConfig(t.Context())
 	xrayCert, err := tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
 		ServerName: "www.example.com",
 	})
@@ -51,7 +51,7 @@ func TestExpiredCertificate(t *testing.T) {
 		},
 	}
 
-	tlsConfig := c.GetTLSConfig()
+	tlsConfig := c.GetTLSConfig(t.Context())
 	xrayCert, err := tlsConfig.GetCertificate(&gotls.ClientHelloInfo{
 		ServerName: "www.example.com",
 	})
@@ -67,7 +67,7 @@ func TestExpiredCertificate(t *testing.T) {
 func TestInsecureCertificates(t *testing.T) {
 	c := &Config{}
 
-	tlsConfig := c.GetTLSConfig()
+	tlsConfig := c.GetTLSConfig(t.Context())
 	if len(tlsConfig.CipherSuites) > 0 {
 		t.Fatal("Unexpected tls cipher suites list: ", tlsConfig.CipherSuites)
 	}
@@ -83,7 +83,7 @@ func BenchmarkCertificateIssuing(b *testing.B) {
 		},
 	}
 
-	tlsConfig := c.GetTLSConfig()
+	tlsConfig := c.GetTLSConfig(b.Context())
 	lenCerts := len(tlsConfig.Certificates)
 
 	b.ResetTimer()

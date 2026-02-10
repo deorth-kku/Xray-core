@@ -75,6 +75,11 @@ func RCodeFromError(err error) uint16 {
 	return 0
 }
 
+type ClientResolver interface {
+	Client
+	Resolver
+}
+
 type Resolver interface {
 	Name() string
 	QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, uint32, error)

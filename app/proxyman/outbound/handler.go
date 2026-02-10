@@ -308,7 +308,7 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (stat.Connecti
 				conn := cnc.NewConnection(cnc.ConnectionInputMulti(uplinkWriter), cnc.ConnectionOutputMulti(downlinkReader))
 
 				if config := tls.ConfigFromStreamSettings(h.streamSettings); config != nil {
-					tlsConfig := config.GetTLSConfig(tls.WithDestination(dest))
+					tlsConfig := config.GetTLSConfig(ctx, tls.WithDestination(dest))
 					conn = tls.Client(conn, tlsConfig)
 				}
 

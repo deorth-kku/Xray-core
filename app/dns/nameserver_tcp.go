@@ -16,7 +16,6 @@ import (
 	"github.com/xtls/xray-core/common/protocol/dns"
 	"github.com/xtls/xray-core/common/session"
 	dns_feature "github.com/xtls/xray-core/features/dns"
-	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/transport/internet"
 )
 
@@ -32,7 +31,7 @@ type TCPNameServer struct {
 // NewTCPNameServer creates DNS over TCP server object for remote resolving.
 func NewTCPNameServer(
 	url *url.URL,
-	dispatcher routing.Dispatcher,
+	dialer DialContext,
 	disableCache bool,
 	clientIP net.IP,
 ) (*TCPNameServer, error) {
@@ -42,14 +41,8 @@ func NewTCPNameServer(
 	}
 
 	s.dial = func(ctx context.Context) (net.Conn, error) {
-		link, err := dispatcher.Dispatch(toDnsContext(ctx, s.destination.String()), *s.destination)
-		if err != nil {
-			return nil, err
-		}
-
-		return cncConn(link), nil
+		return dialer(toDnsContext(ctx, s.destination.String()), *s.destination)
 	}
-
 	return s, nil
 }
 

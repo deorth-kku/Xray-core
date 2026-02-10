@@ -13,6 +13,10 @@ import (
 	dns_feature "github.com/xtls/xray-core/features/dns"
 )
 
+var (
+	_ dns_feature.HTTPSResolver = (*DoHNameServer)(nil)
+)
+
 func TestDOHNameServer(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)

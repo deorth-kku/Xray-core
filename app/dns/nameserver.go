@@ -14,6 +14,7 @@ import (
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/routing"
+	"github.com/xtls/xray-core/transport/internet/tls"
 )
 
 // Server is the interface for Name Server.
@@ -35,6 +36,31 @@ type Client struct {
 	checkSystem   bool
 }
 
+func init() {
+	tls.NewServerReg = NewServerFromString // should use go:linkname instead
+}
+
+// NewServerFromString only support a subset of url schemas of NewServer does
+func NewServerFromString(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (Server, error) {
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return nil, err
+	}
+	u.Scheme = strings.ToLower(u.Scheme)
+	switch u.Scheme {
+	case "https":
+		return NewDoHNameServer(u, dialer, false, disableCache, clientIP), nil
+	case "h2c":
+		return NewDoHNameServer(u, dialer, true, disableCache, clientIP), nil
+	case "quic":
+		return NewQUICNameServer(u, disableCache, clientIP)
+	case "tcp":
+		return NewTCPNameServer(u, dialer, disableCache, clientIP)
+	default:
+		return nil, errors.New("not supported schema ", u.Scheme)
+	}
+}
+
 // NewServer creates a name server object according to the network destination url.
 func NewServer(ctx context.Context, dest net.Destination, dispatcher routing.Dispatcher, disableCache bool, clientIP net.IP) (Server, error) {
 	if address := dest.Address; address.Family().IsDomain() {
@@ -46,9 +72,9 @@ func NewServer(ctx context.Context, dest net.Destination, dispatcher routing.Dis
 		case strings.EqualFold(u.String(), "localhost"):
 			return NewLocalNameServer(), nil
 		case strings.EqualFold(u.Scheme, "https"): // DNS-over-HTTPS Remote mode
-			return NewDoHNameServer(u, dispatcher, false, disableCache, clientIP), nil
+			return NewDoHNameServer(u, DispatcherDial(dispatcher), false, disableCache, clientIP), nil
 		case strings.EqualFold(u.Scheme, "h2c"): // DNS-over-HTTPS h2c Remote mode
-			return NewDoHNameServer(u, dispatcher, true, disableCache, clientIP), nil
+			return NewDoHNameServer(u, DispatcherDial(dispatcher), true, disableCache, clientIP), nil
 		case strings.EqualFold(u.Scheme, "https+local"): // DNS-over-HTTPS Local mode
 			return NewDoHNameServer(u, nil, false, disableCache, clientIP), nil
 		case strings.EqualFold(u.Scheme, "h2c+local"): // DNS-over-HTTPS h2c Local mode
@@ -56,7 +82,7 @@ func NewServer(ctx context.Context, dest net.Destination, dispatcher routing.Dis
 		case strings.EqualFold(u.Scheme, "quic+local"): // DNS-over-QUIC Local mode
 			return NewQUICNameServer(u, disableCache, clientIP)
 		case strings.EqualFold(u.Scheme, "tcp"): // DNS-over-TCP Remote mode
-			return NewTCPNameServer(u, dispatcher, disableCache, clientIP)
+			return NewTCPNameServer(u, DispatcherDial(dispatcher), disableCache, clientIP)
 		case strings.EqualFold(u.Scheme, "tcp+local"): // DNS-over-TCP Local mode
 			return NewTCPLocalNameServer(u, disableCache, clientIP)
 		case strings.EqualFold(u.String(), "fakedns"):

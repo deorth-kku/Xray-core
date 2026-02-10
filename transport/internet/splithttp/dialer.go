@@ -131,12 +131,6 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 		dest.Network = net.Network_UDP // better to keep this line
 	}
 
-	var gotlsConfig *gotls.Config
-
-	if tlsConfig != nil {
-		gotlsConfig = tlsConfig.GetTLSConfig(tls.WithDestination(dest))
-	}
-
 	transportConfig := streamSettings.ProtocolSettings.(*Config)
 
 	dialContext := func(ctxInner context.Context) (net.Conn, error) {
@@ -149,7 +143,8 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 			return reality.UClient(conn, realityConfig, ctxInner, dest)
 		}
 
-		if gotlsConfig != nil {
+		if tlsConfig != nil {
+			gotlsConfig := tlsConfig.GetTLSConfig(ctxInner, tls.WithDestination(dest))
 			if fingerprint := tls.GetFingerprint(tlsConfig.Fingerprint); fingerprint != nil {
 				conn = tls.UClient(conn, gotlsConfig, fingerprint)
 				if err := conn.(*tls.UConn).HandshakeContext(ctxInner); err != nil {
@@ -187,8 +182,7 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 			KeepAlivePeriod:    keepAlivePeriod,
 		}
 		transport = &http3.Transport{
-			QUICConfig:      quicConfig,
-			TLSClientConfig: gotlsConfig,
+			QUICConfig: quicConfig,
 			Dial: func(ctx context.Context, addr string, tlsCfg *gotls.Config, cfg *quic.Config) (*quic.Conn, error) {
 				conn, err := internet.DialSystem(ctx, dest, streamSettings.SocketSettings)
 				if err != nil {
@@ -221,6 +215,9 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 					if err != nil {
 						return nil, err
 					}
+				}
+				if tlsConfig != nil {
+					tlsCfg = tlsConfig.GetTLSConfig(ctx, tls.WithDestination(dest))
 				}
 				qconn, err := quic.DialEarly(ctx, udpConn, udpAddr, tlsCfg, cfg)
 				if qconn == nil || err != nil {
