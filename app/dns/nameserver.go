@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	_ "unsafe"
 
 	"github.com/xtls/xray-core/app/router"
 	"github.com/xtls/xray-core/common/errors"
@@ -14,7 +15,6 @@ import (
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/routing"
-	"github.com/xtls/xray-core/transport/internet/tls"
 )
 
 // Server is the interface for Name Server.
@@ -36,11 +36,9 @@ type Client struct {
 	checkSystem   bool
 }
 
-func init() {
-	tls.NewServerReg = NewServerFromString // should use go:linkname instead
-}
-
 // NewServerFromString only support a subset of url schemas of NewServer does
+//
+//go:linkname NewServerFromString github.com/xtls/xray-core/app/dns.NewServerFromString
 func NewServerFromString(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (Server, error) {
 	u, err := url.Parse(urlstr)
 	if err != nil {

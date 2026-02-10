@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"encoding/binary"
+	gonet "net"
 	"strings"
 	"time"
 
@@ -330,6 +331,52 @@ func (r roundTripper) LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTP
 	}
 	return records, nil
 }
+
+func (r roundTripper) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
+	qname := "_" + service + "._" + proto + "." + name
+	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(qname), dns.TypeSRV))
+	if err != nil {
+		return "", nil, err
+	}
+	var records []*gonet.SRV
+	var cname string
+	for _, answer := range rsp.Answer {
+		switch rr := answer.(type) {
+		case *miekg_dns.CNAME:
+			// keep last CNAME if present
+			cname = rr.Target
+		case *miekg_dns.SRV:
+			records = append(records, &gonet.SRV{
+				Target:   rr.Target,
+				Port:     uint16(rr.Port),
+				Priority: rr.Priority,
+				Weight:   rr.Weight,
+			})
+		}
+	}
+	if len(records) == 0 {
+		return cname, nil, dns_feature.ErrEmptyResponse
+	}
+	return cname, records, nil
+}
+
+func (r roundTripper) LookupTXT(ctx context.Context, name string) ([]string, error) {
+	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(name), dns.TypeTXT))
+	if err != nil {
+		return nil, err
+	}
+	var txts []string
+	for _, answer := range rsp.Answer {
+		if t, ok := answer.(*miekg_dns.TXT); ok {
+			txts = append(txts, strings.Join(t.Txt, ""))
+		}
+	}
+	if len(txts) == 0 {
+		return nil, dns_feature.ErrEmptyResponse
+	}
+	return txts, nil
+}
+ 
 
 type DialContext = func(ctx context.Context, dest net.Destination) (net.Conn, error)
 

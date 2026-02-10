@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	_ "unsafe"
 
 	"github.com/xtls/xray-core/core"
 
@@ -39,25 +40,24 @@ func urlOverName(namer Namer) string {
 type DialContext = func(ctx context.Context, dest net.Destination) (net.Conn, error)
 
 var (
-	NewServerReg     func(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (featdns.Resolver, error)
 	globalServers    = map[string]featdns.HTTPSResolver{}
 	globalServerLock sync.Mutex
 )
 
-func getDOHServer(ctx context.Context, url string, sockopt *internet.SocketConfig) (featdns.HTTPSResolver, error) {
+//go:linkname newServer github.com/xtls/xray-core/app/dns.NewServerFromString
+func newServer(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (featdns.Resolver, error)
+
+func getHTTPSResolver(ctx context.Context, url string, sockopt *internet.SocketConfig) (featdns.HTTPSResolver, error) {
 	globalServerLock.Lock()
 	defer globalServerLock.Unlock()
 	rs, ok := globalServers[url]
 	if ok {
 		return rs, nil
 	}
-	if NewServerReg == nil {
-		return nil, errors.New("app/dns not inited")
-	}
 	if sockopt == nil {
 		sockopt = new(internet.SocketConfig)
 	}
-	r0, err := NewServerReg(ctx, url, func(ctx context.Context, dest net.Destination) (net.Conn, error) {
+	r0, err := newServer(ctx, url, func(ctx context.Context, dest net.Destination) (net.Conn, error) {
 		return internet.DialSystem(ctx, dest, sockopt)
 	}, false, sockopt.BindAddress)
 	if err != nil {
@@ -70,7 +70,7 @@ func getDOHServer(ctx context.Context, url string, sockopt *internet.SocketConfi
 	return rs, nil
 }
 
-func ApplyECH(ctx context.Context, c *Config, config *tls.Config) error {
+func ApplyECH(ctx context.Context, c *Config, config *tls.Config) {
 	var ECHConfig []byte
 	var err error
 
@@ -78,7 +78,7 @@ func ApplyECH(ctx context.Context, c *Config, config *tls.Config) error {
 	if len(c.EchServerKeys) != 0 {
 		KeySets, err := ConvertToGoECHKeys(c.EchServerKeys)
 		if err != nil {
-			return errors.New("Failed to unmarshal ECHKeySetList: ", err)
+			errors.LogErrorInner(ctx, err, "Failed to unmarshal ECHKeySetList")
 		}
 		config.EncryptedClientHelloKeys = KeySets
 	}
@@ -98,6 +98,9 @@ func ApplyECH(ctx context.Context, c *Config, config *tls.Config) error {
 			if err != nil || len(ECHConfig) == 0 {
 				if ECHForceQuery == "full" {
 					ECHConfig = []byte{1, 1, 4, 5, 1, 4}
+					errors.LogErrorInner(ctx, err, "cannot apply ech")
+				} else {
+					errors.LogInfoInner(ctx, err, "cannot apply ech")
 				}
 			}
 			config.EncryptedClientHelloConfigList = ECHConfig
@@ -116,21 +119,26 @@ func ApplyECH(ctx context.Context, c *Config, config *tls.Config) error {
 				DNSServer = c.EchConfigList[len(nameOverride)+1:]
 			}
 			var resolver featdns.HTTPSResolver
-			for _, s := range core.GetResolverFromContext[featdns.HTTPSResolver](ctx, nameToQuery) {
-				if urlOverName(s) == DNSServer {
-					resolver = s
-					break
+			if c.EchSocketSettings == nil { // prefer using global server when sockopt is set
+				for _, s := range core.GetResolverFromContext[featdns.HTTPSResolver](ctx, nameToQuery) {
+					if urlOverName(s) == DNSServer {
+						resolver = s
+						break
+					}
 				}
 			}
+
 			if resolver == nil {
-				resolver, err = getDOHServer(ctx, DNSServer, c.EchSocketSettings)
+				resolver, err = getHTTPSResolver(ctx, DNSServer, c.EchSocketSettings)
 				if err != nil {
-					return err
+					err = errors.New("Failed go get HTTPSResolver").Base(err)
+					return
 				}
 			}
 			rsp, err := resolver.LookupHTTPS(ctx, nameToQuery)
 			if err != nil {
-				return errors.New("Failed to query ECH DNS record for domain: ", nameToQuery, " at server: ", DNSServer).Base(err)
+				err = errors.New("Failed to query ECH DNS record for domain: ", nameToQuery, " at server: ", DNSServer).Base(err)
+				return
 			}
 			for _, answer := range rsp {
 				if answer.Hdr.Name != dns.Fqdn(nameToQuery) {
@@ -138,21 +146,20 @@ func ApplyECH(ctx context.Context, c *Config, config *tls.Config) error {
 				}
 				for _, v := range answer.Value {
 					if echConfig, ok := v.(*dns.SVCBECHConfig); ok {
-						errors.LogDebug(context.Background(), "Get ECH config:", echConfig.String(), " TTL:", answer.Hdr.Ttl)
+						errors.LogDebug(ctx, "Get ECH config:", echConfig.String(), " TTL:", answer.Hdr.Ttl)
 						ECHConfig = echConfig.ECH
-						return nil
+						return
 					}
 				}
 			}
 		} else { // direct base64 config
 			ECHConfig, err = base64.StdEncoding.DecodeString(c.EchConfigList)
 			if err != nil {
-				return errors.New("Failed to unmarshal ECHConfigList: ", err)
+				err = errors.New("Failed to unmarshal ECHConfigList").Base(err)
+				return
 			}
 		}
 	}
-
-	return nil
 }
 
 // reference github.com/OmarTariq612/goech

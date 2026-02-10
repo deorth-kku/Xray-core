@@ -7,6 +7,7 @@ import (
 	go_errors "errors"
 	"fmt"
 	"io"
+	gonet "net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -197,6 +198,14 @@ func (s *DoHNameServer) dohHTTPSContext(ctx context.Context, b []byte) ([]byte, 
 
 func (s *DoHNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
 	return roundTripper(s.dohHTTPSContext).LookupHTTPS(ctx, host) // no cache, we need cache!!!
+}
+
+func (s *DoHNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
+	return roundTripper(s.dohHTTPSContext).LookupSRV(ctx, service, proto, name)
+}
+
+func (s *DoHNameServer) LookupTXT(ctx context.Context, name string) ([]string, error) {
+	return roundTripper(s.dohHTTPSContext).LookupTXT(ctx, name)
 }
 
 // QueryIP implements Server.

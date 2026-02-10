@@ -5,10 +5,14 @@ import (
 	"context"
 	"encoding/binary"
 	go_errors "errors"
+	"io"
+	"math"
 	"net/url"
+	gonet "net"
 	"sync/atomic"
 	"time"
 
+	miekg_dns "github.com/miekg/dns"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/log"
@@ -162,7 +166,7 @@ func (s *TCPNameServer) sendQuery(ctx context.Context, noResponseErrCh chan<- er
 				noResponseErrCh <- err
 				return
 			}
-			var length int16
+			var length uint16
 			err = binary.Read(bytes.NewReader(respBuf.Bytes()), binary.BigEndian, &length)
 			if err != nil {
 				errors.LogErrorInner(ctx, err, "failed to parse response length")
@@ -235,4 +239,49 @@ func (s *TCPNameServer) QueryIP(ctx context.Context, domain string, option dns_f
 	errors.Log(ctx, &log.DNSLog{Server: s.Name(), Domain: domain, Result: ips, Status: log.DNSQueried, Elapsed: time.Since(start), Error: err})
 	return ips, ttl, err
 
+}
+
+func (s *TCPNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, error) {
+	conn, err := s.dial(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	stop := context.AfterFunc(ctx, func() {
+		conn.Close()
+	})
+	defer stop()
+	if len(data) >= math.MaxUint16 {
+		return nil, errors.New("data too large")
+	}
+	err = binary.Write(conn, binary.BigEndian, uint16(len(data)))
+	if err != nil {
+		return nil, err
+	}
+	n, err := conn.Write(data)
+	if err != nil {
+		return nil, err
+	} else if n < len(data) {
+		return nil, io.ErrShortWrite
+	}
+	var l [2]byte
+	_, err = io.ReadFull(conn, l[:])
+	if err != nil {
+		return nil, err
+	}
+	buf := make([]byte, binary.BigEndian.Uint16(l[:]))
+	_, err = io.ReadFull(conn, buf)
+	return buf, err
+}
+
+func (s *TCPNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
+	return roundTripper(s.roundTrip).LookupHTTPS(ctx, host)
+}
+
+func (s *TCPNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
+	return roundTripper(s.roundTrip).LookupSRV(ctx, service, proto, name)
+}
+
+func (s *TCPNameServer) LookupTXT(ctx context.Context, name string) ([]string, error) {
+	return roundTripper(s.roundTrip).LookupTXT(ctx, name)
 }

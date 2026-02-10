@@ -448,14 +448,7 @@ func (c *Config) GetTLSConfig(ctx context.Context, opts ...Option) *tls.Config {
 		}
 	}
 	if len(c.EchConfigList) > 0 || len(c.EchServerKeys) > 0 {
-		err := ApplyECH(ctx, c, config)
-		if err != nil {
-			if c.EchForceQuery == "full" {
-				errors.LogErrorInner(ctx, err, "cannot apply ech")
-			} else {
-				errors.LogInfoInner(ctx, err, "cannot apply ech")
-			}
-		}
+		ApplyECH(ctx, c, config)
 	}
 
 	return config
