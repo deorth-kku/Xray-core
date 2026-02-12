@@ -10,7 +10,6 @@ import (
 	"github.com/sagernet/sing/common/control"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
-	"github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/outbound"
 )
 
@@ -23,7 +22,6 @@ type SystemDialer interface {
 
 type DefaultSystemDialer struct {
 	controllers []control.Func
-	dns         dns.Client
 	obm         outbound.Manager
 }
 

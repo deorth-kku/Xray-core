@@ -29,7 +29,7 @@ type netReadInfo struct {
 
 // reduce duplicated code
 type netBind struct {
-	dns       dns.Client
+	dns       dns.ClientResolver
 	dnsOption dns.IPOption
 
 	workers   int

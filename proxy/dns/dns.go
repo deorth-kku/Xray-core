@@ -45,22 +45,15 @@ type ownLinkVerifier interface {
 }
 
 type Handler struct {
-	client          dns.Client
-	fdns            dns.FakeDNSEngine
-	ownLinkVerifier ownLinkVerifier
-	server          net.Destination
-	timeout         time.Duration
-	nonIPQuery      string
-	blockTypes      []int32
+	fdns       dns.FakeDNSEngine
+	server     net.Destination
+	timeout    time.Duration
+	nonIPQuery string
+	blockTypes []int32
 }
 
-func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager policy.Manager) error {
-	h.client = dnsClient
+func (h *Handler) Init(config *Config, _ dns.Client, policyManager policy.Manager) error {
 	h.timeout = policyManager.ForLevel(config.UserLevel).Timeouts.ConnectionIdle
-
-	if v, ok := dnsClient.(ownLinkVerifier); ok {
-		h.ownLinkVerifier = v
-	}
 
 	if config.Server != nil {
 		h.server = config.Server.AsDestination()
@@ -73,8 +66,12 @@ func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager polic
 	return nil
 }
 
-func (h *Handler) isOwnLink(ctx context.Context) bool {
-	return h.ownLinkVerifier != nil && h.ownLinkVerifier.IsOwnLink(ctx)
+func isOwnLink(ctx context.Context, d dns.Client) bool {
+	v, ok := d.(ownLinkVerifier)
+	if ok {
+		return v != nil && v.IsOwnLink(ctx)
+	}
+	return false
 }
 
 func parseIPQuery(b []byte) (r bool, domain string, id uint16, qType dnsmessage.Type) {
@@ -165,7 +162,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 	}
 
 	if session.TimeoutOnlyFromContext(ctx) {
-		ctx, _ = context.WithCancel(context.Background())
+		ctx = context.WithoutCancel(ctx)
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -190,7 +187,12 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 
 			timer.Update()
 
-			if !h.isOwnLink(ctx) {
+			d, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
+			if !ok {
+				return dns.ErrNoDNS
+			}
+
+			if isOwnLink(ctx, d) {
 				isIPQuery, domain, id, qType := parseIPQuery(b.Bytes())
 				if len(h.blockTypes) > 0 {
 					for _, blocktype := range h.blockTypes {
@@ -209,7 +211,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 				}
 				if isIPQuery {
 					b.Release()
-					go h.handleIPQuery(id, qType, domain, writer, timer)
+					go h.handleIPQuery(ctx, d, id, qType, domain, writer, timer)
 					continue
 				}
 				if h.nonIPQuery == "drop" {
@@ -259,7 +261,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 	return nil
 }
 
-func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string, writer dns_proto.MessageWriter, timer *signal.ActivityTimer) {
+func (h *Handler) handleIPQuery(ctx context.Context, d dns.Resolver, id uint16, qType dnsmessage.Type, domain string, writer dns_proto.MessageWriter, timer *signal.ActivityTimer) {
 	var ips []net.IP
 	var err error
 
@@ -268,13 +270,13 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 
 	switch qType {
 	case dnsmessage.TypeA:
-		ips, ttl4, err = h.client.LookupIP(domain, dns.IPOption{
+		ips, ttl4, err = d.QueryIP(ctx, domain, dns.IPOption{
 			IPv4Enable: true,
 			IPv6Enable: false,
 			FakeEnable: true,
 		})
 	case dnsmessage.TypeAAAA:
-		ips, ttl6, err = h.client.LookupIP(domain, dns.IPOption{
+		ips, ttl6, err = d.QueryIP(ctx, domain, dns.IPOption{
 			IPv4Enable: false,
 			IPv6Enable: true,
 			FakeEnable: true,

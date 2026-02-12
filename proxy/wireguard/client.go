@@ -50,7 +50,6 @@ type Handler struct {
 	net           Tunnel
 	bind          *netBindClient
 	policyManager policy.Manager
-	dns           dns.Client
 	// cached configuration
 	endpoints        []netip.Addr
 	hasIPv4, hasIPv6 bool
@@ -66,11 +65,9 @@ func New(ctx context.Context, conf *DeviceConfig) (*Handler, error) {
 		return nil, err
 	}
 
-	d := v.GetFeature(dns.ClientType()).(dns.Client)
 	return &Handler{
 		conf:          conf,
-		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
-		dns:           d,
+		policyManager: core.MustGetFeature[policy.Manager](v),
 		endpoints:     endpoints,
 		hasIPv4:       hasIPv4,
 		hasIPv6:       hasIPv6,
@@ -113,10 +110,15 @@ func (h *Handler) processWireGuard(ctx context.Context, dialer internet.Dialer) 
 		h.bind = nil
 	}
 
+	d, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
+	if !ok {
+		return dns.ErrNoDNS
+	}
+
 	// bind := conn.NewStdNetBind() // TODO: conn.Bind wrapper for dialer
 	h.bind = &netBindClient{
 		netBind: netBind{
-			dns: h.dns,
+			dns: d,
 			dnsOption: dns.IPOption{
 				IPv4Enable: h.hasIPv4,
 				IPv6Enable: h.hasIPv6,
@@ -134,7 +136,7 @@ func (h *Handler) processWireGuard(ctx context.Context, dialer internet.Dialer) 
 		}
 	}()
 
-	h.net, err = h.makeVirtualTun()
+	h.net, err = h.makeVirtualTun(ctx, d)
 	if err != nil {
 		return errors.New("failed to create virtual tun interface").Base(err)
 	}
@@ -162,16 +164,21 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		command = protocol.RequestCommandUDP
 	}
 
+	d, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
+	if !ok {
+		return dns.ErrNoDNS
+	}
+
 	// resolve dns
 	addr := destination.Address
 	if addr.Family().IsDomain() {
-		ips, _, err := h.dns.LookupIP(addr.Domain(), dns.IPOption{
+		ips, _, err := d.QueryIP(ctx, addr.Domain(), dns.IPOption{
 			IPv4Enable: h.hasIPv4 && h.conf.preferIP4(),
 			IPv6Enable: h.hasIPv6 && h.conf.preferIP6(),
 		})
 		{ // Resolve fallback
 			if (len(ips) == 0 || err != nil) && h.conf.hasFallback() {
-				ips, _, err = h.dns.LookupIP(addr.Domain(), dns.IPOption{
+				ips, _, err = d.QueryIP(ctx, addr.Domain(), dns.IPOption{
 					IPv4Enable: h.hasIPv4 && h.conf.fallbackIP4(),
 					IPv6Enable: h.hasIPv6 && h.conf.fallbackIP6(),
 				})
@@ -252,7 +259,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 }
 
 // creates a tun interface on netstack given a configuration
-func (h *Handler) makeVirtualTun() (Tunnel, error) {
+func (h *Handler) makeVirtualTun(ctx context.Context, dns dns.Resolver) (Tunnel, error) {
 	t, err := h.conf.createTun()(h.endpoints, int(h.conf.Mtu), nil)
 	if err != nil {
 		return nil, err
@@ -261,7 +268,12 @@ func (h *Handler) makeVirtualTun() (Tunnel, error) {
 	h.bind.dnsOption.IPv4Enable = h.hasIPv4
 	h.bind.dnsOption.IPv6Enable = h.hasIPv6
 
-	if err = t.BuildDevice(h.createIPCRequest(), h.bind); err != nil {
+	rpcstring, err := h.createIPCRequest(ctx, dns)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = t.BuildDevice(rpcstring, h.bind); err != nil {
 		_ = t.Close()
 		return nil, err
 	}
@@ -269,7 +281,7 @@ func (h *Handler) makeVirtualTun() (Tunnel, error) {
 }
 
 // serialize the config into an IPC request
-func (h *Handler) createIPCRequest() string {
+func (h *Handler) createIPCRequest(ctx context.Context, d dns.Resolver) (string, error) {
 	var request strings.Builder
 
 	request.WriteString(fmt.Sprintf("private_key=%s\n", h.conf.SecretKey))
@@ -291,6 +303,7 @@ func (h *Handler) createIPCRequest() string {
 		address, port, err := net.SplitHostPort(peer.Endpoint)
 		if err != nil {
 			errors.LogError(h.bind.ctx, "failed to split endpoint ", peer.Endpoint, " into address and port")
+			return "", err
 		}
 		addr := net.ParseAddress(address)
 		if addr.Family().IsDomain() {
@@ -299,13 +312,13 @@ func (h *Handler) createIPCRequest() string {
 				addr = net.ParseAddress(dialerIp.String())
 				errors.LogInfo(h.bind.ctx, "createIPCRequest use dialer dest ip: ", addr)
 			} else {
-				ips, _, err := h.dns.LookupIP(addr.Domain(), dns.IPOption{
+				ips, _, err := d.QueryIP(ctx, addr.Domain(), dns.IPOption{
 					IPv4Enable: h.hasIPv4 && h.conf.preferIP4(),
 					IPv6Enable: h.hasIPv6 && h.conf.preferIP6(),
 				})
 				{ // Resolve fallback
 					if (len(ips) == 0 || err != nil) && h.conf.hasFallback() {
-						ips, _, err = h.dns.LookupIP(addr.Domain(), dns.IPOption{
+						ips, _, err = d.QueryIP(ctx, addr.Domain(), dns.IPOption{
 							IPv4Enable: h.hasIPv4 && h.conf.fallbackIP4(),
 							IPv6Enable: h.hasIPv6 && h.conf.fallbackIP6(),
 						})
@@ -313,8 +326,10 @@ func (h *Handler) createIPCRequest() string {
 				}
 				if err != nil {
 					errors.LogInfoInner(h.bind.ctx, err, "createIPCRequest failed to lookup DNS")
+					return "", err
 				} else if len(ips) == 0 {
 					errors.LogInfo(h.bind.ctx, "createIPCRequest empty lookup DNS")
+					return "", dns.ErrEmptyResponse
 				} else {
 					addr = net.IPAddress(ips[dice.Roll(len(ips))])
 				}
@@ -334,5 +349,5 @@ func (h *Handler) createIPCRequest() string {
 		}
 	}
 
-	return request.String()[:request.Len()]
+	return request.String()[:request.Len()], nil
 }

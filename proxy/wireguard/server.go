@@ -31,10 +31,10 @@ type Server struct {
 }
 
 type routingInfo struct {
-	ctx         context.Context
-	dispatcher  routing.Dispatcher
-	inboundTag  *session.Inbound
-	contentTag  *session.Content
+	ctx        context.Context
+	dispatcher routing.Dispatcher
+	inboundTag *session.Inbound
+	contentTag *session.Content
 }
 
 func NewServer(ctx context.Context, conf *DeviceConfig) (*Server, error) {
@@ -48,14 +48,14 @@ func NewServer(ctx context.Context, conf *DeviceConfig) (*Server, error) {
 	server := &Server{
 		bindServer: &netBindServer{
 			netBind: netBind{
-				dns: v.GetFeature(dns.ClientType()).(dns.Client),
+				dns: core.MustGetFeature[dns.ClientResolver](v),
 				dnsOption: dns.IPOption{
 					IPv4Enable: hasIPv4,
 					IPv6Enable: hasIPv6,
 				},
 			},
 		},
-		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
+		policyManager: core.MustGetFeature[policy.Manager](v),
 	}
 
 	tun, err := conf.createTun()(endpoints, int(conf.Mtu), server.forwardConnection)

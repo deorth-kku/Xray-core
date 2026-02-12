@@ -19,7 +19,6 @@ type Router struct {
 	domainStrategy Config_DomainStrategy
 	rules          []*Rule
 	balancers      map[string]*Balancer
-	dns            dns.Client
 
 	ctx        context.Context
 	ohm        outbound.Manager
@@ -36,9 +35,8 @@ type Route struct {
 }
 
 // Init initializes the Router.
-func (r *Router) Init(ctx context.Context, config *Config, d dns.Client, ohm outbound.Manager, dispatcher routing.Dispatcher) error {
+func (r *Router) Init(ctx context.Context, config *Config, _ dns.Client, ohm outbound.Manager, dispatcher routing.Dispatcher) error {
 	r.domainStrategy = config.DomainStrategy
-	r.dns = d
 	r.ctx = ctx
 	r.ohm = ohm
 	r.dispatcher = dispatcher
@@ -201,8 +199,13 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 	// this prevents cycle resolving dead loop
 	skipDNSResolve := ctx.GetSkipDNSResolve()
 
+	d, ok := core.GetFeatureFromContext[dns.Client](r.ctx)
+	if !ok {
+		return nil, nil, dns.ErrNoDNS
+	}
+
 	if r.domainStrategy == Config_IpOnDemand && !skipDNSResolve {
-		ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
+		ctx = routing_dns.ContextWithDNSClient(ctx, d)
 	}
 
 	for _, rule := range r.getrules() {
@@ -215,7 +218,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 		return nil, ctx, common.ErrNoClue
 	}
 
-	ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
+	ctx = routing_dns.ContextWithDNSClient(ctx, d)
 
 	// Try applying rules again if we have IPs.
 	for _, rule := range r.getrules() {

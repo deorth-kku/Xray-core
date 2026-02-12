@@ -391,6 +391,14 @@ func GetFeature[T features.Feature](s *Instance) (t T, ok bool) {
 	return
 }
 
+func MustGetFeature[T features.Feature](s *Instance) T {
+	feat, ok := GetFeature[T](s)
+	if !ok {
+		panic(reflect.TypeFor[T]().String() + " is not found")
+	}
+	return feat
+}
+
 func GetFeatureFromContext[T features.Feature](ctx context.Context) (T, bool) {
 	i := FromContext(ctx)
 	if i == nil {

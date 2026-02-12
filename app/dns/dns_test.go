@@ -161,7 +161,7 @@ func TestUDPServerSubnet(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	ips, _, err := client.LookupIP("google.com", feature_dns.IPOption{
 		IPv4Enable: true,
@@ -221,7 +221,7 @@ func TestUDPServer(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	{
 		ips, _, err := client.LookupIP("google.com", feature_dns.IPOption{
@@ -360,7 +360,7 @@ func TestPrioritizedDomain(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	startTime := time.Now()
 
@@ -429,7 +429,7 @@ func TestUDPServerIPv6(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 	{
 		ips, _, err := client.LookupIP("ipv6.google.com", feature_dns.IPOption{
 			IPv4Enable: false,
@@ -497,7 +497,7 @@ func TestStaticHostDomain(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	{
 		ips, _, err := client.LookupIP("example.com", feature_dns.IPOption{
@@ -606,7 +606,7 @@ func TestIPMatch(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	startTime := time.Now()
 
@@ -729,7 +729,7 @@ func TestLocalDomain(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	startTime := time.Now()
 
@@ -1000,7 +1000,7 @@ func TestMultiMatchPrioritizedDomain(t *testing.T) {
 	v, err := core.New(config)
 	common.Must(err)
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	client := core.MustGetFeature[feature_dns.Client](v)
 
 	startTime := time.Now()
 

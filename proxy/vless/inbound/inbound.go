@@ -27,7 +27,6 @@ import (
 	"github.com/xtls/xray-core/common/signal"
 	"github.com/xtls/xray-core/common/task"
 	"github.com/xtls/xray-core/core"
-	"github.com/xtls/xray-core/features/dns"
 	feature_inbound "github.com/xtls/xray-core/features/inbound"
 	"github.com/xtls/xray-core/features/outbound"
 	"github.com/xtls/xray-core/features/policy"
@@ -44,14 +43,6 @@ import (
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		var dc dns.Client
-		if err := core.RequireFeatures(ctx, func(d dns.Client) error {
-			dc = d
-			return nil
-		}); err != nil {
-			return nil, err
-		}
-
 		c := config.(*Config)
 
 		validator := new(vless.MemoryValidator)
@@ -65,7 +56,7 @@ func init() {
 			}
 		}
 
-		return New(ctx, c, dc, validator)
+		return New(ctx, c, validator)
 	}))
 }
 
@@ -79,11 +70,10 @@ type Handler struct {
 	defaultDispatcher      *dispatcher.DefaultDispatcher
 	ctx                    context.Context
 	fallbacks              map[string]map[string]map[string]*Fallback // or nil
-	// regexps               map[string]*regexp.Regexp       // or nil
 }
 
 // New creates a new VLess inbound handler.
-func New(ctx context.Context, config *Config, dc dns.Client, validator vless.Validator) (*Handler, error) {
+func New(ctx context.Context, config *Config, validator vless.Validator) (*Handler, error) {
 	v := core.MustFromContext(ctx)
 	handler := &Handler{
 		inboundHandlerManager:  v.GetFeature(feature_inbound.ManagerType()).(feature_inbound.Manager),

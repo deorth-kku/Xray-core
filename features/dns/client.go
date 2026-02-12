@@ -36,7 +36,10 @@ func ClientType() interface{} {
 }
 
 // ErrEmptyResponse indicates that DNS query succeeded but no answer was returned.
-var ErrEmptyResponse = errors.New("empty response")
+var (
+	ErrEmptyResponse = errors.New("empty response")
+	ErrNoDNS         = errors.New("dns client not found")
+)
 
 const DefaultTTL = 300
 

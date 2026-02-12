@@ -126,7 +126,9 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 }
 
 func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, body io.Reader, contentLength int64) error {
-	req := NewRequestWithContext(context.WithoutCancel(ctx), "POST", url, body, c.transportConfig.GetRequestHeader(url))
+	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+	stop := context.AfterFunc(ctx, cancel)
+	req := NewRequestWithContext(reqctx, "POST", url, body, c.transportConfig.GetRequestHeader(url))
 	req.ContentLength = contentLength
 
 	if c.httpVersion != "1.1" {
@@ -135,7 +137,7 @@ func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, body 
 			c.closed = true
 			return err
 		}
-
+		stop()
 		io.Copy(io.Discard, resp.Body)
 		defer resp.Body.Close()
 
@@ -149,7 +151,7 @@ func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, body 
 		// request
 		requestBuff := new(bytes.Buffer)
 		common.Must(req.Write(requestBuff))
-
+		stop()
 		var uploadConn any
 		var h1UploadConn *H1Conn
 
