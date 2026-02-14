@@ -13,9 +13,7 @@ import (
 )
 
 var (
-	_ dns_feature.HTTPSResolver = (*DoHNameServer)(nil)
-	_ dns_feature.SRVResolver   = (*DoHNameServer)(nil)
-	_ dns_feature.TXTResolver   = (*DoHNameServer)(nil)
+	_ dns_feature.FullResolver = (*DoHNameServer)(nil)
 )
 
 func TestDOHNameServer(t *testing.T) {
@@ -115,11 +113,19 @@ func TestDOHNameServer65(t *testing.T) {
 
 	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
 	ctx, cancel := withTimeout(t, 5*time.Second)
+	defer cancel()
 	rec, err := s.LookupHTTPS(ctx, "google.com")
-	cancel()
 	common.Must(err)
 	if len(rec) == 0 {
 		t.Error("expect some records, but got 0")
+	}
+
+	starttime := time.Now()
+	rec, err = s.LookupHTTPS(ctx, "google.com")
+	common.Must(err)
+	elapsed := time.Since(starttime)
+	if elapsed > 10*time.Millisecond {
+		t.Error("expected cached response, but took too long: ", elapsed)
 	}
 }
 

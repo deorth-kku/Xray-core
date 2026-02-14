@@ -7,8 +7,8 @@ import (
 	go_errors "errors"
 	"io"
 	"math"
-	"net/url"
 	gonet "net"
+	"net/url"
 	"sync/atomic"
 	"time"
 
@@ -26,6 +26,7 @@ import (
 // TCPNameServer implemented DNS over TCP (RFC7766).
 type TCPNameServer struct {
 	cacheController *CacheController
+	echCache        *cacheTable[string, []*miekg_dns.HTTPS]
 	destination     *net.Destination
 	reqID           uint32
 	dial            func(context.Context) (net.Conn, error)
@@ -78,6 +79,9 @@ func baseTCPNameServer(url *url.URL, prefix string, disableCache bool, clientIP 
 		cacheController: NewCacheController(prefix+"//"+dest.NetAddr(), disableCache),
 		destination:     &dest,
 		clientIP:        clientIP,
+	}
+	if !disableCache {
+		s.echCache = NewCacheTable[string, []*miekg_dns.HTTPS]()
 	}
 
 	return s, nil
@@ -241,20 +245,17 @@ func (s *TCPNameServer) QueryIP(ctx context.Context, domain string, option dns_f
 
 }
 
-func (s *TCPNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, error) {
-	conn, err := s.dial(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	stop := context.AfterFunc(ctx, func() {
-		conn.Close()
-	})
-	defer stop()
+type ReadWriter interface {
+	io.Reader
+	io.Writer
+	io.Closer
+}
+
+func tcpConnRoundTrip(conn ReadWriter, data []byte, close_after_write bool) ([]byte, error) {
 	if len(data) >= math.MaxUint16 {
 		return nil, errors.New("data too large")
 	}
-	err = binary.Write(conn, binary.BigEndian, uint16(len(data)))
+	err := binary.Write(conn, binary.BigEndian, uint16(len(data)))
 	if err != nil {
 		return nil, err
 	}
@@ -263,6 +264,12 @@ func (s *TCPNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, err
 		return nil, err
 	} else if n < len(data) {
 		return nil, io.ErrShortWrite
+	}
+	if close_after_write {
+		err = conn.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 	var l [2]byte
 	_, err = io.ReadFull(conn, l[:])
@@ -274,8 +281,27 @@ func (s *TCPNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, err
 	return buf, err
 }
 
+func (s *TCPNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, error) {
+	conn, err := s.dial(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	stop := context.AfterFunc(ctx, func() {
+		conn.Close()
+	})
+	defer stop()
+	return tcpConnRoundTrip(conn, data, false)
+}
+
 func (s *TCPNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
-	return roundTripper(s.roundTrip).LookupHTTPS(ctx, host)
+	if s.cacheController.disableCache {
+		return roundTripper(s.roundTrip).LookupHTTPS(ctx, host)
+	}
+	return s.echCache.Compute(ctx, Fqdn(host), func(ctx context.Context) ([]*miekg_dns.HTTPS, time.Duration, error) {
+		records, ttl, err := roundTripper(s.roundTrip).lookupHTTPS(ctx, host)
+		return records, time.Duration(ttl) * time.Second, err
+	})
 }
 
 func (s *TCPNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {

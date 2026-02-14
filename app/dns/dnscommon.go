@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	gonet "net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/miekg/dns"
@@ -21,14 +22,12 @@ import (
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
 	"golang.org/x/net/dns/dnsmessage"
+	"golang.org/x/sync/semaphore"
 )
 
 // Fqdn normalizes domain make sure it ends with '.'
 func Fqdn(domain string) string {
-	if len(domain) > 0 && strings.HasSuffix(domain, ".") {
-		return domain
-	}
-	return domain + "."
+	return dns.Fqdn(domain)
 }
 
 type record struct {
@@ -315,21 +314,28 @@ func (r roundTripper) roundTrip(ctx context.Context, msg *dns.Msg) (*dns.Msg, er
 	return msg, err
 }
 
-func (r roundTripper) LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, error) {
+func (r roundTripper) lookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, uint32, error) {
 	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(host), dns.TypeHTTPS))
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	var records []*dns.HTTPS
+	var ttl uint32
 	for _, answer := range rsp.Answer {
 		if a, ok := answer.(*dns.HTTPS); ok {
+			ttl = a.Hdr.Ttl
 			records = append(records, a)
 		}
 	}
 	if len(records) == 0 {
-		return nil, dns_feature.ErrEmptyResponse
+		return nil, 0, dns_feature.ErrEmptyResponse
 	}
-	return records, nil
+	return records, ttl, nil
+}
+
+func (r roundTripper) LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, error) {
+	records, _, err := r.lookupHTTPS(ctx, host)
+	return records, err
 }
 
 func (r roundTripper) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
@@ -376,7 +382,6 @@ func (r roundTripper) LookupTXT(ctx context.Context, name string) ([]string, err
 	}
 	return txts, nil
 }
- 
 
 type DialContext = func(ctx context.Context, dest net.Destination) (net.Conn, error)
 
@@ -396,4 +401,70 @@ func DispatcherDial(dispatcher routing.Dispatcher) DialContext {
 		}
 		return cncConn(link), nil
 	}
+}
+
+type cacheLine[T any] struct {
+	data  T
+	err   error
+	sem   semaphore.Weighted
+	timer *time.Timer
+}
+
+type cacheTable[K comparable, V any] struct {
+	table map[K]*cacheLine[V]
+	mu    sync.Mutex
+}
+
+// NewCacheTable creates a new cache table
+func NewCacheTable[K comparable, V any]() *cacheTable[K, V] {
+	return &cacheTable[K, V]{
+		table: make(map[K]*cacheLine[V]),
+	}
+}
+
+// fn should return the new value and TTL duration.
+// Multiple concurrent calls with the same key will only execute fn once.
+// Even if fn returns an error, the value will be updated.
+// If TTL is 0 or negative, the entry will be deleted.
+func (tb *cacheTable[K, V]) Compute(
+	ctx context.Context,
+	key K,
+	fn func(ctx context.Context) (V, time.Duration, error),
+) (V, error) {
+	tb.mu.Lock()
+	line, found := tb.table[key]
+	if !found {
+		line = &cacheLine[V]{
+			sem: *semaphore.NewWeighted(1),
+		}
+		tb.table[key] = line
+	}
+	tb.mu.Unlock()
+
+	// Wait for the ongoing computation if there is one
+	if err := line.sem.Acquire(ctx, 1); err != nil {
+		var zero V
+		return zero, err
+	}
+	defer line.sem.Release(1)
+
+	if line.timer != nil {
+		return line.data, line.err
+	}
+	var ttl time.Duration
+	line.data, ttl, line.err = fn(ctx)
+	if ttl > 0 {
+		line.timer = time.AfterFunc(ttl, func() {
+			tb.mu.Lock()
+			if tb.table[key] == line {
+				delete(tb.table, key)
+			}
+			tb.mu.Unlock()
+		})
+	} else {
+		tb.mu.Lock()
+		delete(tb.table, key)
+		tb.mu.Unlock()
+	}
+	return line.data, line.err
 }

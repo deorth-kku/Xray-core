@@ -31,6 +31,7 @@ import (
 // thus most of the DOH implementation is copied from udpns.go
 type DoHNameServer struct {
 	cacheController *CacheController
+	echCache        *cacheTable[string, []*miekg_dns.HTTPS]
 	httpClient      *http.Client
 	dohURL          string
 	clientIP        net.IP
@@ -57,6 +58,9 @@ func NewDoHNameServer(url *url.URL, dialtcp DialContext, h2c bool, disableCache 
 		cacheController: NewCacheController(mode+"//"+url.Host, disableCache),
 		dohURL:          url.String(),
 		clientIP:        clientIP,
+	}
+	if !disableCache {
+		s.echCache = NewCacheTable[string, []*miekg_dns.HTTPS]()
 	}
 	s.httpClient = &http.Client{
 		Transport: &http2.Transport{
@@ -151,7 +155,7 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, noResponseErrCh chan<- er
 				noResponseErrCh <- err
 				return
 			}
-			resp, err := s.dohHTTPSContext(dnsCtx, b.Bytes())
+			resp, err := s.dohRoundTrip(dnsCtx, b.Bytes())
 			if err != nil {
 				errors.LogErrorInner(ctx, err, "failed to retrieve response for ", domain)
 				noResponseErrCh <- err
@@ -168,7 +172,7 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, noResponseErrCh chan<- er
 	}
 }
 
-func (s *DoHNameServer) dohHTTPSContext(ctx context.Context, b []byte) ([]byte, error) {
+func (s *DoHNameServer) dohRoundTrip(ctx context.Context, b []byte) ([]byte, error) {
 	body := bytes.NewBuffer(b)
 	req, err := http.NewRequest("POST", s.dohURL, body)
 	if err != nil {
@@ -197,15 +201,21 @@ func (s *DoHNameServer) dohHTTPSContext(ctx context.Context, b []byte) ([]byte, 
 }
 
 func (s *DoHNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
-	return roundTripper(s.dohHTTPSContext).LookupHTTPS(ctx, host) // no cache, we need cache!!!
+	if s.cacheController.disableCache {
+		return roundTripper(s.dohRoundTrip).LookupHTTPS(ctx, host)
+	}
+	return s.echCache.Compute(ctx, Fqdn(host), func(ctx context.Context) ([]*miekg_dns.HTTPS, time.Duration, error) {
+		records, ttl, err := roundTripper(s.dohRoundTrip).lookupHTTPS(ctx, host)
+		return records, time.Duration(ttl) * time.Second, err
+	})
 }
 
 func (s *DoHNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
-	return roundTripper(s.dohHTTPSContext).LookupSRV(ctx, service, proto, name)
+	return roundTripper(s.dohRoundTrip).LookupSRV(ctx, service, proto, name)
 }
 
 func (s *DoHNameServer) LookupTXT(ctx context.Context, name string) ([]string, error) {
-	return roundTripper(s.dohHTTPSContext).LookupTXT(ctx, name)
+	return roundTripper(s.dohRoundTrip).LookupTXT(ctx, name)
 }
 
 // QueryIP implements Server.

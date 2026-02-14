@@ -83,6 +83,12 @@ type ClientResolver interface {
 	Resolver
 }
 
+type FullResolver interface {
+	HTTPSResolver
+	SRVResolver
+	TXTResolver
+}
+
 type Resolver interface {
 	Name() string
 	QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, uint32, error)

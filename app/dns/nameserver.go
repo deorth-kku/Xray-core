@@ -39,7 +39,7 @@ type Client struct {
 // NewServerFromString only support a subset of url schemas of NewServer does
 //
 //go:linkname NewServerFromString github.com/xtls/xray-core/app/dns.NewServerFromString
-func NewServerFromString(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (Server, error) {
+func NewServerFromString(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (dns.FullResolver, error) {
 	u, err := url.Parse(urlstr)
 	if err != nil {
 		return nil, err

@@ -45,7 +45,7 @@ var (
 )
 
 //go:linkname newServer github.com/xtls/xray-core/app/dns.NewServerFromString
-func newServer(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (featdns.Resolver, error)
+func newServer(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (featdns.FullResolver, error)
 
 func getHTTPSResolver(ctx context.Context, url string, sockopt *internet.SocketConfig) (featdns.HTTPSResolver, error) {
 	globalServerLock.Lock()
@@ -57,14 +57,11 @@ func getHTTPSResolver(ctx context.Context, url string, sockopt *internet.SocketC
 	if sockopt == nil {
 		sockopt = new(internet.SocketConfig)
 	}
-	r0, err := newServer(ctx, url, func(ctx context.Context, dest net.Destination) (net.Conn, error) {
+	rs, err := newServer(ctx, url, func(ctx context.Context, dest net.Destination) (net.Conn, error) {
 		return internet.DialSystem(ctx, dest, sockopt)
 	}, false, sockopt.BindAddress)
 	if err != nil {
 		return nil, err
-	}
-	if rs, ok = r0.(featdns.HTTPSResolver); !ok {
-		return nil, errors.New("dns server doesn't support LookupHTTPS ", url)
 	}
 	globalServers[url] = rs
 	return rs, nil

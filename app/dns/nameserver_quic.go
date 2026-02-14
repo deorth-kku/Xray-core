@@ -5,10 +5,12 @@ import (
 	"context"
 	"encoding/binary"
 	go_errors "errors"
+	gonet "net"
 	"net/url"
 	"sync"
 	"time"
 
+	miekg_dns "github.com/miekg/dns"
 	"github.com/quic-go/quic-go"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/errors"
@@ -31,6 +33,7 @@ const handshakeTimeout = time.Second * 8
 type QUICNameServer struct {
 	sync.RWMutex
 	cacheController *CacheController
+	echCache        *cacheTable[string, []*miekg_dns.HTTPS]
 	destination     *net.Destination
 	connection      *quic.Conn
 	clientIP        net.IP
@@ -54,6 +57,9 @@ func NewQUICNameServer(url *url.URL, disableCache bool, clientIP net.IP) (*QUICN
 		cacheController: NewCacheController(url.String(), disableCache),
 		destination:     &dest,
 		clientIP:        clientIP,
+	}
+	if !disableCache {
+		s.echCache = NewCacheTable[string, []*miekg_dns.HTTPS]()
 	}
 
 	return s, nil
@@ -291,4 +297,32 @@ func (s *QUICNameServer) openStream(ctx context.Context) (*quic.Stream, error) {
 
 	// open a new stream
 	return conn.OpenStreamSync(ctx)
+}
+
+func (s *QUICNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	conn, err := s.openStream(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return tcpConnRoundTrip(conn, data, true)
+}
+
+func (s *QUICNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
+	if s.cacheController.disableCache {
+		return roundTripper(s.roundTrip).LookupHTTPS(ctx, host)
+	}
+	return s.echCache.Compute(ctx, Fqdn(host), func(ctx context.Context) ([]*miekg_dns.HTTPS, time.Duration, error) {
+		records, ttl, err := roundTripper(s.roundTrip).lookupHTTPS(ctx, host)
+		return records, time.Duration(ttl) * time.Second, err
+	})
+}
+
+func (s *QUICNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
+	return roundTripper(s.roundTrip).LookupSRV(ctx, service, proto, name)
+}
+
+func (s *QUICNameServer) LookupTXT(ctx context.Context, name string) ([]string, error) {
+	return roundTripper(s.roundTrip).LookupTXT(ctx, name)
 }

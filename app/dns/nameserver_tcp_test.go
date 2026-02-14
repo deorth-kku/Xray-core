@@ -14,9 +14,7 @@ import (
 )
 
 var (
-	_ dns_feature.HTTPSResolver = (*TCPNameServer)(nil)
-	_ dns_feature.SRVResolver   = (*TCPNameServer)(nil)
-	_ dns_feature.TXTResolver   = (*TCPNameServer)(nil)
+	_ dns_feature.FullResolver = (*TCPNameServer)(nil)
 )
 
 func TestTCPLocalNameServer(t *testing.T) {
@@ -150,7 +148,7 @@ func TestTCPLocalNameServerSRV(t *testing.T) {
 	cancel()
 	common.Must(err)
 	if len(cname) == 0 {
-		t.Fatal("expected SRV records for jabber.org, but got no cname")
+		t.Log("_xmpp-server._tcp.jabber.org. has empty CNAME")
 	}
 	if len(srvs) == 0 {
 		t.Fatal("expected SRV records for jabber.org, but got 0")

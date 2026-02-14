@@ -1,7 +1,9 @@
 package dns
 
 import (
+	"context"
 	"math/rand"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -163,23 +165,21 @@ func Test_genEDNS0Options(t *testing.T) {
 	}
 }
 
-func TestFqdn(t *testing.T) {
-	type args struct {
-		domain string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{"with fqdn", args{"www.example.com."}, "www.example.com."},
-		{"without fqdn", args{"www.example.com"}, "www.example.com."},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Fqdn(tt.args.domain); got != tt.want {
-				t.Errorf("Fqdn() = %v, want %v", got, tt.want)
-			}
+func TestCacheTable(t *testing.T) {
+	tb := NewCacheTable[string, string]()
+	var count atomic.Int64
+	for range 10 {
+		tb.Compute(t.Context(), "test", func(ctx context.Context) (string, time.Duration, error) {
+			time.Sleep(100 * time.Millisecond)
+			count.Add(1)
+			return "value", time.Second, nil
 		})
+	}
+	if count.Load() != 1 {
+		t.Errorf("expected 1, got %d", count.Load())
+	}
+	time.Sleep(2 * time.Second)
+	if len(tb.table) != 0 {
+		t.Errorf("cache did not expire")
 	}
 }
