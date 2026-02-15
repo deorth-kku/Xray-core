@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	miekg_dns "github.com/miekg/dns"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/log"
@@ -186,6 +185,57 @@ func buildReqMsgs(domain string, option dns_feature.IPOption, reqIDGen func() ui
 	return reqs
 }
 
+func doHttps(ctx context.Context, r roundTripper, domain string, ipcache *CacheController, echCache *cacheTable[string, []*dns.HTTPS]) ([]*dns.HTTPS, error) {
+	if echCache == nil {
+		return r.LookupHTTPS(ctx, domain)
+	}
+	domain = Fqdn(domain)
+	return echCache.Compute(ctx, domain, func(ctx context.Context) ([]*dns.HTTPS, time.Duration, error) {
+		starttime := time.Now()
+		records, rsp, err := r.lookupHTTPSRaw(ctx, domain)
+		if err == dns_feature.ErrEmptyResponse {
+			// If the response is empty, we still want to cache it to avoid repeated queries for non-existent records.
+			return nil, time.Second * dns_feature.DefaultTTL, err
+		}
+		var ttldur time.Duration
+		for _, record := range records {
+			if record.Hdr.Ttl != 0 {
+				ttldur = time.Duration(record.Hdr.Ttl) * time.Second
+			}
+			expire := time.Now().Add(ttldur)
+			for _, kv := range record.Value {
+				switch kv.Key() {
+				case dns.SVCB_IPV4HINT:
+					ipcache.updateIP(&dnsRequest{
+						reqType: dnsmessage.TypeA,
+						domain:  domain,
+						start:   starttime,
+						expire:  expire,
+					}, &IPRecord{
+						ReqID:  rsp.Id,
+						IP:     kv.(*dns.SVCBIPv4Hint).Hint,
+						Expire: expire,
+						RCode:  dnsmessage.RCode(rsp.Rcode),
+					})
+				case dns.SVCB_IPV6HINT:
+					ipcache.updateIP(&dnsRequest{
+						reqType: dnsmessage.TypeAAAA,
+						domain:  domain,
+						start:   starttime,
+						expire:  expire,
+					}, &IPRecord{
+						ReqID:  rsp.Id,
+						IP:     kv.(*dns.SVCBIPv6Hint).Hint,
+						Expire: expire,
+						RCode:  dnsmessage.RCode(rsp.Rcode),
+					})
+				}
+			}
+		}
+		return records, ttldur, err
+	})
+}
+
 // parseResponse parses DNS answers from the returned payload
 func parseResponse(payload []byte) (*IPRecord, error) {
 	var parser dnsmessage.Parser
@@ -314,33 +364,31 @@ func (r roundTripper) roundTrip(ctx context.Context, msg *dns.Msg) (*dns.Msg, er
 	return msg, err
 }
 
-func (r roundTripper) lookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, uint32, error) {
-	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(host), dns.TypeHTTPS))
+func (r roundTripper) lookupHTTPSRaw(ctx context.Context, host string) ([]*dns.HTTPS, *dns.Msg, error) {
+	rsp, err := r.roundTrip(ctx, new(dns.Msg).SetQuestion(dns.CanonicalName(host), dns.TypeHTTPS))
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, err
 	}
 	var records []*dns.HTTPS
-	var ttl uint32
 	for _, answer := range rsp.Answer {
 		if a, ok := answer.(*dns.HTTPS); ok {
-			ttl = a.Hdr.Ttl
 			records = append(records, a)
 		}
 	}
 	if len(records) == 0 {
-		return nil, 0, dns_feature.ErrEmptyResponse
+		return nil, rsp, dns_feature.ErrEmptyResponse
 	}
-	return records, ttl, nil
+	return records, rsp, nil
 }
 
 func (r roundTripper) LookupHTTPS(ctx context.Context, host string) ([]*dns.HTTPS, error) {
-	records, _, err := r.lookupHTTPS(ctx, host)
+	records, _, err := r.lookupHTTPSRaw(ctx, host)
 	return records, err
 }
 
 func (r roundTripper) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {
 	qname := "_" + service + "._" + proto + "." + name
-	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(qname), dns.TypeSRV))
+	rsp, err := r.roundTrip(ctx, new(dns.Msg).SetQuestion(dns.CanonicalName(qname), dns.TypeSRV))
 	if err != nil {
 		return "", nil, err
 	}
@@ -348,10 +396,10 @@ func (r roundTripper) LookupSRV(ctx context.Context, service string, proto strin
 	var cname string
 	for _, answer := range rsp.Answer {
 		switch rr := answer.(type) {
-		case *miekg_dns.CNAME:
+		case *dns.CNAME:
 			// keep last CNAME if present
 			cname = rr.Target
-		case *miekg_dns.SRV:
+		case *dns.SRV:
 			records = append(records, &gonet.SRV{
 				Target:   rr.Target,
 				Port:     uint16(rr.Port),
@@ -367,13 +415,13 @@ func (r roundTripper) LookupSRV(ctx context.Context, service string, proto strin
 }
 
 func (r roundTripper) LookupTXT(ctx context.Context, name string) ([]string, error) {
-	rsp, err := r.roundTrip(ctx, new(miekg_dns.Msg).SetQuestion(dns.CanonicalName(name), dns.TypeTXT))
+	rsp, err := r.roundTrip(ctx, new(dns.Msg).SetQuestion(dns.CanonicalName(name), dns.TypeTXT))
 	if err != nil {
 		return nil, err
 	}
 	var txts []string
 	for _, answer := range rsp.Answer {
-		if t, ok := answer.(*miekg_dns.TXT); ok {
+		if t, ok := answer.(*dns.TXT); ok {
 			txts = append(txts, strings.Join(t.Txt, ""))
 		}
 	}

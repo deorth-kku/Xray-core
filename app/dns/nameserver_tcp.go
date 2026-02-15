@@ -295,13 +295,7 @@ func (s *TCPNameServer) roundTrip(ctx context.Context, data []byte) ([]byte, err
 }
 
 func (s *TCPNameServer) LookupHTTPS(ctx context.Context, host string) ([]*miekg_dns.HTTPS, error) {
-	if s.cacheController.disableCache {
-		return roundTripper(s.roundTrip).LookupHTTPS(ctx, host)
-	}
-	return s.echCache.Compute(ctx, Fqdn(host), func(ctx context.Context) ([]*miekg_dns.HTTPS, time.Duration, error) {
-		records, ttl, err := roundTripper(s.roundTrip).lookupHTTPS(ctx, host)
-		return records, time.Duration(ttl) * time.Second, err
-	})
+	return doHttps(ctx, s.roundTrip, host, s.cacheController, s.echCache)
 }
 
 func (s *TCPNameServer) LookupSRV(ctx context.Context, service string, proto string, name string) (string, []*gonet.SRV, error) {

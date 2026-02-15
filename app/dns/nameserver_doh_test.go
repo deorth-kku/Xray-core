@@ -114,18 +114,32 @@ func TestDOHNameServer65(t *testing.T) {
 	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
 	ctx, cancel := withTimeout(t, 5*time.Second)
 	defer cancel()
-	rec, err := s.LookupHTTPS(ctx, "google.com")
+	rec, err := s.LookupHTTPS(ctx, "cloudflare-ech.com")
 	common.Must(err)
 	if len(rec) == 0 {
 		t.Error("expect some records, but got 0")
 	}
 
 	starttime := time.Now()
-	rec, err = s.LookupHTTPS(ctx, "google.com")
+	rec, err = s.LookupHTTPS(ctx, "cloudflare-ech.com")
 	common.Must(err)
 	elapsed := time.Since(starttime)
 	if elapsed > 10*time.Millisecond {
 		t.Error("expected cached response, but took too long: ", elapsed)
+	}
+
+	starttime = time.Now()
+	ips, _, err := s.QueryIP(ctx, "cloudflare-ech.com", dns_feature.IPOption{
+		IPv4Enable: true,
+		IPv6Enable: true,
+	})
+	common.Must(err)
+	elapsed = time.Since(starttime)
+	if elapsed > 10*time.Millisecond {
+		t.Error("expected cached response, but took too long: ", elapsed)
+	}
+	if len(ips) == 0 {
+		t.Error("expect some ips, but got 0")
 	}
 }
 
