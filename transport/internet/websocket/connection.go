@@ -24,14 +24,14 @@ type connection struct {
 
 func NewConnection(conn *websocket.Conn, remoteAddr net.Addr, extraReader io.Reader, heartbeatPeriod uint32) *connection {
 	if heartbeatPeriod != 0 {
-		go func() {
-			for {
-				time.Sleep(time.Duration(heartbeatPeriod) * time.Second)
-				if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Time{}); err != nil {
-					break
-				}
+		dur := time.Duration(heartbeatPeriod) * time.Second
+		var timer *time.Timer
+		timer = time.AfterFunc(dur, func() {
+			if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Time{}); err != nil {
+				return
 			}
-		}()
+			timer.Reset(dur)
+		})
 	}
 
 	return &connection{
