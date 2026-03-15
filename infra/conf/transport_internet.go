@@ -690,7 +690,9 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 		if c.SpiderX[0] != '/' {
 			return nil, errors.New(`invalid "spiderX": `, c.SpiderX)
 		}
-		config.SpiderY = make([]int64, 10)
+		config.SpiderY = make([]int64, 12)
+		config.SpiderY[10] = 10000 // ms
+		config.SpiderY[11] = 10000 // ms
 		u, _ := url.Parse(c.SpiderX)
 		q := u.Query()
 		parse := func(param string, index int) {
@@ -706,11 +708,12 @@ func (c *REALITYConfig) Build() (proto.Message, error) {
 			}
 			q.Del(param)
 		}
-		parse("p", 0) // padding
-		parse("c", 2) // concurrency
-		parse("t", 4) // times
-		parse("i", 6) // interval
-		parse("r", 8) // return
+		parse("p", 0)  // padding
+		parse("c", 2)  // concurrency
+		parse("t", 4)  // times
+		parse("i", 6)  // interval
+		parse("r", 8)  // return
+		parse("o", 10) // timeout
 		u.RawQuery = q.Encode()
 		config.SpiderX = u.String()
 		config.ServerName = c.ServerName

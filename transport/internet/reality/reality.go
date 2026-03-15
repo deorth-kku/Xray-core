@@ -235,6 +235,10 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 				if req == nil {
 					return
 				}
+				timeout := time.Duration(crypto.RandBetween(config.SpiderY[10], config.SpiderY[11])) * time.Millisecond
+				spiderctx, cancel := context.WithTimeout(context.Background(), timeout)
+				defer cancel()
+				req = req.WithContext(spiderctx)                 // 吔屎啦RPRX
 				req.Header.Set("User-Agent", fingerprint.Client) // TODO: User-Agent map
 				if first && config.Show {
 					fmt.Printf("REALITY localAddr: %v\treq.UserAgent(): %v\n", localAddr, req.UserAgent())
@@ -283,7 +287,8 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 			// Do not close the connection
 		}()
 		time.Sleep(time.Duration(crypto.RandBetween(config.SpiderY[8], config.SpiderY[9])) * time.Millisecond) // return
-		return nil, errors.New("REALITY: processed invalid connection").AtWarning()
+		err = errors.New("REALITY: processed invalid connection").AtWarning()
+		goto ReturnErr
 	}
 	return uConn, nil
 ReturnErr:
