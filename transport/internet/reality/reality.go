@@ -195,6 +195,7 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 	if !uConn.Verified {
 		errors.LogError(ctx, "REALITY: received real certificate (potential MITM or redirection)")
 		go func() {
+			defer uConn.Close()
 			client := &http.Client{
 				Transport: &http2.Transport{
 					DialTLSContext: func(ctx context.Context, network, addr string, cfg *gotls.Config) (net.Conn, error) {
@@ -218,7 +219,8 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 			}
 			firstURL := string(prefix) + getPathLocked(paths)
 			maps.Unlock()
-			get := func(first bool) {
+			first := true
+			get := func() {
 				var (
 					req  *http.Request
 					resp *http.Response
@@ -279,16 +281,20 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 					}
 				}
 			}
-			get(true)
-			concurrency := int(crypto.RandBetween(config.SpiderY[2], config.SpiderY[3]))
-			for i := 0; i < concurrency; i++ {
-				go get(false)
+			get()
+			first = false
+			concurrency := crypto.RandBetween(config.SpiderY[2], config.SpiderY[3])
+			if concurrency == 0 {
+				return
 			}
-			// Do not close the connection
+			var wg sync.WaitGroup
+			for range concurrency {
+				wg.Go(get)
+			}
+			wg.Wait()
 		}()
 		time.Sleep(time.Duration(crypto.RandBetween(config.SpiderY[8], config.SpiderY[9])) * time.Millisecond) // return
-		err = errors.New("REALITY: processed invalid connection").AtWarning()
-		goto ReturnErr
+		return nil, errors.New("REALITY: processed invalid connection").AtWarning()
 	}
 	return uConn, nil
 ReturnErr:
