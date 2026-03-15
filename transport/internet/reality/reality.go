@@ -293,7 +293,9 @@ func UClient(c net.Conn, config *Config, ctx context.Context, dest net.Destinati
 			}
 			wg.Wait()
 		}()
-		time.Sleep(time.Duration(crypto.RandBetween(config.SpiderY[8], config.SpiderY[9])) * time.Millisecond) // return
+		retctx, cancel := context.WithTimeout(ctx, time.Duration(crypto.RandBetween(config.SpiderY[8], config.SpiderY[9]))*time.Millisecond)
+		defer cancel()
+		<-retctx.Done()
 		return nil, errors.New("REALITY: processed invalid connection").AtWarning()
 	}
 	return uConn, nil
