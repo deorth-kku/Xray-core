@@ -35,6 +35,7 @@ type Outbound struct {
 	server    net.Destination
 	method    shadowsocks.Method
 	uotClient *uot.Client
+	userLevel uint32
 }
 
 func NewClient(ctx context.Context, config *ClientConfig) (*Outbound, error) {
@@ -45,6 +46,7 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Outbound, error) {
 			Port:    net.Port(config.Port),
 			Network: net.Network_TCP,
 		},
+		userLevel: config.UserLevel,
 	}
 	if C.Contains(shadowaead_2022.List, config.Method) {
 		if config.Key == "" {
@@ -110,15 +112,14 @@ func (o *Outbound) Process(ctx context.Context, link *transport.Link, dialer int
 	}
 
 	if session.TimeoutOnlyFromContext(ctx) {
-		i := core.MustFromContext(ctx)
-		policyManager, ok := i.GetFeature(policy.ManagerType()).(policy.Manager)
+		policyManager, ok := core.GetFeatureFromContext[policy.Manager](ctx)
 		if !ok {
 			errors.LogError(ctx, "cannot find policyManger for ss2022")
 			panic("cannot find policyManger for ss2022")
 		}
-		sessionPolicy := policyManager.ForLevel(0)
+		sessionPolicy := policyManager.ForLevel(o.userLevel)
 		var cancel func()
-		ctx, cancel = context.WithCancel(context.Background())
+		ctx, cancel = context.WithCancel(o.ctx)
 		act := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 		inboundConn = &ActivityConn{inboundConn, act}
 	}

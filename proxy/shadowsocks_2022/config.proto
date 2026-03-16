@@ -51,4 +51,5 @@ message ClientConfig {
   string key = 4;
   bool udp_over_tcp = 5;
   uint32 udp_over_tcp_version = 6;
+  uint32 user_level = 7;
 }

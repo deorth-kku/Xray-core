@@ -224,6 +224,7 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 			config.Key = server.Password
 			config.UdpOverTcp = server.UoT
 			config.UdpOverTcpVersion = uint32(server.UoTVersion)
+			config.UserLevel = uint32(server.Level)
 			return config, nil
 		}
 	}
