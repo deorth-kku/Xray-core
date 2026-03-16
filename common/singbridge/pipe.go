@@ -6,7 +6,9 @@ import (
 	"net"
 
 	"github.com/sagernet/sing/common/bufio"
+	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/buf"
+	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/transport"
 )
 
@@ -30,7 +32,11 @@ type PipeConnWrapper struct {
 }
 
 func (w *PipeConnWrapper) Close() error {
-	return nil
+	// Only break the pipe-side read/write. Do not close the underlying Conn
+	// to avoid unexpected shutdown of shared connections.
+	err1 := common.Interrupt(w.R)
+	err2 := common.Close(w.W)
+	return errors.Combine(err1, err2)
 }
 
 func (w *PipeConnWrapper) Read(b []byte) (n int, err error) {
