@@ -162,6 +162,11 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 	if streamSettings.ProtocolSettings.(*Config).Xmux != nil {
 		keepAlivePeriod = time.Duration(streamSettings.ProtocolSettings.(*Config).Xmux.HKeepAlivePeriod) * time.Second
 	}
+	var respHeaderTimeout time.Duration
+	if streamSettings.SocketSettings != nil && streamSettings.SocketSettings.TcpUserTimeout > 0 {
+		// TCP_USER_TIMEOUT is in milliseconds; reuse it to bound HTTP header wait.
+		respHeaderTimeout = time.Duration(streamSettings.SocketSettings.TcpUserTimeout) * time.Millisecond
+	}
 
 	var transport http.RoundTripper
 
@@ -178,8 +183,9 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 			// these two are defaults of quic-go/http3. the default of quic-go (no
 			// http3) is different, so it is hardcoded here for clarity.
 			// https://github.com/quic-go/quic-go/blob/b8ea5c798155950fb5bbfdd06cad1939c9355878/http3/client.go#L36-L39
-			MaxIncomingStreams: -1,
-			KeepAlivePeriod:    keepAlivePeriod,
+			MaxIncomingStreams:   -1,
+			KeepAlivePeriod:      keepAlivePeriod,
+			HandshakeIdleTimeout: respHeaderTimeout,
 		}
 		transport = &http3.Transport{
 			QUICConfig: quicConfig,
@@ -241,6 +247,7 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 			},
 			IdleConnTimeout: net.ConnIdleTimeout,
 			ReadIdleTimeout: keepAlivePeriod,
+			PingTimeout:     respHeaderTimeout,
 		}
 	} else {
 		httpDialContext := func(ctxInner context.Context, network string, addr string) (net.Conn, error) {
@@ -253,7 +260,8 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 			IdleConnTimeout: net.ConnIdleTimeout,
 			// chunked transfer download with KeepAlives is buggy with
 			// http.Client and our custom dial context.
-			DisableKeepAlives: true,
+			DisableKeepAlives:     true,
+			ResponseHeaderTimeout: respHeaderTimeout,
 		}
 	}
 
