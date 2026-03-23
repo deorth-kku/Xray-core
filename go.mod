@@ -1,6 +1,6 @@
 module github.com/xtls/xray-core
 
-go 1.25
+go 1.25.5
 
 require (
 	github.com/cloudflare/circl v1.6.1
@@ -28,7 +28,7 @@ require (
 	golang.zx2c4.com/wireguard v0.0.0-20231211153847-12269c276173
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.9
-	gvisor.dev/gvisor v0.0.0-20250428193742-2d800c3129d5
+	gvisor.dev/gvisor v0.0.0-20260224225140-573d5e7127a8
 	h12.io/socks v1.0.3
 	lukechampine.com/blake3 v1.4.1
 )
@@ -47,12 +47,13 @@ require (
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.uber.org/mock v0.5.0 // indirect
-	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
+	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
-	golang.org/x/time v0.7.0 // indirect
-	golang.org/x/tools v0.36.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/tools v0.37.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
