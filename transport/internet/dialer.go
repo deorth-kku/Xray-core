@@ -106,6 +106,13 @@ func LookupForIP(ctx context.Context, domain string, strategy DomainStrategy, lo
 	return ips, err
 }
 
+type funcCloser func()
+
+func (f funcCloser) Close() error {
+	f()
+	return nil
+}
+
 func redirect(ctx context.Context, dst net.Destination, obt string, h outbound.Handler) net.Conn {
 	errors.LogInfo(ctx, "redirecting request "+dst.String()+" to "+obt)
 	outbounds := session.OutboundsFromContext(ctx)
@@ -118,7 +125,8 @@ func redirect(ctx context.Context, dst net.Destination, obt string, h outbound.H
 	ur, uw := pipe.New(pipe.OptionsFromContext(ctx)...)
 	dr, dw := pipe.New(pipe.OptionsFromContext(ctx)...)
 
-	go h.Dispatch(context.WithoutCancel(ctx), &transport.Link{Reader: ur, Writer: dw})
+	ctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+	go h.Dispatch(ctx, &transport.Link{Reader: ur, Writer: dw})
 	var readerOpt cnc.ConnectionOption
 	if dst.Network == net.Network_TCP {
 		readerOpt = cnc.ConnectionOutputMulti(dr)
@@ -128,7 +136,7 @@ func redirect(ctx context.Context, dst net.Destination, obt string, h outbound.H
 	nc := cnc.NewConnection(
 		cnc.ConnectionInputMulti(uw),
 		readerOpt,
-		cnc.ConnectionOnClose(common.ChainedClosable{uw, dw}),
+		cnc.ConnectionOnClose(common.ChainedClosable{uw, dw, funcCloser(cancel)}),
 	)
 	return nc
 
