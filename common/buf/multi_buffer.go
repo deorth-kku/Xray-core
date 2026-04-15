@@ -2,6 +2,7 @@ package buf
 
 import (
 	"io"
+	"sync"
 
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
@@ -269,11 +270,19 @@ func (mb MultiBuffer) String() string {
 
 // MultiBufferContainer is a ReadWriteCloser wrapper over MultiBuffer.
 type MultiBufferContainer struct {
+	mu sync.Mutex
 	MultiBuffer
+	closed bool
 }
 
 // Read implements io.Reader.
 func (c *MultiBufferContainer) Read(b []byte) (int, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return 0, io.EOF
+	}
 	if c.MultiBuffer.IsEmpty() {
 		return 0, io.EOF
 	}
@@ -285,6 +294,9 @@ func (c *MultiBufferContainer) Read(b []byte) (int, error) {
 
 // ReadMultiBuffer implements Reader.
 func (c *MultiBufferContainer) ReadMultiBuffer() (MultiBuffer, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	mb := c.MultiBuffer
 	c.MultiBuffer = nil
 	return mb, nil
@@ -292,12 +304,24 @@ func (c *MultiBufferContainer) ReadMultiBuffer() (MultiBuffer, error) {
 
 // Write implements io.Writer.
 func (c *MultiBufferContainer) Write(b []byte) (int, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return 0, io.ErrClosedPipe
+	}
 	c.MultiBuffer = MergeBytes(c.MultiBuffer, b)
 	return len(b), nil
 }
 
 // WriteMultiBuffer implements Writer.
 func (c *MultiBufferContainer) WriteMultiBuffer(b MultiBuffer) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return io.ErrClosedPipe
+	}
 	mb, _ := MergeMulti(c.MultiBuffer, b)
 	c.MultiBuffer = mb
 	return nil
@@ -305,6 +329,13 @@ func (c *MultiBufferContainer) WriteMultiBuffer(b MultiBuffer) error {
 
 // Close implements io.Closer.
 func (c *MultiBufferContainer) Close() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return nil
+	}
+	c.closed = true
 	c.MultiBuffer = ReleaseMulti(c.MultiBuffer)
 	return nil
 }

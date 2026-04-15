@@ -3,11 +3,16 @@ package buf_test
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"os"
+	"runtime"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	_ "github.com/xtls/xray-core/app/dns"
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common"
 	. "github.com/xtls/xray-core/common/buf"
 )
@@ -190,11 +195,72 @@ func TestCompactWithConsumed(t *testing.T) {
 
 	mb := MultiBuffer{a, b}
 	cmb := Compact(mb)
-	mbc := &MultiBufferContainer{mb}
+	mbc := &MultiBufferContainer{MultiBuffer: mb}
 	mbc.Read(make([]byte, 8190))
 
 	if w := cmb.String(); w != "bb" {
 		t.Error("unexpected Compact result ", w)
+	}
+}
+
+func TestMultiBufferContainerConcurrentReadClose(t *testing.T) {
+	t.Parallel()
+
+	for i := 0; i < 200; i++ {
+		payload := bytes.Repeat([]byte("a"), 128)
+		container := &MultiBufferContainer{
+			MultiBuffer: MergeBytes(nil, payload),
+		}
+
+		var wg sync.WaitGroup
+		errCh := make(chan error, 2)
+		startClose := make(chan struct{})
+
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					errCh <- fmt.Errorf("read panicked: %v", r)
+				}
+			}()
+
+			buf := make([]byte, 24)
+			for {
+				_, err := container.Read(buf)
+				if err == io.EOF {
+					return
+				}
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				select {
+				case <-startClose:
+				default:
+					close(startClose)
+				}
+				runtime.Gosched()
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			<-startClose
+			if err := container.Close(); err != nil {
+				errCh <- err
+			}
+		}()
+
+		wg.Wait()
+		close(errCh)
+
+		for err := range errCh {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
 }
 
