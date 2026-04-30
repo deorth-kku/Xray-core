@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"unsafe"
 )
 
@@ -62,6 +63,21 @@ func NewMphMatcherGroup() *MphMatcherGroup {
 	}
 }
 
+var (
+	matchers     = make(map[string]Matcher)
+	matchersLock sync.RWMutex
+)
+
+func OverrideRegexP(expr string, m Matcher) {
+	matchersLock.Lock()
+	defer matchersLock.Unlock()
+	if m == nil {
+		delete(matchers, expr)
+	} else {
+		matchers[expr] = m
+	}
+}
+
 // AddPattern adds a pattern to MphMatcherGroup
 func (g *MphMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
 	switch t {
@@ -74,12 +90,18 @@ func (g *MphMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
 		pattern = strings.ToLower(pattern)
 		g.AddFullOrDomainPattern(pattern, t)
 	case Regex:
-		r, err := regexp.Compile(pattern)
-		if err != nil {
-			return 0, err
+		matchersLock.RLock()
+		defer matchersLock.RUnlock()
+		m, ok := matchers[pattern]
+		if !ok {
+			r, err := regexp.Compile(pattern)
+			if err != nil {
+				return 0, err
+			}
+			m = &regexMatcher{pattern: r}
 		}
 		g.otherMatchers = append(g.otherMatchers, matcherEntry{
-			m:  &regexMatcher{pattern: r},
+			m:  m,
 			id: g.count,
 		})
 	default:

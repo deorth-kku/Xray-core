@@ -6,7 +6,7 @@ import (
 	go_errors "errors"
 	"fmt"
 	"iter"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 
@@ -299,9 +299,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	// Priority domain matching
 	hasMatch := false
 	MatchSlice := s.domainMatcher.Match(domain)
-	sort.Slice(MatchSlice, func(i, j int) bool {
-		return MatchSlice[i] < MatchSlice[j]
-	})
+	slices.Sort(MatchSlice)
 	for _, match := range MatchSlice {
 		info := s.matcherInfos[match]
 		client := s.clients[info.clientIdx]
