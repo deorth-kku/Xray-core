@@ -34,7 +34,7 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	if r.Tag == "" {
 		return nil, errors.New("empty balancer tag")
 	}
-	if len(r.Selectors) == 0 {
+	if len(r.Selectors) == 0 && len(r.FallbackTag) == 0 {
 		return nil, errors.New("empty selector list")
 	}
 
