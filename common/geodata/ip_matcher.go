@@ -51,6 +51,10 @@ type ipBucket struct {
 	ips []net.IP
 }
 
+func NewHeuristicIPMatcher(ipset *IPSet, reverse bool) *HeuristicIPMatcher {
+	return &HeuristicIPMatcher{ipset, reverse}
+}
+
 // Match implements IPMatcher.
 func (m *HeuristicIPMatcher) Match(ip net.IP) bool {
 	ipx, ok := netipx.FromStdIP(ip)
