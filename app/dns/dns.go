@@ -6,6 +6,7 @@ import (
 	go_errors "errors"
 	"fmt"
 	"iter"
+	"slices"
 	"strings"
 	"sync"
 
@@ -274,9 +275,9 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, uint32, er
 	return s.QueryIP(s.ctx, domain, option)
 }
 
-func (s *DNS) RangeResolver(domain string) iter.Seq[Server] {
+func (s *DNS) RangeResolver(domain string) iter.Seq[dns.Resolver] {
 	clients := s.sortClients(domain)
-	return func(yield func(Server) bool) {
+	return func(yield func(dns.Resolver) bool) {
 		for _, v := range clients {
 			if !yield(v) {
 				return
@@ -295,7 +296,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	hasMatch := false
 	if s.domainMatcher != nil {
 		matchSlice := s.domainMatcher.Match(strings.ToLower(domain))
-		slice.Sort(matchSlice)
+		slices.Sort(matchSlice)
 		for _, match := range matchSlice {
 			info := s.matcherInfos[match]
 			client := s.clients[info.clientIdx]

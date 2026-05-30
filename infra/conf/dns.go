@@ -17,21 +17,6 @@ import (
 )
 
 type NameServerConfig struct {
-<<<<<<< HEAD
-	Address       *Address   `json:"address,omitzero"`
-	ClientIP      *Address   `json:"clientIp,omitzero"`
-	Port          uint16     `json:"port,omitzero"`
-	SkipFallback  bool       `json:"skipFallback,omitzero"`
-	Domains       []string   `json:"domains,omitzero"`
-	ExpectedIPs   StringList `json:"expectedIPs,omitzero"`
-	ExpectIPs     StringList `json:"expectIPs,omitzero"`
-	QueryStrategy string     `json:"queryStrategy,omitzero"`
-	Tag           string     `json:"tag,omitzero"`
-	TimeoutMs     uint64     `json:"timeoutMs,omitzero"`
-	DisableCache  bool       `json:"disableCache,omitzero"`
-	FinalQuery    bool       `json:"finalQuery,omitzero"`
-	UnexpectedIPs StringList `json:"unexpectedIPs,omitzero"`
-=======
 	Address         *Address   `json:"address"`
 	ClientIP        *Address   `json:"clientIp"`
 	Port            uint16     `json:"port"`
@@ -47,7 +32,6 @@ type NameServerConfig struct {
 	ServeExpiredTTL *uint32    `json:"serveExpiredTTL"`
 	FinalQuery      bool       `json:"finalQuery"`
 	UnexpectedIPs   StringList `json:"unexpectedIPs"`
->>>>>>> XTLS-main
 }
 
 // UnmarshalJSON implements encoding/json.Unmarshaler.UnmarshalJSON
@@ -174,17 +158,6 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 
 // DNSConfig is a JSON serializable object for dns.Config
 type DNSConfig struct {
-<<<<<<< HEAD
-	Servers                []*NameServerConfig `json:"servers,omitzero"`
-	Hosts                  *HostsWrapper       `json:"hosts,omitzero"`
-	ClientIP               *Address            `json:"clientIp,omitzero"`
-	Tag                    string              `json:"tag,omitzero"`
-	QueryStrategy          string              `json:"queryStrategy,omitzero"`
-	DisableCache           bool                `json:"disableCache,omitzero"`
-	DisableFallback        bool                `json:"disableFallback,omitzero"`
-	DisableFallbackIfMatch bool                `json:"disableFallbackIfMatch,omitzero"`
-	UseSystemHosts         bool                `json:"useSystemHosts,omitzero"`
-=======
 	Servers                []*NameServerConfig `json:"servers"`
 	Hosts                  *HostsWrapper       `json:"hosts"`
 	ClientIP               *Address            `json:"clientIp"`
@@ -197,7 +170,6 @@ type DNSConfig struct {
 	DisableFallbackIfMatch bool                `json:"disableFallbackIfMatch"`
 	EnableParallelQuery    bool                `json:"enableParallelQuery"`
 	UseSystemHosts         bool                `json:"useSystemHosts"`
->>>>>>> XTLS-main
 }
 
 type HostAddress struct {

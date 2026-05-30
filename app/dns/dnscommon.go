@@ -209,7 +209,7 @@ func doHttps(ctx context.Context, r roundTripper, domain string, ipcache *CacheC
 			for _, kv := range record.Value {
 				switch kv.Key() {
 				case dns.SVCB_IPV4HINT:
-					ipcache.updateIP(&dnsRequest{
+					ipcache.updateRecord(&dnsRequest{
 						reqType: dnsmessage.TypeA,
 						domain:  domain,
 						start:   starttime,
@@ -221,58 +221,7 @@ func doHttps(ctx context.Context, r roundTripper, domain string, ipcache *CacheC
 						RCode:  dnsmessage.RCode(rsp.Rcode),
 					})
 				case dns.SVCB_IPV6HINT:
-					ipcache.updateIP(&dnsRequest{
-						reqType: dnsmessage.TypeAAAA,
-						domain:  domain,
-						start:   starttime,
-						expire:  expire,
-					}, &IPRecord{
-						ReqID:  rsp.Id,
-						IP:     kv.(*dns.SVCBIPv6Hint).Hint,
-						Expire: expire,
-						RCode:  dnsmessage.RCode(rsp.Rcode),
-					})
-				}
-			}
-		}
-		return records, ttldur, err
-	})
-}
-
-func doHttps(ctx context.Context, r roundTripper, domain string, ipcache *CacheController, echCache *cacheTable[string, []*dns.HTTPS]) ([]*dns.HTTPS, error) {
-	if echCache == nil {
-		return r.LookupHTTPS(ctx, domain)
-	}
-	domain = Fqdn(domain)
-	return echCache.Compute(ctx, domain, func(ctx context.Context) ([]*dns.HTTPS, time.Duration, error) {
-		starttime := time.Now()
-		records, rsp, err := r.lookupHTTPSRaw(ctx, domain)
-		if err == dns_feature.ErrEmptyResponse {
-			// If the response is empty, we still want to cache it to avoid repeated queries for non-existent records.
-			return nil, time.Second * dns_feature.DefaultTTL, err
-		}
-		var ttldur time.Duration
-		for _, record := range records {
-			if record.Hdr.Ttl != 0 {
-				ttldur = time.Duration(record.Hdr.Ttl) * time.Second
-			}
-			expire := time.Now().Add(ttldur)
-			for _, kv := range record.Value {
-				switch kv.Key() {
-				case dns.SVCB_IPV4HINT:
-					ipcache.updateIP(&dnsRequest{
-						reqType: dnsmessage.TypeA,
-						domain:  domain,
-						start:   starttime,
-						expire:  expire,
-					}, &IPRecord{
-						ReqID:  rsp.Id,
-						IP:     kv.(*dns.SVCBIPv4Hint).Hint,
-						Expire: expire,
-						RCode:  dnsmessage.RCode(rsp.Rcode),
-					})
-				case dns.SVCB_IPV6HINT:
-					ipcache.updateIP(&dnsRequest{
+					ipcache.updateRecord(&dnsRequest{
 						reqType: dnsmessage.TypeAAAA,
 						domain:  domain,
 						start:   starttime,

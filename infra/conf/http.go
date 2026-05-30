@@ -23,16 +23,10 @@ func (v *HTTPAccount) Build() *http.Account {
 }
 
 type HTTPServerConfig struct {
-<<<<<<< HEAD
-	Accounts    []*HTTPAccount `json:"accounts,omitzero"`
-	Transparent bool           `json:"allowTransparent,omitzero"`
-	UserLevel   uint32         `json:"userLevel,omitzero"`
-=======
 	Users       []*HTTPAccount `json:"users"`
 	Accounts    []*HTTPAccount `json:"accounts"`
 	Transparent bool           `json:"allowTransparent"`
 	UserLevel   uint32         `json:"userLevel"`
->>>>>>> XTLS-main
 }
 
 func (c *HTTPServerConfig) Build() (proto.Message, error) {

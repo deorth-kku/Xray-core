@@ -112,14 +112,9 @@ type TrojanUserConfig struct {
 
 // TrojanServerConfig is Inbound configuration
 type TrojanServerConfig struct {
-<<<<<<< HEAD
-	Clients   []*TrojanUserConfig      `json:"clients,omitzero"`
-	Fallbacks []*TrojanInboundFallback `json:"fallbacks,omitzero"`
-=======
 	Users     []*TrojanUserConfig      `json:"users"`
 	Clients   []*TrojanUserConfig      `json:"clients"`
 	Fallbacks []*TrojanInboundFallback `json:"fallbacks"`
->>>>>>> XTLS-main
 }
 
 // Build implements Buildable

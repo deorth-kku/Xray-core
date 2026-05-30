@@ -1,6 +1,7 @@
 package dns_test
 
 import (
+	"context"
 	"net/url"
 	"testing"
 	"time"
@@ -20,13 +21,8 @@ func TestDOHNameServer(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-<<<<<<< HEAD
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
-=======
 	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
->>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
@@ -42,13 +38,8 @@ func TestDOHNameServerWithCache(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-<<<<<<< HEAD
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
-=======
 	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
->>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
@@ -59,7 +50,7 @@ func TestDOHNameServerWithCache(t *testing.T) {
 		t.Error("expect some ips, but got 0")
 	}
 
-	ctx2, cancel := withTimeout(t, 5*time.Second)
+	ctx2, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	ips2, _, err := s.QueryIP(ctx2, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
@@ -75,13 +66,8 @@ func TestDOHNameServerWithIPv4Override(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-<<<<<<< HEAD
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
-=======
 	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
->>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: false,
@@ -103,13 +89,8 @@ func TestDOHNameServerWithIPv6Override(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-<<<<<<< HEAD
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
-=======
 	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
->>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: false,
 		IPv6Enable: true,
@@ -131,8 +112,8 @@ func TestDOHNameServer65(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	rec, err := s.LookupHTTPS(ctx, "cloudflare-ech.com")
 	common.Must(err)
@@ -167,8 +148,8 @@ func TestDOHNameServerTXT(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	txts, err := s.LookupTXT(ctx, "google.com")
 	cancel()
 	common.Must(err)
@@ -181,8 +162,8 @@ func TestDOHNameServerSRV(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
-	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
-	ctx, cancel := withTimeout(t, 5*time.Second)
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	cname, srvs, err := s.LookupSRV(ctx, "xmpp-server", "tcp", "jabber.org")
 	cancel()
 	common.Must(err)

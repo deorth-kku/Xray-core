@@ -195,7 +195,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			tryctx, cancel := context.WithCancel(ctx)
 			timer := time.AfterFunc(sessionPolicy.Timeouts.Handshake, cancel)
 			defer timer.Stop()
-			conn, err = dialer.Dial(ctx, rec.Destination)
+			conn, err = dialer.Dial(tryctx, rec.Destination)
 			if err != nil {
 				return err
 			}

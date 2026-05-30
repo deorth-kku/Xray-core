@@ -80,10 +80,6 @@ type Handler struct {
 
 func (h *Handler) Init(config *Config, _ dns.Client, policyManager policy.Manager) error {
 	h.timeout = policyManager.ForLevel(config.UserLevel).Timeouts.ConnectionIdle
-	
-	if v, ok := dnsClient.(ownLinkVerifier); ok {
-		h.ownLinkVerifier = v
-	}
 
 	if config.RewriteServer != nil {
 		h.rewriteServer = config.RewriteServer.AsDestination()
@@ -111,7 +107,11 @@ func (h *Handler) Init(config *Config, _ dns.Client, policyManager policy.Manage
 	return nil
 }
 
-func isOwnLink(ctx context.Context, d dns.Client) bool {
+func (*Handler) isOwnLink(ctx context.Context) bool {
+	d, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
+	if !ok {
+		return false
+	}
 	v, ok := d.(ownLinkVerifier)
 	if ok {
 		return v != nil && v.IsOwnLink(ctx)
@@ -239,32 +239,42 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 
 			timer.Update()
 
-			d, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
-			if !ok {
-				return dns.ErrNoDNS
-			}
-
 			if h.isOwnLink(ctx) {
 				if err := connWriter.WriteMessage(b); err != nil {
 					return err
 				}
-				if isIPQuery {
-					b.Release()
-					go h.handleIPQuery(id, qType, domain, writer, timer)
-					continue
+				continue
+			}
+
+			id, qType, domain, ok := parseQuery(b.Bytes())
+			if !ok {
+				b.Release()
+				continue
+			}
+
+			switch h.applyRules(qType, domain) {
+			case RuleAction_Drop:
+				b.Release()
+				errors.LogInfo(ctx, "blocked type ", qType, " query for domain ", domain)
+			case RuleAction_Reject:
+				b.Release()
+				errors.LogInfo(ctx, "rejected type ", qType, " query for domain ", domain)
+				if err := h.rejectNonIPQuery(id, qType, domain, writer); err != nil {
+					return err
 				}
-				if h.nonIPQuery == "drop" {
-					b.Release()
-					continue
-				}
-				if h.nonIPQuery == "reject" {
-					b.Release()
-					err := h.rejectNonIPQuery(id, qType, domain, writer)
-					if err != nil {
+			case RuleAction_Hijack:
+				b.Release()
+				if qType != dnsmessage.TypeA && qType != dnsmessage.TypeAAAA {
+					errors.LogError(ctx, "can only hijack A/AAAA records")
+					if err := h.rejectNonIPQuery(id, qType, domain, writer); err != nil {
 						return err
 					}
 				} else {
-					go h.handleIPQuery(id, qType, domain, writer, timer)
+					d, ok := core.GetFeatureFromContext[dns.ClientResolver](ctx)
+					if !ok {
+						return dns.ErrNoDNS
+					}
+					go h.handleIPQuery(ctx, d, id, qType, domain, writer, timer)
 				}
 			case RuleAction_Direct:
 				if err := connWriter.WriteMessage(b); err != nil {

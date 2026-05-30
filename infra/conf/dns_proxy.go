@@ -58,14 +58,6 @@ func (c *DNSOutboundRuleConfig) Build() (*dns.DNSRuleConfig, error) {
 }
 
 type DNSOutboundConfig struct {
-<<<<<<< HEAD
-	Network    Network  `json:"network,omitzero"`
-	Address    *Address `json:"address,omitzero"`
-	Port       uint16   `json:"port,omitzero"`
-	UserLevel  uint32   `json:"userLevel,omitzero"`
-	NonIPQuery string   `json:"nonIPQuery,omitzero"`
-	BlockTypes []int32  `json:"blockTypes,omitzero"`
-=======
 	RewriteNetwork Network                  `json:"rewriteNetwork"`
 	RewriteAddress *Address                 `json:"rewriteAddress"`
 	RewritePort    uint16                   `json:"rewritePort"`
@@ -76,7 +68,6 @@ type DNSOutboundConfig struct {
 	Rules          []*DNSOutboundRuleConfig `json:"rules"`
 	NonIPQuery     *string                  `json:"nonIPQuery"` // todo: remove legacy
 	BlockTypes     *[]int32                 `json:"blockTypes"` // todo: remove legacy
->>>>>>> XTLS-main
 }
 
 func (c *DNSOutboundConfig) Build() (proto.Message, error) {

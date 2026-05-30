@@ -26,11 +26,11 @@ type realmConnClient struct {
 	punchInterval time.Duration
 }
 
-func NewConnClient(config *Config, raw net.PacketConn) (net.PacketConn, error) {
+func NewConnClient(ctx context.Context, config *Config, raw net.PacketConn) (net.PacketConn, error) {
 	conn := &realmConnClient{
 		PacketConn: raw,
 
-		realmClient:   NewClient(config.Scheme, config.Host, config.Port, config.Token, config.TlsConfig),
+		realmClient:   NewClient(ctx, config.Scheme, config.Host, config.Port, config.Token, config.TlsConfig),
 		realmID:       config.ID,
 		stunServers:   config.StunServers,
 		stunTimeout:   defaultSTUNTimeout,

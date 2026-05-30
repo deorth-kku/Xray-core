@@ -51,17 +51,6 @@ var tcpHeaderLoader = NewJSONConfigLoader(ConfigCreatorCache{
 }, "type", "")
 
 type KCPConfig struct {
-<<<<<<< HEAD
-	Mtu             *uint32         `json:"mtu,omitzero"`
-	Tti             *uint32         `json:"tti,omitzero"`
-	UpCap           *uint32         `json:"uplinkCapacity,omitzero"`
-	DownCap         *uint32         `json:"downlinkCapacity,omitzero"`
-	Congestion      *bool           `json:"congestion,omitzero"`
-	ReadBufferSize  *uint32         `json:"readBufferSize,omitzero"`
-	WriteBufferSize *uint32         `json:"writeBufferSize,omitzero"`
-	HeaderConfig    json.RawMessage `json:"header,omitzero"`
-	Seed            *string         `json:"seed,omitzero"`
-=======
 	Mtu              *uint32 `json:"mtu"`
 	Tti              *uint32 `json:"tti"`
 	UpCap            *uint32 `json:"uplinkCapacity"`
@@ -71,7 +60,6 @@ type KCPConfig struct {
 
 	HeaderConfig json.RawMessage `json:"header"`
 	Seed         *string         `json:"seed"`
->>>>>>> XTLS-main
 }
 
 // Build implements Buildable.
@@ -220,22 +208,6 @@ func (c *HttpUpgradeConfig) Build() (proto.Message, error) {
 }
 
 type SplitHTTPConfig struct {
-<<<<<<< HEAD
-	Host                 string            `json:"host,omitzero"`
-	Path                 string            `json:"path,omitzero"`
-	Mode                 string            `json:"mode,omitzero"`
-	Headers              map[string]string `json:"headers,omitzero"`
-	XPaddingBytes        Int32Range        `json:"xPaddingBytes,omitzero"`
-	NoGRPCHeader         bool              `json:"noGRPCHeader,omitzero"`
-	NoSSEHeader          bool              `json:"noSSEHeader,omitzero"`
-	ScMaxEachPostBytes   Int32Range        `json:"scMaxEachPostBytes,omitzero"`
-	ScMinPostsIntervalMs Int32Range        `json:"scMinPostsIntervalMs,omitzero"`
-	ScMaxBufferedPosts   int64             `json:"scMaxBufferedPosts,omitzero"`
-	ScStreamUpServerSecs Int32Range        `json:"scStreamUpServerSecs,omitzero"`
-	Xmux                 XmuxConfig        `json:"xmux,omitzero"`
-	DownloadSettings     *StreamConfig     `json:"downloadSettings,omitzero"`
-	Extra                json.RawMessage   `json:"extra,omitzero"`
-=======
 	Host                 string            `json:"host"`
 	Path                 string            `json:"path"`
 	Mode                 string            `json:"mode"`
@@ -264,7 +236,6 @@ type SplitHTTPConfig struct {
 	Xmux                 XmuxConfig        `json:"xmux"`
 	DownloadSettings     *StreamConfig     `json:"downloadSettings"`
 	Extra                json.RawMessage   `json:"extra"`
->>>>>>> XTLS-main
 }
 
 type XmuxConfig struct {
@@ -1024,12 +995,6 @@ func (p TransportProtocol) Build() (string, error) {
 	case "kcp", "mkcp":
 		return "mkcp", nil
 	case "grpc":
-<<<<<<< HEAD
-		return "grpc", nil
-	case "ws", "websocket":
-		return "websocket", nil
-	case "httpupgrade":
-=======
 		errors.PrintNonRemovalDeprecatedFeatureWarning("gRPC transport (with unnecessary costs, etc.)", "XHTTP stream-up H2")
 		return "grpc", nil
 	case "ws", "websocket":
@@ -1037,7 +1002,6 @@ func (p TransportProtocol) Build() (string, error) {
 		return "websocket", nil
 	case "httpupgrade":
 		errors.PrintNonRemovalDeprecatedFeatureWarning("HTTPUpgrade transport (with ALPN http/1.1, etc.)", "XHTTP H2 & H3")
->>>>>>> XTLS-main
 		return "httpupgrade", nil
 	case "h2", "h3", "http":
 		return "", errors.PrintRemovedFeatureError("HTTP transport (without header padding, etc.)", "XHTTP stream-one H2 & H3")
@@ -1084,27 +1048,6 @@ func (h *HappyEyeballsConfig) UnmarshalJSON(data []byte) error {
 }
 
 type SocketConfig struct {
-<<<<<<< HEAD
-	Mark                  int32                  `json:"mark,omitzero"`
-	TFO                   interface{}            `json:"tcpFastOpen,omitzero"`
-	TProxy                string                 `json:"tproxy,omitzero"`
-	AcceptProxyProtocol   bool                   `json:"acceptProxyProtocol,omitzero"`
-	DomainStrategy        string                 `json:"domainStrategy,omitzero"`
-	DialerProxy           string                 `json:"dialerProxy,omitzero"`
-	TCPKeepAliveInterval  int32                  `json:"tcpKeepAliveInterval,omitzero"`
-	TCPKeepAliveIdle      int32                  `json:"tcpKeepAliveIdle,omitzero"`
-	TCPCongestion         string                 `json:"tcpCongestion,omitzero"`
-	TCPWindowClamp        int32                  `json:"tcpWindowClamp,omitzero"`
-	TCPMaxSeg             int32                  `json:"tcpMaxSeg,omitzero"`
-	Penetrate             bool                   `json:"penetrate,omitzero"`
-	TCPUserTimeout        int32                  `json:"tcpUserTimeout,omitzero"`
-	V6only                bool                   `json:"v6only,omitzero"`
-	Interface             string                 `json:"interface,omitzero"`
-	TcpMptcp              bool                   `json:"tcpMptcp,omitzero"`
-	CustomSockopt         []*CustomSockoptConfig `json:"customSockopt,omitzero"`
-	AddressPortStrategy   string                 `json:"addressPortStrategy,omitzero"`
-	HappyEyeballsSettings *HappyEyeballsConfig   `json:"happyEyeballs,omitzero"`
-=======
 	Mark                  int32                  `json:"mark"`
 	TFO                   interface{}            `json:"tcpFastOpen"`
 	TProxy                string                 `json:"tproxy"`
@@ -1125,7 +1068,6 @@ type SocketConfig struct {
 	AddressPortStrategy   string                 `json:"addressPortStrategy"`
 	HappyEyeballsSettings *HappyEyeballsConfig   `json:"happyEyeballs"`
 	TrustedXForwardedFor  []string               `json:"trustedXForwardedFor"`
->>>>>>> XTLS-main
 }
 
 // Build implements Buildable.
@@ -2057,23 +1999,6 @@ type FinalMask struct {
 }
 
 type StreamConfig struct {
-<<<<<<< HEAD
-	Address             *Address           `json:"address,omitzero"`
-	Port                uint16             `json:"port,omitzero"`
-	Network             *TransportProtocol `json:"network,omitzero"`
-	Security            string             `json:"security,omitzero"`
-	TLSSettings         *TLSConfig         `json:"tlsSettings,omitzero"`
-	REALITYSettings     *REALITYConfig     `json:"realitySettings,omitzero"`
-	RAWSettings         *TCPConfig         `json:"rawSettings,omitzero"`
-	TCPSettings         *TCPConfig         `json:"tcpSettings,omitzero"`
-	XHTTPSettings       *SplitHTTPConfig   `json:"xhttpSettings,omitzero"`
-	SplitHTTPSettings   *SplitHTTPConfig   `json:"splithttpSettings,omitzero"`
-	KCPSettings         *KCPConfig         `json:"kcpSettings,omitzero"`
-	GRPCSettings        *GRPCConfig        `json:"grpcSettings,omitzero"`
-	WSSettings          *WebSocketConfig   `json:"wsSettings,omitzero"`
-	HTTPUPGRADESettings *HttpUpgradeConfig `json:"httpupgradeSettings,omitzero"`
-	SocketSettings      *SocketConfig      `json:"sockopt,omitzero"`
-=======
 	Address             *Address           `json:"address"`
 	Port                uint16             `json:"port"`
 	Network             *TransportProtocol `json:"network"`
@@ -2091,7 +2016,6 @@ type StreamConfig struct {
 	HTTPUPGRADESettings *HttpUpgradeConfig `json:"httpupgradeSettings"`
 	HysteriaSettings    *HysteriaConfig    `json:"hysteriaSettings"`
 	SocketSettings      *SocketConfig      `json:"sockopt"`
->>>>>>> XTLS-main
 }
 
 // Build implements Buildable.

@@ -149,14 +149,6 @@ func getResolverWithFallback[T dns.Resolver](ctx context.Context, name string) T
 	return rs[0]
 }
 
-func getResolverWithFallback[T dns.Resolver](ctx context.Context, name string) T {
-	rs := core.GetResolverFromContext[T](ctx, name)
-	if len(rs) == 0 {
-		return dns.Resolver(localdns.New()).(T)
-	}
-	return rs[0]
-}
-
 func checkAddressPortStrategy(ctx context.Context, dest net.Destination, sockopt *SocketConfig) (*net.Destination, error) {
 	if sockopt.AddressPortStrategy == AddressPortStrategy_None {
 		return nil, nil

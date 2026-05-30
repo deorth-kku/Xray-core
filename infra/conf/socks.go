@@ -28,20 +28,12 @@ const (
 )
 
 type SocksServerConfig struct {
-<<<<<<< HEAD
-	AuthMethod string          `json:"auth,omitzero"`
-	Accounts   []*SocksAccount `json:"accounts,omitzero"`
-	UDP        bool            `json:"udp,omitzero"`
-	Host       *Address        `json:"ip,omitzero"`
-	UserLevel  uint32          `json:"userLevel,omitzero"`
-=======
 	AuthMethod string          `json:"auth"`
 	Users      []*SocksAccount `json:"users"`
 	Accounts   []*SocksAccount `json:"accounts"`
 	UDP        bool            `json:"udp"`
 	Host       *Address        `json:"ip"`
 	UserLevel  uint32          `json:"userLevel"`
->>>>>>> XTLS-main
 }
 
 func (v *SocksServerConfig) Build() (proto.Message, error) {

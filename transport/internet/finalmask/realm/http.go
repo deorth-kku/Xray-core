@@ -81,11 +81,11 @@ func (e *StatusError) Error() string {
 	return fmt.Sprintf("realm server returned %d", e.StatusCode)
 }
 
-func NewClient(scheme, host, port, token string, tlsConfig *tls.Config) *Client {
+func NewClient(ctx context.Context, scheme, host, port, token string, tlsConfig *tls.Config) *Client {
 	client := http.DefaultClient
 	if tlsConfig != nil {
 		tr := http.DefaultTransport.(*http.Transport).Clone()
-		tr.TLSClientConfig = tlsConfig.GetTLSConfig()
+		tr.TLSClientConfig = tlsConfig.GetTLSConfig(ctx)
 		client = &http.Client{Transport: tr}
 	}
 	return &Client{

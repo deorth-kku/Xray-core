@@ -59,12 +59,8 @@ func (c *VMessDefaultConfig) Build() *inbound.DefaultConfig {
 }
 
 type VMessInboundConfig struct {
-<<<<<<< HEAD
-	Users    []json.RawMessage   `json:"clients"`
-=======
 	Users    []json.RawMessage   `json:"users"`
 	Clients  []json.RawMessage   `json:"clients"`
->>>>>>> XTLS-main
 	Defaults *VMessDefaultConfig `json:"default"`
 }
 

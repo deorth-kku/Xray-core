@@ -55,11 +55,14 @@ func (c *DefaultDialerClient) IsClosed() bool {
 }
 
 func toReaderCloser(body io.Reader) io.ReadCloser {
-	rc, ok := body.(io.ReadCloser)
-	if !ok && body != nil {
-		rc = io.NopCloser(body)
+	switch v := body.(type) {
+	case nil:
+		return nil
+	case io.ReadCloser:
+		return v
+	default:
+		return io.NopCloser(body)
 	}
-	return rc
 }
 
 func NewRequestWithContext(ctx context.Context, method string, url url.URL, body io.Reader, header http.Header) *http.Request {
@@ -90,10 +93,11 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, sessi
 	}
 	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	stop := context.AfterFunc(ctx, cancel)
-	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader())
+	req := NewRequestWithContext(reqctx, method, url, nil, c.transportConfig.GetRequestHeader())
 	c.transportConfig.FillStreamRequest(req, sessionId, "")
 
-	wrc = &WaitReadCloser{Wait: make(chan struct{})}
+	wrc0 := &WaitReadCloser{Wait: make(chan struct{})}
+	wrc = wrc0
 	go func() {
 		resp, err := c.client.Do(req)
 		if err != nil {
@@ -124,11 +128,11 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, sessi
 	return
 }
 
-func (c *DefaultDialerClient) PostPacket(ctx context.Context, url string, sessionId string, seqStr string, payload buf.MultiBuffer) error {
+func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, sessionId string, seqStr string, payload buf.MultiBuffer) error {
 	method := c.transportConfig.GetNormalizedUplinkHTTPMethod()
 	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	stop := context.AfterFunc(ctx, cancel)
-	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader())
+	req := NewRequestWithContext(reqctx, method, url, nil, c.transportConfig.GetRequestHeader())
 	c.transportConfig.FillPacketRequest(req, sessionId, seqStr, payload)
 
 	if c.httpVersion != "1.1" {

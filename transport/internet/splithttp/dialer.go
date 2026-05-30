@@ -593,9 +593,10 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 				go func() {
 					err := httpClient.PostPacket(
 						ctx,
-						url.String(),
-						&buf.MultiBufferContainer{MultiBuffer: chunk},
-						int64(chunk.Len()),
+						requestURL,
+						sessionId,
+						seqStr,
+						chunk,
 					)
 					wroteRequest.Close()
 					if err != nil {

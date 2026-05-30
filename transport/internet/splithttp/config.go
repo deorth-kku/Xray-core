@@ -47,7 +47,6 @@ func (c *Config) GetNormalizedQuery() string {
 	return query
 }
 
-func (c *Config) GetRequestHeader(u url.URL) http.Header {
 func (c *Config) GetRequestHeader() http.Header {
 	header := http.Header{}
 	for k, v := range c.Headers {

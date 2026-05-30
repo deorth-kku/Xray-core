@@ -9,6 +9,7 @@ import (
 	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/common/serial"
 	"github.com/xtls/xray-core/common/task"
+	cfgproto "github.com/xtls/xray-core/infra/conf/cfgcommon/proto"
 	"github.com/xtls/xray-core/proxy/shadowsocks"
 	"github.com/xtls/xray-core/proxy/shadowsocks_2022"
 	"google.golang.org/protobuf/proto"
@@ -242,7 +243,7 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 			config.Key = server.Password
 			config.UdpOverTcp = server.UoT
 			config.UdpOverTcpVersion = uint32(server.UoTVersion)
-			config.UserLevel = uint32(server.Level)
+			cfgproto.WriteSizeCache(config, int32(server.Level))
 			return config, nil
 		}
 	}

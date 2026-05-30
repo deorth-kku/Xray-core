@@ -16,52 +16,6 @@ func (NoOpConnectionAuthenticator) Build() (proto.Message, error) {
 	return new(noop.ConnectionConfig), nil
 }
 
-<<<<<<< HEAD
-type SRTPAuthenticator struct{}
-
-func (SRTPAuthenticator) Build() (proto.Message, error) {
-	return new(srtp.Config), nil
-}
-
-type UTPAuthenticator struct{}
-
-func (UTPAuthenticator) Build() (proto.Message, error) {
-	return new(utp.Config), nil
-}
-
-type WechatVideoAuthenticator struct{}
-
-func (WechatVideoAuthenticator) Build() (proto.Message, error) {
-	return new(wechat.VideoConfig), nil
-}
-
-type WireguardAuthenticator struct{}
-
-func (WireguardAuthenticator) Build() (proto.Message, error) {
-	return new(wireguard.WireguardConfig), nil
-}
-
-type DNSAuthenticator struct {
-	Domain string `json:"domain,omitzero"`
-}
-
-func (v *DNSAuthenticator) Build() (proto.Message, error) {
-	config := new(dns.Config)
-	config.Domain = "www.baidu.com"
-	if len(v.Domain) > 0 {
-		config.Domain = v.Domain
-	}
-	return config, nil
-}
-
-type DTLSAuthenticator struct{}
-
-func (DTLSAuthenticator) Build() (proto.Message, error) {
-	return new(tls.PacketConfig), nil
-}
-
-=======
->>>>>>> XTLS-main
 type AuthenticatorRequest struct {
 	Version string                 `json:"version,omitzero"`
 	Method  string                 `json:"method,omitzero"`

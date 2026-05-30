@@ -50,36 +50,13 @@ func NewServerFromString(ctx context.Context, urlstr string, dialer DialContext,
 	u.Scheme = strings.ToLower(u.Scheme)
 	switch u.Scheme {
 	case "https":
-		return NewDoHNameServer(u, dialer, false, disableCache, clientIP), nil
+		return NewDoHNameServer(u, dialer, false, disableCache, false, 0, clientIP), nil
 	case "h2c":
-		return NewDoHNameServer(u, dialer, true, disableCache, clientIP), nil
+		return NewDoHNameServer(u, dialer, true, disableCache, false, 0, clientIP), nil
 	case "quic":
-		return NewQUICNameServer(u, disableCache, clientIP)
+		return NewQUICNameServer(u, disableCache, false, 0, clientIP)
 	case "tcp":
-		return NewTCPNameServer(u, dialer, disableCache, clientIP)
-	default:
-		return nil, errors.New("not supported schema ", u.Scheme)
-	}
-}
-
-// NewServerFromString only support a subset of url schemas of NewServer does
-//
-//go:linkname NewServerFromString github.com/xtls/xray-core/app/dns.NewServerFromString
-func NewServerFromString(ctx context.Context, urlstr string, dialer DialContext, disableCache bool, clientIP net.IP) (dns.FullResolver, error) {
-	u, err := url.Parse(urlstr)
-	if err != nil {
-		return nil, err
-	}
-	u.Scheme = strings.ToLower(u.Scheme)
-	switch u.Scheme {
-	case "https":
-		return NewDoHNameServer(u, dialer, false, disableCache, clientIP), nil
-	case "h2c":
-		return NewDoHNameServer(u, dialer, true, disableCache, clientIP), nil
-	case "quic":
-		return NewQUICNameServer(u, disableCache, clientIP)
-	case "tcp":
-		return NewTCPNameServer(u, dialer, disableCache, clientIP)
+		return NewTCPNameServer(u, dialer, disableCache, false, 0, clientIP)
 	default:
 		return nil, errors.New("not supported schema ", u.Scheme)
 	}

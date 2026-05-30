@@ -27,6 +27,7 @@ func (m *GeneralMessage) String() string {
 	return serial.Concat("[", m.Severity, "] ", m.Content)
 }
 
+// Deprecated: Use errors.Log instead
 // Record writes a message into log stream.
 func Record(msg Message) {
 	logHandler.Handle(msg)

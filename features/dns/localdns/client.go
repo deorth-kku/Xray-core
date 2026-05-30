@@ -2,21 +2,17 @@ package localdns
 
 import (
 	"context"
-	"time"
-
-	"context"
+	"net"
 	"syscall"
 	"time"
+	_ "unsafe"
 
 	"github.com/xtls/xray-core/common/errors"
-	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/features/dns"
-	"github.com/xtls/xray-core/transport/internet"
 )
 
 // Client is an implementation of dns.Client, which queries localhost for DNS.
 type Client struct {
-	d *net.Dialer
 	r *net.Resolver
 }
 
@@ -40,13 +36,21 @@ func (c *Client) LookupIP(host string, option dns.IPOption) ([]net.IP, uint32, e
 	return c.QueryIP(ctx, host, option)
 }
 
+//go:linkname Controllers github.com/xtls/xray-core/transport/internet.Controllers
+var Controllers []func(network, address string, c syscall.RawConn) error
+
 // New create a new dns.Client that queries localhost for DNS.
 func New() *Client {
+	if len(Controllers) == 0 {
+		return &Client{
+			r: net.DefaultResolver,
+		}
+	}
 	d := &net.Dialer{
 		Timeout: time.Second * 16,
 		Control: func(network, address string, c syscall.RawConn) error {
 			var errs []error
-			for _, ctl := range internet.Controllers {
+			for _, ctl := range Controllers {
 				if err := ctl(network, address, c); err != nil {
 					errs = append(errs, err)
 				}
@@ -59,15 +63,16 @@ func New() *Client {
 		},
 	}
 
-	r := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			return d.DialContext(ctx, network, address)
+	return &Client{
+		r: &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				return d.DialContext(ctx, network, address)
+			},
 		},
 	}
+}
 
-	return &Client{
-		d: d,
-		r: r,
-	}
+func (*Client) IsDisableCache() bool {
+	return true
 }

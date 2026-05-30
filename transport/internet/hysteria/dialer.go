@@ -349,7 +349,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 			c = &client{
 				dest:           dest,
 				config:         streamSettings.ProtocolSettings.(*Config),
-				tlsConfig:      tlsConfig.GetTLSConfig(),
+				tlsConfig:      tlsConfig.GetTLSConfig(ctx),
 				socketConfig:   streamSettings.SocketSettings,
 				udpmaskManager: streamSettings.UdpmaskManager,
 				quicParams:     streamSettings.QuicParams,

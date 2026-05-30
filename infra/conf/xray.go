@@ -52,20 +52,12 @@ var (
 )
 
 type SniffingConfig struct {
-<<<<<<< HEAD
-	Enabled         bool        `json:"enabled,omitzero"`
-	DestOverride    *StringList `json:"destOverride,omitzero"`
-	DomainsExcluded *StringList `json:"domainsExcluded,omitzero"`
-	MetadataOnly    bool        `json:"metadataOnly,omitzero"`
-	RouteOnly       bool        `json:"routeOnly,omitzero"`
-=======
 	Enabled         bool       `json:"enabled"`
 	DestOverride    StringList `json:"destOverride"`
 	DomainsExcluded StringList `json:"domainsExcluded"`
 	IPsExcluded     StringList `json:"ipsExcluded"`
 	MetadataOnly    bool       `json:"metadataOnly"`
 	RouteOnly       bool       `json:"routeOnly"`
->>>>>>> XTLS-main
 }
 
 // Build implements Buildable.

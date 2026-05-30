@@ -20,6 +20,7 @@ import (
 	"github.com/xtls/xray-core/common/singbridge"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/policy"
+	cfgproto "github.com/xtls/xray-core/infra/conf/cfgcommon/proto"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
 )
@@ -46,7 +47,7 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Outbound, error) {
 			Port:    net.Port(config.Port),
 			Network: net.Network_TCP,
 		},
-		userLevel: config.UserLevel,
+		userLevel: uint32(cfgproto.ReadSizeCache(config)),
 	}
 	if C.Contains(shadowaead_2022.List, config.Method) {
 		if config.Key == "" {
