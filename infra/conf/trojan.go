@@ -12,6 +12,7 @@ import (
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/common/serial"
+	"github.com/xtls/xray-core/common/task"
 	"github.com/xtls/xray-core/proxy/trojan"
 	"google.golang.org/protobuf/proto"
 )
@@ -39,6 +40,8 @@ type TrojanClientConfig struct {
 
 // Build implements Buildable
 func (c *TrojanClientConfig) Build() (proto.Message, error) {
+	errors.PrintNonRemovalDeprecatedFeatureWarning("Trojan (with no Flow, etc.)", "VLESS with Flow & Seed")
+
 	if c.Address != nil {
 		c.Servers = []*TrojanServerTarget{
 			{
@@ -109,19 +112,32 @@ type TrojanUserConfig struct {
 
 // TrojanServerConfig is Inbound configuration
 type TrojanServerConfig struct {
+<<<<<<< HEAD
 	Clients   []*TrojanUserConfig      `json:"clients,omitzero"`
 	Fallbacks []*TrojanInboundFallback `json:"fallbacks,omitzero"`
+=======
+	Users     []*TrojanUserConfig      `json:"users"`
+	Clients   []*TrojanUserConfig      `json:"clients"`
+	Fallbacks []*TrojanInboundFallback `json:"fallbacks"`
+>>>>>>> XTLS-main
 }
 
 // Build implements Buildable
 func (c *TrojanServerConfig) Build() (proto.Message, error) {
-	config := &trojan.ServerConfig{
-		Users: make([]*protocol.User, len(c.Clients)),
+	errors.PrintNonRemovalDeprecatedFeatureWarning("Trojan (with no Flow, etc.)", "VLESS with Flow & Seed")
+
+	if c.Clients != nil {
+		c.Users = c.Clients
 	}
 
-	for idx, rawUser := range c.Clients {
+	config := &trojan.ServerConfig{
+		Users: make([]*protocol.User, len(c.Users)),
+	}
+
+	processClient := func(idx int) error {
+		rawUser := c.Users[idx]
 		if rawUser.Flow != "" {
-			return nil, errors.PrintRemovedFeatureError(`Flow for Trojan`, ``)
+			return errors.PrintRemovedFeatureError(`Flow for Trojan`, ``)
 		}
 
 		config.Users[idx] = &protocol.User{
@@ -131,6 +147,10 @@ func (c *TrojanServerConfig) Build() (proto.Message, error) {
 				Password: rawUser.Password,
 			}),
 		}
+		return nil
+	}
+	if err := task.ParallelForN(len(c.Users), processClient); err != nil {
+		return nil, err
 	}
 
 	for _, fb := range c.Fallbacks {

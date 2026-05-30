@@ -5,13 +5,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	gonet "net"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
 	"sync"
 
 	"github.com/xtls/xray-core/common"
+	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/signal/done"
@@ -22,10 +22,10 @@ type DialerClient interface {
 	IsClosed() bool
 
 	// ctx, url, body, uploadOnly
-	OpenStream(context.Context, url.URL, io.Reader, bool) (io.ReadCloser, net.Addr, net.Addr, error)
+	OpenStream(context.Context, url.URL, string, io.Reader, bool) (io.ReadCloser, net.Addr, net.Addr, error)
 
-	// ctx, url, body, contentLength
-	PostPacket(context.Context, url.URL, io.Reader, int64) error
+	// ctx, url, sessionId, seqStr, body, contentLength
+	PostPacket(context.Context, url.URL, string, string, buf.MultiBuffer) error
 }
 
 // implements splithttp.DialerClient in terms of direct network connections
@@ -71,7 +71,7 @@ func NewRequestWithContext(ctx context.Context, method string, url url.URL, body
 	}).WithContext(ctx)
 }
 
-func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body io.Reader, uploadOnly bool) (wrc io.ReadCloser, remoteAddr, localAddr gonet.Addr, err error) {
+func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, sessionId string, body io.Reader, uploadOnly bool) (wrc io.ReadCloser, remoteAddr, localAddr net.Addr, err error) {
 	// this is done when the TCP/UDP connection to the server was established,
 	// and we can unblock the Dial function and print correct net addresses in
 	// logs
@@ -86,17 +86,14 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 
 	method := "GET" // stream-down
 	if body != nil {
-		method = "POST" // stream-up/one
+		method = c.transportConfig.GetNormalizedUplinkHTTPMethod() // stream-up/one
 	}
 	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	stop := context.AfterFunc(ctx, cancel)
-	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader(url))
+	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader())
+	c.transportConfig.FillStreamRequest(req, sessionId, "")
 
-	if method == "POST" && !c.transportConfig.NoGRPCHeader {
-		req.Header.Set("Content-Type", "application/grpc")
-	}
-	wrc0 := &WaitReadCloser{Wait: make(chan struct{})}
-	wrc = wrc0
+	wrc = &WaitReadCloser{Wait: make(chan struct{})}
 	go func() {
 		resp, err := c.client.Do(req)
 		if err != nil {
@@ -105,6 +102,7 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 				errors.LogInfoInner(ctx, err, "failed to "+method+" "+url.String())
 			}
 			gotConn.Close()
+			common.Close(body)
 			wrc.Close()
 			return
 		}
@@ -115,6 +113,7 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 		if resp.StatusCode != 200 || uploadOnly { // stream-up
 			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close() // if it is called immediately, the upload will be interrupted also
+			common.Close(body)
 			wrc.Close()
 			return
 		}
@@ -125,11 +124,12 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, body 
 	return
 }
 
-func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, body io.Reader, contentLength int64) error {
+func (c *DefaultDialerClient) PostPacket(ctx context.Context, url string, sessionId string, seqStr string, payload buf.MultiBuffer) error {
+	method := c.transportConfig.GetNormalizedUplinkHTTPMethod()
 	reqctx, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	stop := context.AfterFunc(ctx, cancel)
-	req := NewRequestWithContext(reqctx, "POST", url, body, c.transportConfig.GetRequestHeader(url))
-	req.ContentLength = contentLength
+	req := NewRequestWithContext(reqctx, method, url, body, c.transportConfig.GetRequestHeader())
+	c.transportConfig.FillPacketRequest(req, sessionId, seqStr, payload)
 
 	if c.httpVersion != "1.1" {
 		resp, err := c.client.Do(req)
@@ -150,6 +150,7 @@ func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, body 
 		// times, the body is already drained after the first
 		// request
 		requestBuff := new(bytes.Buffer)
+		requestBuff.Grow(512 + int(req.ContentLength))
 		common.Must(req.Write(requestBuff))
 		stop()
 		var uploadConn any

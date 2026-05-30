@@ -28,11 +28,20 @@ const (
 )
 
 type SocksServerConfig struct {
+<<<<<<< HEAD
 	AuthMethod string          `json:"auth,omitzero"`
 	Accounts   []*SocksAccount `json:"accounts,omitzero"`
 	UDP        bool            `json:"udp,omitzero"`
 	Host       *Address        `json:"ip,omitzero"`
 	UserLevel  uint32          `json:"userLevel,omitzero"`
+=======
+	AuthMethod string          `json:"auth"`
+	Users      []*SocksAccount `json:"users"`
+	Accounts   []*SocksAccount `json:"accounts"`
+	UDP        bool            `json:"udp"`
+	Host       *Address        `json:"ip"`
+	UserLevel  uint32          `json:"userLevel"`
+>>>>>>> XTLS-main
 }
 
 func (v *SocksServerConfig) Build() (proto.Message, error) {
@@ -47,9 +56,13 @@ func (v *SocksServerConfig) Build() (proto.Message, error) {
 		config.AuthType = socks.AuthType_NO_AUTH
 	}
 
-	if len(v.Accounts) > 0 {
-		config.Accounts = make(map[string]string, len(v.Accounts))
-		for _, account := range v.Accounts {
+	if v.Accounts != nil {
+		v.Users = v.Accounts
+	}
+	// TODO: PB
+	if len(v.Users) > 0 {
+		config.Accounts = make(map[string]string, len(v.Users))
+		for _, account := range v.Users {
 			config.Accounts[account.Username] = account.Password
 		}
 	}

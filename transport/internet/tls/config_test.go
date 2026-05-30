@@ -13,7 +13,8 @@ import (
 )
 
 func TestCertificateIssuing(t *testing.T) {
-	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
+	ct, _ := cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign))
+	certificate := ParseCertificate(ct)
 	certificate.Usage = Certificate_AUTHORITY_ISSUE
 
 	c := &Config{
@@ -36,8 +37,8 @@ func TestCertificateIssuing(t *testing.T) {
 }
 
 func TestExpiredCertificate(t *testing.T) {
-	caCert := cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign))
-	expiredCert := cert.MustGenerate(caCert, cert.NotAfter(time.Now().Add(time.Minute*-2)), cert.CommonName("www.example.com"), cert.DNSNames("www.example.com"))
+	caCert, _ := cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign))
+	expiredCert, _ := cert.MustGenerate(caCert, cert.NotAfter(time.Now().Add(time.Minute*-2)), cert.CommonName("www.example.com"), cert.DNSNames("www.example.com"))
 
 	certificate := ParseCertificate(caCert)
 	certificate.Usage = Certificate_AUTHORITY_ISSUE
@@ -74,7 +75,8 @@ func TestInsecureCertificates(t *testing.T) {
 }
 
 func BenchmarkCertificateIssuing(b *testing.B) {
-	certificate := ParseCertificate(cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign)))
+	ct, _ := cert.MustGenerate(nil, cert.Authority(true), cert.KeyUsage(x509.KeyUsageCertSign))
+	certificate := ParseCertificate(ct)
 	certificate.Usage = Certificate_AUTHORITY_ISSUE
 
 	c := &Config{

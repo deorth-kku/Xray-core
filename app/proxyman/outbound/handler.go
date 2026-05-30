@@ -6,7 +6,6 @@ import (
 	goerrors "errors"
 	"io"
 	"math/big"
-	gonet "net"
 	"os"
 
 	"github.com/xtls/xray-core/common/dice"
@@ -125,7 +124,7 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 	}
 	h.proxyConfig = proxyConfig
 
-	ctx = session.ContextWithHandler(ctx, h)
+	ctx = session.ContextWithFullHandler(ctx, h)
 
 	rawProxyHandler, err := common.CreateObject(ctx, proxyConfig)
 	if err != nil {
@@ -334,8 +333,12 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (stat.Connecti
 	conn, err := internet.Dial(ctx, dest, h.streamSettings)
 	conn = h.getStatCouterConnection(conn)
 	outbounds := session.OutboundsFromContext(ctx)
-	ob := outbounds[len(outbounds)-1]
-	ob.Conn = conn
+	if outbounds != nil {
+		ob := outbounds[len(outbounds)-1]
+		ob.Conn = conn
+	} else {
+		// for Vision's pre-connect
+	}
 	return conn, err
 }
 
@@ -362,7 +365,7 @@ func (h *Handler) SetOutboundGateway(ctx context.Context, ob *session.Outbound) 
 					errors.LogDebug(ctx, "use inbound source ip as sendthrough: ", inbound.Source.Address.String())
 				}
 			}
-		//case addr.Family().IsDomain():
+		// case addr.Family().IsDomain():
 		default:
 			ob.Gateway = addr
 
@@ -420,8 +423,7 @@ func (h *Handler) ProxySettings() *serial.TypedMessage {
 }
 
 func ParseRandomIP(addr net.Address, prefix string) net.Address {
-
-	_, ipnet, _ := gonet.ParseCIDR(addr.IP().String() + "/" + prefix)
+	_, ipnet, _ := net.ParseCIDR(addr.IP().String() + "/" + prefix)
 
 	ones, bits := ipnet.Mask.Size()
 	subnetSize := new(big.Int).Lsh(big.NewInt(1), uint(bits-ones))
@@ -435,5 +437,5 @@ func ParseRandomIP(addr net.Address, prefix string) net.Address {
 	padded := make([]byte, len(ipnet.IP))
 	copy(padded[len(padded)-len(rndBytes):], rndBytes)
 
-	return net.ParseAddress(gonet.IP(padded).String())
+	return net.ParseAddress(net.IP(padded).String())
 }

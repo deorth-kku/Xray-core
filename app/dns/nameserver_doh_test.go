@@ -20,8 +20,13 @@ func TestDOHNameServer(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
+<<<<<<< HEAD
 	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
 	ctx, cancel := withTimeout(t, 5*time.Second)
+=======
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+>>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
@@ -37,8 +42,13 @@ func TestDOHNameServerWithCache(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
+<<<<<<< HEAD
 	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
 	ctx, cancel := withTimeout(t, 5*time.Second)
+=======
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+>>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
@@ -65,8 +75,13 @@ func TestDOHNameServerWithIPv4Override(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
+<<<<<<< HEAD
 	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
 	ctx, cancel := withTimeout(t, 5*time.Second)
+=======
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+>>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: false,
@@ -88,8 +103,13 @@ func TestDOHNameServerWithIPv6Override(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
+<<<<<<< HEAD
 	s := NewDoHNameServer(url, nil, false, false, net.IP(nil))
 	ctx, cancel := withTimeout(t, 5*time.Second)
+=======
+	s := NewDoHNameServer(url, nil, false, false, false, 0, net.IP(nil))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+>>>>>>> XTLS-main
 	ips, _, err := s.QueryIP(ctx, "google.com", dns_feature.IPOption{
 		IPv4Enable: false,
 		IPv6Enable: true,

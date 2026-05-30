@@ -21,7 +21,7 @@ var (
 func TestQUICNameServer(t *testing.T) {
 	url, err := url.Parse("quic://dns.nextdns.io")
 	common.Must(err)
-	s, err := NewQUICNameServer(url, false, net.IP(nil))
+	s, err := NewQUICNameServer(url, false, false, 0, net.IP(nil))
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	ips, _, err := s.QueryIP(ctx, "google.com", dns.IPOption{
@@ -48,7 +48,7 @@ func TestQUICNameServer(t *testing.T) {
 func TestQUICNameServerWithIPv4Override(t *testing.T) {
 	url, err := url.Parse("quic://dns.nextdns.io")
 	common.Must(err)
-	s, err := NewQUICNameServer(url, false, net.IP(nil))
+	s, err := NewQUICNameServer(url, false, false, 0, net.IP(nil))
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	ips, _, err := s.QueryIP(ctx, "google.com", dns.IPOption{
@@ -71,7 +71,7 @@ func TestQUICNameServerWithIPv4Override(t *testing.T) {
 func TestQUICNameServerWithIPv6Override(t *testing.T) {
 	url, err := url.Parse("quic://dns.nextdns.io")
 	common.Must(err)
-	s, err := NewQUICNameServer(url, false, net.IP(nil))
+	s, err := NewQUICNameServer(url, false, false, 0, net.IP(nil))
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	ips, _, err := s.QueryIP(ctx, "google.com", dns.IPOption{

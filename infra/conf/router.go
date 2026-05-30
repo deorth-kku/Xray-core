@@ -2,17 +2,20 @@ package conf
 
 import (
 	"encoding/json"
+<<<<<<< HEAD
 	goerrors "errors"
 	"io"
 	"iter"
 	"strconv"
+=======
+>>>>>>> XTLS-main
 	"strings"
 
 	"github.com/xtls/xray-core/app/router"
 	"github.com/xtls/xray-core/common/errors"
-	"github.com/xtls/xray-core/common/net"
-	"github.com/xtls/xray-core/common/platform/filesystem"
+	"github.com/xtls/xray-core/common/geodata"
 	"github.com/xtls/xray-core/common/serial"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -85,8 +88,6 @@ func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
 	}
 
 	switch strings.ToLower(ds) {
-	case "alwaysip":
-		return router.Config_UseIp
 	case "ipifnonmatch":
 		return router.Config_IpIfNonMatch
 	case "ipondemand":
@@ -104,15 +105,14 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 	if c != nil {
 		rawRuleList = c.RuleList
 	}
-
 	for _, rawRule := range rawRuleList {
-		rule, err := ParseRule(rawRule)
+		rule, err := parseRule(rawRule)
 		if err != nil {
 			return nil, err
 		}
-
 		config.Rule = append(config.Rule, rule)
 	}
+
 	for _, rawBalancer := range c.Balancers {
 		balancer, err := rawBalancer.Build()
 		if err != nil {
@@ -120,6 +120,7 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 		}
 		config.BalancingRule = append(config.BalancingRule, balancer)
 	}
+
 	return config, nil
 }
 
@@ -129,6 +130,7 @@ type RouterRule struct {
 	BalancerTag string `json:"balancerTag"`
 }
 
+<<<<<<< HEAD
 func ParseIP(s string) (*router.CIDR, error) {
 	var addr, mask string
 	i := strings.Index(s, "/")
@@ -510,26 +512,34 @@ func ToCidrList(ips StringList) ([]*router.GeoIP, error) {
 	}
 
 	return geoipList, nil
+=======
+type WebhookRuleConfig struct {
+	URL           string            `json:"url"`
+	Deduplication uint32            `json:"deduplication"`
+	Headers       map[string]string `json:"headers"`
+>>>>>>> XTLS-main
 }
 
 func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	type RawFieldRule struct {
 		RouterRule
-		Domain     *StringList       `json:"domain"`
-		Domains    *StringList       `json:"domains"`
-		IP         *StringList       `json:"ip"`
-		Port       *PortList         `json:"port"`
-		Network    *NetworkList      `json:"network"`
-		SourceIP   *StringList       `json:"sourceIP"`
-		Source     *StringList       `json:"source"`
-		SourcePort *PortList         `json:"sourcePort"`
-		User       *StringList       `json:"user"`
-		VlessRoute *PortList         `json:"vlessRoute"`
-		InboundTag *StringList       `json:"inboundTag"`
-		Protocols  *StringList       `json:"protocol"`
-		Attributes map[string]string `json:"attrs"`
-		LocalIP    *StringList       `json:"localIP"`
-		LocalPort  *PortList         `json:"localPort"`
+		Domain     *StringList        `json:"domain"`
+		Domains    *StringList        `json:"domains"`
+		IP         *StringList        `json:"ip"`
+		Port       *PortList          `json:"port"`
+		Network    *NetworkList       `json:"network"`
+		SourceIP   *StringList        `json:"sourceIP"`
+		Source     *StringList        `json:"source"`
+		SourcePort *PortList          `json:"sourcePort"`
+		User       *StringList        `json:"user"`
+		VlessRoute *PortList          `json:"vlessRoute"`
+		InboundTag *StringList        `json:"inboundTag"`
+		Protocols  *StringList        `json:"protocol"`
+		Attributes map[string]string  `json:"attrs"`
+		LocalIP    *StringList        `json:"localIP"`
+		LocalPort  *PortList          `json:"localPort"`
+		Process    *StringList        `json:"process"`
+		Webhook    *WebhookRuleConfig `json:"webhook"`
 	}
 	rawFieldRule := new(RawFieldRule)
 	err := json.Unmarshal(msg, rawFieldRule)
@@ -553,31 +563,27 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	}
 
 	if rawFieldRule.Domain != nil {
-		for _, domain := range *rawFieldRule.Domain {
-			rules, err := parseDomainRule(domain)
-			if err != nil {
-				return nil, errors.New("failed to parse domain rule: ", domain).Base(err)
-			}
-			rule.Domain = append(rule.Domain, rules...)
-		}
-	}
-
-	if rawFieldRule.Domains != nil {
-		for _, domain := range *rawFieldRule.Domains {
-			rules, err := parseDomainRule(domain)
-			if err != nil {
-				return nil, errors.New("failed to parse domain rule: ", domain).Base(err)
-			}
-			rule.Domain = append(rule.Domain, rules...)
-		}
-	}
-
-	if rawFieldRule.IP != nil {
-		geoipList, err := ToCidrList(*rawFieldRule.IP)
+		rules, err := geodata.ParseDomainRules(*rawFieldRule.Domain, geodata.Domain_Substr)
 		if err != nil {
 			return nil, err
 		}
-		rule.Geoip = geoipList
+		rule.Domain = rules
+	}
+
+	if rawFieldRule.Domains != nil {
+		rules, err := geodata.ParseDomainRules(*rawFieldRule.Domains, geodata.Domain_Substr)
+		if err != nil {
+			return nil, err
+		}
+		rule.Domain = rules
+	}
+
+	if rawFieldRule.IP != nil {
+		rules, err := geodata.ParseIPRules(*rawFieldRule.IP)
+		if err != nil {
+			return nil, err
+		}
+		rule.Ip = rules
 	}
 
 	if rawFieldRule.Port != nil {
@@ -593,11 +599,11 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	}
 
 	if rawFieldRule.SourceIP != nil {
-		geoipList, err := ToCidrList(*rawFieldRule.SourceIP)
+		rules, err := geodata.ParseIPRules(*rawFieldRule.SourceIP)
 		if err != nil {
 			return nil, err
 		}
-		rule.SourceGeoip = geoipList
+		rule.SourceIp = rules
 	}
 
 	if rawFieldRule.SourcePort != nil {
@@ -605,11 +611,11 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	}
 
 	if rawFieldRule.LocalIP != nil {
-		geoipList, err := ToCidrList(*rawFieldRule.LocalIP)
+		rules, err := geodata.ParseIPRules(*rawFieldRule.LocalIP)
 		if err != nil {
 			return nil, err
 		}
-		rule.LocalGeoip = geoipList
+		rule.LocalIp = rules
 	}
 
 	if rawFieldRule.LocalPort != nil {
@@ -642,10 +648,22 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 		rule.Attributes = rawFieldRule.Attributes
 	}
 
+	if rawFieldRule.Process != nil && len(*rawFieldRule.Process) > 0 {
+		rule.Process = *rawFieldRule.Process
+	}
+
+	if rawFieldRule.Webhook != nil && rawFieldRule.Webhook.URL != "" {
+		rule.Webhook = &router.WebhookConfig{
+			Url:           rawFieldRule.Webhook.URL,
+			Deduplication: rawFieldRule.Webhook.Deduplication,
+			Headers:       rawFieldRule.Webhook.Headers,
+		}
+	}
+
 	return rule, nil
 }
 
-func ParseRule(msg json.RawMessage) (*router.RoutingRule, error) {
+func parseRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	rawRule := new(RouterRule)
 	err := json.Unmarshal(msg, rawRule)
 	if err != nil {

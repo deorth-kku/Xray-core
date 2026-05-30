@@ -5,11 +5,13 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"math/big"
+	"slices"
 	"time"
 
 	utls "github.com/refraction-networking/utls"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/net"
+	"github.com/xtls/xray-core/common/utils"
 )
 
 type Interface interface {
@@ -20,8 +22,10 @@ type Interface interface {
 	NegotiatedProtocol() string
 }
 
-var _ buf.Writer = (*Conn)(nil)
-var _ Interface = (*Conn)(nil)
+var (
+	_ buf.Writer = (*Conn)(nil)
+	_ Interface  = (*Conn)(nil)
+)
 
 type Conn struct {
 	*tls.Conn
@@ -89,25 +93,37 @@ func (c *UConn) HandshakeContextServerName(ctx context.Context) string {
 	return c.ConnectionState().ServerName
 }
 
-// WebsocketHandshake basically calls UConn.Handshake inside it but it will only send
-// http/1.1 in its ALPN.
+// WebsocketHandshakeContext basically calls UConn.Handshake inside it but it will try
+// to build outer ALPN to `http/1.1` or `h2 http/1.1` (if manually specified for camouflage)
 func (c *UConn) WebsocketHandshakeContext(ctx context.Context) error {
+	config := *utils.AccessField[*utls.Config](c, "config")
+	ALPN := slices.Clone(config.NextProtos)
+	// set other kinds of ALPN to http/1.1
+	if !slices.Equal(ALPN, []string{"h2", "http/1.1"}) {
+		ALPN = []string{"http/1.1"}
+	}
 	// Build the handshake state. This will apply every variable of the TLS of the
 	// fingerprint in the UConn
 	if err := c.BuildHandshakeState(); err != nil {
 		return err
+	}
+	// Do not modify outer ALPN if ECH is used
+	// Outer ALPN will be h2,http/1.1, and real http/1.1 in config will be hidden in ECH
+	if config.EncryptedClientHelloConfigList != nil {
+		config.NextProtos = []string{"http/1.1"}
+		return c.HandshakeContext(ctx)
 	}
 	// Iterate over extensions and check for utls.ALPNExtension
 	hasALPNExtension := false
 	for _, extension := range c.Extensions {
 		if alpn, ok := extension.(*utls.ALPNExtension); ok {
 			hasALPNExtension = true
-			alpn.AlpnProtocols = []string{"http/1.1"}
+			alpn.AlpnProtocols = ALPN
 			break
 		}
 	}
 	if !hasALPNExtension { // Append extension if doesn't exists
-		c.Extensions = append(c.Extensions, &utls.ALPNExtension{AlpnProtocols: []string{"http/1.1"}})
+		c.Extensions = append(c.Extensions, &utls.ALPNExtension{AlpnProtocols: ALPN})
 	}
 	// Rebuild the client hello and do the handshake
 	if err := c.BuildHandshakeState(); err != nil {
@@ -145,8 +161,12 @@ func UClient(c net.Conn, config *tls.Config, fingerprint *utls.ClientHelloID) ne
 	return &UConn{UConn: utlsConn}
 }
 
+func GeneraticUClient(c net.Conn, config *tls.Config) *utls.UConn {
+	return utls.UClient(c, copyConfig(config), utls.HelloChrome_Auto)
+}
+
 func copyConfig(c *tls.Config) *utls.Config {
-	return &utls.Config{
+	config := &utls.Config{
 		Rand:                           c.Rand,
 		RootCAs:                        c.RootCAs,
 		ServerName:                     c.ServerName,
@@ -154,7 +174,9 @@ func copyConfig(c *tls.Config) *utls.Config {
 		VerifyPeerCertificate:          c.VerifyPeerCertificate,
 		KeyLogWriter:                   c.KeyLogWriter,
 		EncryptedClientHelloConfigList: c.EncryptedClientHelloConfigList,
+		NextProtos:                     c.NextProtos,
 	}
+	return config
 }
 
 func init() {

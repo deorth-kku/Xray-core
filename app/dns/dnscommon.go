@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"encoding/binary"
+	"math"
 	gonet "net"
 	"strings"
 	"sync"
@@ -17,6 +18,7 @@ import (
 	"github.com/xtls/xray-core/common/session"
 	"github.com/xtls/xray-core/core"
 	dns_feature "github.com/xtls/xray-core/features/dns"
+
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
@@ -25,6 +27,7 @@ import (
 )
 
 // Fqdn normalizes domain make sure it ends with '.'
+// case-sensitive
 func Fqdn(domain string) string {
 	return dns.Fqdn(domain)
 }
@@ -43,19 +46,14 @@ type IPRecord struct {
 	RawHeader *dnsmessage.Header
 }
 
-func (r *IPRecord) getIPs() ([]net.IP, uint32, error) {
+func (r *IPRecord) getIPs() ([]net.IP, int32, error) {
 	if r == nil {
 		return nil, 0, errRecordNotFound
 	}
-	untilExpire := time.Until(r.Expire).Seconds()
-	if untilExpire <= 0 {
-		return nil, 0, errRecordNotFound
-	}
 
-	ttl := uint32(untilExpire) + 1
-	if ttl == 1 {
-		r.Expire = time.Now().Add(time.Second) // To ensure that two consecutive requests get the same result
-	}
+	untilExpire := time.Until(r.Expire).Seconds()
+	ttl := int32(math.Ceil(untilExpire))
+
 	if r.RCode != dnsmessage.RCodeSuccess {
 		return nil, ttl, dns_feature.RCodeError(r.RCode)
 	}
@@ -134,15 +132,20 @@ func genEDNS0Options(clientIP net.IP, padding int) *dnsmessage.Resource {
 	return opt
 }
 
-func buildReqMsgs(domain string, option dns_feature.IPOption, reqIDGen func() uint16, reqOpts *dnsmessage.Resource) []*dnsRequest {
+func buildReqMsgs(domain string, option dns_feature.IPOption, reqIDGen func() uint16, reqOpts *dnsmessage.Resource) ([]*dnsRequest, error) {
+	name, err := dnsmessage.NewName(domain)
+	if err != nil {
+		return nil, err
+	}
+
 	qA := dnsmessage.Question{
-		Name:  dnsmessage.MustNewName(domain),
+		Name:  name,
 		Type:  dnsmessage.TypeA,
 		Class: dnsmessage.ClassINET,
 	}
 
 	qAAAA := dnsmessage.Question{
-		Name:  dnsmessage.MustNewName(domain),
+		Name:  name,
 		Type:  dnsmessage.TypeAAAA,
 		Class: dnsmessage.ClassINET,
 	}
@@ -182,7 +185,58 @@ func buildReqMsgs(domain string, option dns_feature.IPOption, reqIDGen func() ui
 		})
 	}
 
-	return reqs
+	return reqs, nil
+}
+
+func doHttps(ctx context.Context, r roundTripper, domain string, ipcache *CacheController, echCache *cacheTable[string, []*dns.HTTPS]) ([]*dns.HTTPS, error) {
+	if echCache == nil {
+		return r.LookupHTTPS(ctx, domain)
+	}
+	domain = Fqdn(domain)
+	return echCache.Compute(ctx, domain, func(ctx context.Context) ([]*dns.HTTPS, time.Duration, error) {
+		starttime := time.Now()
+		records, rsp, err := r.lookupHTTPSRaw(ctx, domain)
+		if err == dns_feature.ErrEmptyResponse {
+			// If the response is empty, we still want to cache it to avoid repeated queries for non-existent records.
+			return nil, time.Second * dns_feature.DefaultTTL, err
+		}
+		var ttldur time.Duration
+		for _, record := range records {
+			if record.Hdr.Ttl != 0 {
+				ttldur = time.Duration(record.Hdr.Ttl) * time.Second
+			}
+			expire := time.Now().Add(ttldur)
+			for _, kv := range record.Value {
+				switch kv.Key() {
+				case dns.SVCB_IPV4HINT:
+					ipcache.updateIP(&dnsRequest{
+						reqType: dnsmessage.TypeA,
+						domain:  domain,
+						start:   starttime,
+						expire:  expire,
+					}, &IPRecord{
+						ReqID:  rsp.Id,
+						IP:     kv.(*dns.SVCBIPv4Hint).Hint,
+						Expire: expire,
+						RCode:  dnsmessage.RCode(rsp.Rcode),
+					})
+				case dns.SVCB_IPV6HINT:
+					ipcache.updateIP(&dnsRequest{
+						reqType: dnsmessage.TypeAAAA,
+						domain:  domain,
+						start:   starttime,
+						expire:  expire,
+					}, &IPRecord{
+						ReqID:  rsp.Id,
+						IP:     kv.(*dns.SVCBIPv6Hint).Hint,
+						Expire: expire,
+						RCode:  dnsmessage.RCode(rsp.Rcode),
+					})
+				}
+			}
+		}
+		return records, ttldur, err
+	})
 }
 
 func doHttps(ctx context.Context, r roundTripper, domain string, ipcache *CacheController, echCache *cacheTable[string, []*dns.HTTPS]) ([]*dns.HTTPS, error) {

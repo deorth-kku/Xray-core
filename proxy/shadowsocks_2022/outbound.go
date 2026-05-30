@@ -171,6 +171,9 @@ func (o *Outbound) Process(ctx context.Context, link *transport.Link, dialer int
 				Writer: link.Writer,
 				Conn:   inboundConn,
 				Dest:   destination,
+				T: signal.CancelAfterInactivity(ctx, func() {
+					common.Interrupt(link.Reader)
+				}, 300*time.Second),
 			}
 		}
 

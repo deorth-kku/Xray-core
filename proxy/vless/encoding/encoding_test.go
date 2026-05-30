@@ -54,7 +54,7 @@ func TestRequestSerialization(t *testing.T) {
 	}
 
 	addonsComparer := func(x, y *Addons) bool {
-		return (x.Flow == y.Flow) && (cmp.Equal(x.Seed, y.Seed))
+		return (x.Flow == y.Flow) && cmp.Equal(x.Seed, y.Seed)
 	}
 	if r := cmp.Diff(actualAddons, expectedAddons, cmp.Comparer(addonsComparer)); r != "" {
 		t.Error(r)
@@ -126,7 +126,7 @@ func TestMuxRequest(t *testing.T) {
 	}
 
 	addonsComparer := func(x, y *Addons) bool {
-		return (x.Flow == y.Flow) && (cmp.Equal(x.Seed, y.Seed))
+		return (x.Flow == y.Flow) && cmp.Equal(x.Seed, y.Seed)
 	}
 	if r := cmp.Diff(actualAddons, expectedAddons, cmp.Comparer(addonsComparer)); r != "" {
 		t.Error(r)

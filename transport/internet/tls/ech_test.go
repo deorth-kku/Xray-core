@@ -4,7 +4,11 @@ import (
 	"context"
 	"io"
 	"net/http"
+<<<<<<< HEAD
 	"reflect"
+=======
+	"slices"
+>>>>>>> XTLS-main
 	"strings"
 	"sync"
 	"testing"
@@ -43,16 +47,42 @@ func TestECHDial(t *testing.T) {
 		})
 	}
 	wg.Wait()
+<<<<<<< HEAD
+=======
+	// check cache
+	echConfigCache, ok := GlobalECHConfigCache.Load(ECHCacheKey("udp://1.1.1.1", "encryptedsni.com", nil))
+	if !ok {
+		t.Error("ECH config cache not found")
+	}
+	ok = echConfigCache.UpdateLock.TryLock()
+	if !ok {
+		t.Error("ECH config cache dead lock detected")
+	}
+	echConfigCache.UpdateLock.Unlock()
+	configRecord := echConfigCache.configRecord.Load()
+	if configRecord == nil {
+		t.Error("ECH config record not found in cache")
+	}
+>>>>>>> XTLS-main
 }
 
 func TestECHDialFail(t *testing.T) {
 	config := &Config{
 		ServerName:    "cloudflare.com",
+<<<<<<< HEAD
 		EchConfigList: "udp://127.0.0.1",
 		EchForceQuery: "full",
 	}
 	cfg := config.GetTLSConfig(t.Context())
 	if !reflect.DeepEqual(cfg.EncryptedClientHelloConfigList, []byte{1, 1, 4, 5, 1, 4}) {
 		t.Error("failed to set fake echconfig")
+=======
+		EchConfigList: "udp://0.0.0.0",
+	}
+	tlsConfig := config.GetTLSConfig()
+	ApplyECH(config, tlsConfig)
+	if !slices.Equal(tlsConfig.EncryptedClientHelloConfigList, []byte{1, 1, 4, 5, 1, 4}) {
+		t.Error("ECH config should be invalid when query failed", " but got ", tlsConfig.EncryptedClientHelloConfigList)
+>>>>>>> XTLS-main
 	}
 }
