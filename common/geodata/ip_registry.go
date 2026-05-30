@@ -35,7 +35,7 @@ func (r *IPRegistry) Reload() error {
 
 	errors.LogInfo(context.Background(), "reloading GeoIP data for ", len(r.matchers), " IP matcher(s)")
 
-	factory := newIPSetFactory()
+	factory := NewIPSetFactory()
 	type reloadEntry struct {
 		dynamic *DynamicIPMatcher
 		matcher IPMatcher
@@ -59,7 +59,7 @@ func (r *IPRegistry) Reload() error {
 
 func newIPRegistry() *IPRegistry {
 	return &IPRegistry{
-		ipsetFactory: newIPSetFactory(),
+		ipsetFactory: NewIPSetFactory(),
 	}
 }
 

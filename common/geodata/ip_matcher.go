@@ -1022,6 +1022,6 @@ func buildOptimizedIPMatcher(f *IPSetFactory, rules []*IPRule) (IPMatcher, error
 	}
 }
 
-func newIPSetFactory() *IPSetFactory {
+func NewIPSetFactory() *IPSetFactory {
 	return &IPSetFactory{shared: utils.NewWeakCacheMap[string, IPSet]()}
 }
