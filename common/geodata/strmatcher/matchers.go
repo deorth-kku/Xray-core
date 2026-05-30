@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	"unicode/utf8"
 
 	"golang.org/x/net/idna"
@@ -92,6 +93,27 @@ func (m *RegexMatcher) Match(s string) bool {
 	return m.pattern.MatchString(s)
 }
 
+var (
+	matchers     = make(map[string]Matcher)
+	matchersLock sync.RWMutex
+)
+
+func OverrideRegexP(expr string, m Matcher) {
+	matchersLock.Lock()
+	defer matchersLock.Unlock()
+	if m == nil {
+		delete(matchers, expr)
+	} else {
+		matchers[expr] = m
+	}
+}
+
+func getOverride(expr string) Matcher {
+	matchersLock.RLock()
+	defer matchersLock.RUnlock()
+	return matchers[expr]
+}
+
 // New creates a new Matcher based on the given pattern.
 func (t Type) New(pattern string) (Matcher, error) {
 	switch t {
@@ -102,6 +124,9 @@ func (t Type) New(pattern string) (Matcher, error) {
 	case Domain:
 		return DomainMatcher(pattern), nil
 	case Regex: // 1. regex matching is case-sensitive
+		if m := getOverride(pattern); m != nil {
+			return m, nil
+		}
 		regex, err := regexp.Compile(pattern)
 		if err != nil {
 			return nil, err
