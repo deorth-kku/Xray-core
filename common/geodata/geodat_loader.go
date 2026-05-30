@@ -52,7 +52,7 @@ func loadIP(file, code string) ([]*CIDR, error) {
 	return geoip.Cidr, nil
 }
 
-func loadSite(file, code string) ([]*Domain, error) {
+func LoadSite(file, code string) ([]*Domain, error) {
 	bs, err := loadFile(file, code)
 	if err != nil {
 		return nil, err
@@ -179,14 +179,14 @@ func NewAllAttrsMatcher(attrs string) AttributeMatcher {
 		return nil
 	}
 	m := new(AllAttrsMatcher)
-	for _, attr := range strings.Split(attrs, "@") {
+	for attr := range strings.SplitSeq(attrs, "@") {
 		m.matchers = append(m.matchers, HasAttrMatcher(attr))
 	}
 	return m
 }
 
 func loadSiteWithAttrs(file, code, attrs string) ([]*Domain, error) {
-	domains, err := loadSite(file, code)
+	domains, err := LoadSite(file, code)
 	if err != nil {
 		return nil, err
 	}
