@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	. "github.com/xtls/xray-core/common/platform/filesystem"
 )
 

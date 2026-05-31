@@ -48,6 +48,7 @@ func TestGetAssetLocation(t *testing.T) {
 	exec, err := os.Executable()
 	common.Must(err)
 
+	os.Unsetenv("xray.location.asset")
 	loc := GetAssetLocation("t")
 	if filepath.Dir(loc) != filepath.Dir(exec) {
 		t.Error("asset dir: ", loc, " not in ", exec)

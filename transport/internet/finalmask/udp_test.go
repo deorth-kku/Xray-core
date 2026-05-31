@@ -12,6 +12,7 @@ import (
 
 	singM "github.com/sagernet/sing/common/metadata"
 	singN "github.com/sagernet/sing/common/network"
+	_ "github.com/xtls/xray-core/app/dns"
 	"github.com/xtls/xray-core/proxy"
 	"github.com/xtls/xray-core/transport/internet/finalmask"
 	"github.com/xtls/xray-core/transport/internet/finalmask/header/custom"

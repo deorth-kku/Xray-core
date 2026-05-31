@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/dns"
 	"github.com/xtls/xray-core/app/router"
 )
 

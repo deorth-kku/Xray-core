@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	_ "github.com/xtls/xray-core/app/dns"
 	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/router"
 	. "github.com/xtls/xray-core/app/router/command"
@@ -15,6 +16,8 @@ import (
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/geodata"
 	"github.com/xtls/xray-core/common/net"
+	"github.com/xtls/xray-core/core"
+	"github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/testing/mocks"
 	"google.golang.org/grpc"
@@ -274,6 +277,14 @@ func TestServiceSubscribeSubsetOfFields(t *testing.T) {
 	}
 }
 
+const xrayKey core.XrayKey = 1
+
+func dnsCtx(d dns.Client) context.Context {
+	i := new(core.Instance)
+	common.Must(i.AddFeature(d))
+	return context.WithValue(context.TODO(), xrayKey, i)
+}
+
 func TestServiceTestRoute(t *testing.T) {
 	c := stats.NewChannel(&stats.ChannelConfig{
 		SubscriberLimit: 1,
@@ -286,7 +297,8 @@ func TestServiceTestRoute(t *testing.T) {
 	r := new(router.Router)
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
-	common.Must(r.Init(context.TODO(), &router.Config{
+	mockdns := mocks.NewDNSClient(mockCtl)
+	common.Must(r.Init(dnsCtx(mockdns), &router.Config{
 		Rule: []*router.RoutingRule{
 			{
 				InboundTag: []string{"in"},
@@ -321,7 +333,7 @@ func TestServiceTestRoute(t *testing.T) {
 				TargetTag: &router.RoutingRule_Tag{Tag: "out"},
 			},
 		},
-	}, mocks.NewDNSClient(mockCtl), mocks.NewOutboundManager(mockCtl), nil))
+	}, mockdns, mocks.NewOutboundManager(mockCtl), nil))
 
 	lis := bufconn.Listen(1024 * 1024)
 	bufDialer := func(context.Context, string) (net.Conn, error) {

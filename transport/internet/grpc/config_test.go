@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	_ "github.com/xtls/xray-core/app/dns"
+	_ "github.com/xtls/xray-core/app/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

@@ -1,6 +1,10 @@
 package observatory
 
-import "testing"
+import (
+	"testing"
+
+	_ "github.com/xtls/xray-core/app/log"
+)
 
 func TestObserverUpdateStatusPrunesStaleOutbounds(t *testing.T) {
 	observer := &Observer{

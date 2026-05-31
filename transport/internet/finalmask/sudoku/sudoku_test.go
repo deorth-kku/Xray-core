@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/xtls/xray-core/app/dispatcher"
+	_ "github.com/xtls/xray-core/app/dns"
 	"github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/proxyman"
 	clog "github.com/xtls/xray-core/common/log"

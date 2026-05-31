@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 	"golang.org/x/net/ipv6"

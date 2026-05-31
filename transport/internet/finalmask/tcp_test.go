@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/xtls/xray-core/app/dns"
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/transport/internet/finalmask"
 	"github.com/xtls/xray-core/transport/internet/finalmask/header/custom"
 )

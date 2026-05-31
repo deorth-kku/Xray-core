@@ -262,7 +262,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 
 	d, ok := core.GetFeatureFromContext[dns.Client](r.ctx)
 	if !ok {
-		return nil, nil, dns.ErrNoDNS
+		return nil, ctx, dns.ErrNoDNS
 	}
 
 	if r.domainStrategy == Config_IpOnDemand && !skipDNSResolve {

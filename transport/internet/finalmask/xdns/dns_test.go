@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	_ "github.com/xtls/xray-core/app/log"
 )
 
 func namesEqual(a, b Name) bool {

@@ -6,6 +6,7 @@ import (
 	"slices"
 	"testing"
 
+	_ "github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/common/geodata/strmatcher"
 	"github.com/xtls/xray-core/common/utils"
 )

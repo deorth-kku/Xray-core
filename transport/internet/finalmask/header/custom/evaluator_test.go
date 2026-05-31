@@ -3,6 +3,8 @@ package custom
 import (
 	"bytes"
 	"testing"
+
+	_ "github.com/xtls/xray-core/app/log"
 )
 
 func TestEvaluatorSaveAndReuseWithinPacket(t *testing.T) {

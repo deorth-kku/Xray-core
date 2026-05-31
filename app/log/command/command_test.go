@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/xtls/xray-core/app/dispatcher"
+	_ "github.com/xtls/xray-core/app/dns"
 	"github.com/xtls/xray-core/app/log"
 	. "github.com/xtls/xray-core/app/log/command"
 	"github.com/xtls/xray-core/app/proxyman"
