@@ -144,6 +144,10 @@ func (h *Handler) Close() error {
 	return nil
 }
 
+func (h *Handler) ServerDest() net.Destination {
+	return h.server.Destination
+}
+
 // Process implements proxy.Outbound.Process().
 func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
 	outbounds := session.OutboundsFromContext(ctx)

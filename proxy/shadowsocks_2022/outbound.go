@@ -190,3 +190,7 @@ func (o *Outbound) Process(ctx context.Context, link *transport.Link, dialer int
 		}
 	}
 }
+
+func (h *Outbound) ServerDest() net.Destination {
+	return h.server
+}

@@ -37,25 +37,25 @@ import (
 	"golang.org/x/net/http2"
 )
 
-type dialerConf struct {
-	net.Destination
-	*internet.MemoryStreamConfig
-}
+type dialerConf = internet.DialerConf
 
 var (
 	globalDialerMap    map[dialerConf]*XmuxManager
 	globalDialerAccess sync.Mutex
 )
 
-func DeleteXmuxManager(conf *internet.MemoryStreamConfig) {
+func DeleteXmuxManager(key dialerConf) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
-	for k, v := range globalDialerMap {
-		if k.MemoryStreamConfig == conf {
-			delete(globalDialerMap, k)
-			v.CloseAll()
-		}
+	v, ok := globalDialerMap[key]
+	if ok {
+		delete(globalDialerMap, key)
+		v.CloseAll()
 	}
+}
+
+func init() {
+	common.Must(internet.RegisterDialerDelete(protocolName, DeleteXmuxManager))
 }
 
 func XmuxManagerCount() int {

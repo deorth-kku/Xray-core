@@ -226,6 +226,10 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	return nil
 }
 
+func (h *Handler) ServerDest() net.Destination {
+	return h.server.Destination
+}
+
 var enablePadding = false
 
 func shouldEnablePadding(s protocol.SecurityType) bool {
