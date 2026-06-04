@@ -56,9 +56,15 @@ func (c *client) status() status {
 }
 
 func (c *client) close() {
-	c.conn.CloseWithError(closeErrCodeOK, "")
-	c.tr.Close()
-	c.pktConn.Close()
+	if c.conn != nil {
+		c.conn.CloseWithError(closeErrCodeOK, "")
+	}
+	if c.tr != nil {
+		c.tr.Close()
+	}
+	if c.pktConn != nil {
+		c.pktConn.Close()
+	}
 	c.conn = nil
 	c.tr = nil
 	c.pktConn = nil
@@ -309,7 +315,9 @@ func (m *clientManager) delete(key dialerConf) {
 	defer m.Unlock()
 	c, ok := m.m[key]
 	if ok {
+		c.Lock()
 		c.close()
+		c.Unlock()
 		delete(m.m, key)
 	}
 }
