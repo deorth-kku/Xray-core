@@ -296,14 +296,22 @@ func (c *client) clean() {
 	c.Unlock()
 }
 
-type dialerConf struct {
-	net.Destination
-	*internet.MemoryStreamConfig
-}
+type dialerConf = internet.DialerConf
 
 type clientManager struct {
 	sync.RWMutex
 	m map[dialerConf]*client
+}
+
+func (m *clientManager) delete(key dialerConf) {
+	key.Network = net.Network_UDP
+	m.Lock()
+	defer m.Unlock()
+	c, ok := m.m[key]
+	if ok {
+		c.close()
+		delete(m.m, key)
+	}
 }
 
 func (m *clientManager) clean() {
@@ -321,6 +329,15 @@ var (
 	manager     *clientManager
 	initmanager sync.Once
 )
+
+func init() {
+	common.Must(internet.RegisterDialerDelete(protocolName, func(key dialerConf) {
+		if manager == nil {
+			return
+		}
+		manager.delete(key)
+	}))
+}
 
 func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (stat.Connection, error) {
 	tlsConfig := tls.ConfigFromStreamSettings(streamSettings)

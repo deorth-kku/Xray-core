@@ -76,6 +76,34 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *MemoryStrea
 	return nil, errors.New("unknown network ", dest.Network)
 }
 
+type DialerConf struct {
+	net.Destination
+	*MemoryStreamConfig
+}
+
+type delelefunc = func(key DialerConf)
+
+var dialerDeleteCache = make(map[string]delelefunc)
+
+func DeleteDailer(key DialerConf) {
+	if key.MemoryStreamConfig == nil {
+		return
+	}
+	f, ok := dialerDeleteCache[key.MemoryStreamConfig.ProtocolName]
+	if !ok {
+		return
+	}
+	f(key)
+}
+
+func RegisterDialerDelete(protocol string, f delelefunc) error {
+	if _, found := dialerDeleteCache[protocol]; found {
+		return errors.New(protocol, " dialer delete already registered").AtError()
+	}
+	dialerDeleteCache[protocol] = f
+	return nil
+}
+
 // DestIpAddress returns the ip of proxy server. It is useful in case of Android client, which prepare an IP before proxy connection is established
 func DestIpAddress() net.IP {
 	return effectiveSystemDialer.DestIpAddress()

@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"runtime"
 
 	"github.com/xtls/xray-core/common/dice"
 
@@ -185,7 +186,17 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 	}
 
 	h.proxy = proxyHandler
+	if dest, ok := proxyHandler.(serverDest); ok {
+		runtime.AddCleanup(h, internet.DeleteDailer, internet.DialerConf{
+			Destination:        dest.ServerDest(),
+			MemoryStreamConfig: h.streamSettings,
+		})
+	}
 	return h, nil
+}
+
+type serverDest interface {
+	ServerDest() net.Destination
 }
 
 // Tag implements outbound.Handler.
