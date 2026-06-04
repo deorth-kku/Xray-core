@@ -36,7 +36,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 
 func init() {
 	common.Must(internet.RegisterTransportDialer(protocolName, Dial))
-	common.Must(internet.RegisterDialerDelete(protocolName, GrpcCloseConn))
+	common.Must(internet.RegisterDialerDelete(protocolName, CloseConn))
 }
 
 type dialerConf = internet.DialerConf
@@ -78,6 +78,7 @@ func getGrpcClient(ctx context.Context, dest net.Destination, streamSettings *in
 
 	if globalDialerMap == nil {
 		globalDialerMap = make(map[dialerConf]*grpc.ClientConn)
+		go cleanconns()
 	}
 	tlsConfig := tls.ConfigFromStreamSettings(streamSettings)
 	realityConfig := reality.ConfigFromStreamSettings(streamSettings)
@@ -220,7 +221,23 @@ func setUserAgent(conn *grpc.ClientConn, ua string) {
 	}
 }
 
-func GrpcCloseConn(key dialerConf) {
+const idleCleanupInterval = 15 * time.Second
+
+func cleanconns() {
+	ticker := time.NewTicker(idleCleanupInterval)
+	for range ticker.C {
+		globalDialerAccess.Lock()
+		for k, v := range globalDialerMap {
+			if v.GetState() == connectivity.Shutdown {
+				go v.Close()
+				delete(globalDialerMap, k)
+			}
+		}
+		globalDialerAccess.Unlock()
+	}
+}
+
+func CloseConn(key dialerConf) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 	v, ok := globalDialerMap[key]
