@@ -27,7 +27,6 @@ import (
 	"github.com/xtls/xray-core/proxy"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
-	"github.com/xtls/xray-core/transport/internet/grpc"
 	"github.com/xtls/xray-core/transport/internet/stat"
 	"github.com/xtls/xray-core/transport/internet/tls"
 	"github.com/xtls/xray-core/transport/pipe"
@@ -410,13 +409,6 @@ func (h *Handler) Close() error {
 	common.CloseT(h.mux)
 	common.Close(h.proxy)
 	common.CloseT(h.xudp)
-	if h.streamSettings == nil {
-		return nil
-	}
-	switch h.streamSettings.ProtocolName {
-	case "grpc":
-		grpc.GrpcCloseConn(h.streamSettings)
-	}
 	return nil
 }
 
