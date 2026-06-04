@@ -315,11 +315,31 @@ func (m *clientManager) delete(key dialerConf) {
 	defer m.Unlock()
 	c, ok := m.m[key]
 	if ok {
-		c.Lock()
-		c.close()
-		c.Unlock()
-		delete(m.m, key)
+		m.closeClient(key, c)
 	}
+}
+
+func (m *clientManager) closeClient(key dialerConf, c *client) {
+	c.Lock()
+	c.close()
+	c.Unlock()
+	delete(m.m, key)
+}
+
+func (m *clientManager) clear() (count int) {
+	m.Lock()
+	defer m.Unlock()
+	count = len(m.m)
+	for k, v := range m.m {
+		m.closeClient(k, v)
+	}
+	return
+}
+
+func (m *clientManager) len() int {
+	m.RLock()
+	defer m.RUnlock()
+	return len(m.m)
 }
 
 func (m *clientManager) clean() {
@@ -345,6 +365,20 @@ func init() {
 		}
 		manager.delete(key)
 	}))
+}
+
+func ClientsLen() int {
+	if manager == nil {
+		return 0
+	}
+	return manager.len()
+}
+
+func CloseAllClients() int {
+	if manager == nil {
+		return 0
+	}
+	return manager.clear()
 }
 
 func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (stat.Connection, error) {
