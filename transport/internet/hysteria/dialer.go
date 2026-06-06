@@ -391,6 +391,14 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		go manager.clean()
 	})
 
+	// GetTLSConfig can use DNS to query ECH, which can be very slow. place it out of the locking part.
+	gotlsConfig := tlsConfig.GetTLSConfig(ctx)
+	select {
+	case <-ctx.Done():
+		return nil, errors.New("failed when creating tls config").Base(ctx.Err())
+	default:
+	}
+
 	manager.RLock()
 	c := manager.m[dialerConf{dest, streamSettings}]
 	manager.RUnlock()
@@ -402,7 +410,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 			c = &client{
 				dest:           dest,
 				config:         streamSettings.ProtocolSettings.(*Config),
-				tlsConfig:      tlsConfig.GetTLSConfig(ctx),
+				tlsConfig:      gotlsConfig,
 				socketConfig:   streamSettings.SocketSettings,
 				udpmaskManager: streamSettings.UdpmaskManager,
 				quicParams:     streamSettings.QuicParams,
