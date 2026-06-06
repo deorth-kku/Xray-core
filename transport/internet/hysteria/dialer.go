@@ -336,12 +336,6 @@ func (m *clientManager) clear() (count int) {
 	return
 }
 
-func (m *clientManager) len() int {
-	m.RLock()
-	defer m.RUnlock()
-	return len(m.m)
-}
-
 func (m *clientManager) clean() {
 	ticker := time.NewTicker(idleCleanupInterval)
 	for range ticker.C {
@@ -371,7 +365,7 @@ func ClientsLen() int {
 	if manager == nil {
 		return 0
 	}
-	return manager.len()
+	return len(manager.m)
 }
 
 func CloseAllClients() int {

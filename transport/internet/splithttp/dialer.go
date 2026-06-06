@@ -59,8 +59,6 @@ func init() {
 }
 
 func XmuxManagerCount() int {
-	globalDialerAccess.Lock()
-	defer globalDialerAccess.Unlock()
 	return len(globalDialerMap)
 }
 
