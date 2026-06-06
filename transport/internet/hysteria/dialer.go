@@ -219,13 +219,13 @@ func (c *client) dial(ctx context.Context) error {
 		_ = pktConn.Close()
 		return err
 	}
+	_ = resp.Body.Close()
 	if resp.StatusCode != StatusAuthOK {
 		_ = conn.CloseWithError(closeErrCodeProtocolError, "")
 		_ = tr.Close()
 		_ = pktConn.Close()
 		return errors.New("auth failed code ", resp.StatusCode)
 	}
-	_ = resp.Body.Close()
 
 	// udp, _ := strconv.ParseBool(resp.Header.Get(ResponseHeaderUDPEnabled))
 	down, _ := strconv.ParseUint(resp.Header.Get(CommonHeaderCCRX), 10, 64)
