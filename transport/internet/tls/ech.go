@@ -104,7 +104,7 @@ func ApplyECH(ctx context.Context, c *Config, config *tls.Config) error {
 				DNSServer = c.EchConfigList[len(nameOverride)+1:]
 			}
 			var resolver featdns.HTTPSResolver
-			if c.EchSocketSettings == nil { // prefer using global server when sockopt is set
+			if c.EchSocketSettings == nil { // prefer using global server when sockopt is not set
 				for _, s := range core.GetResolverFromContext[featdns.HTTPSResolver](ctx, nameToQuery) {
 					if urlOverName(s) == DNSServer {
 						resolver = s
