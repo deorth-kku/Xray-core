@@ -52,41 +52,11 @@ func (r *Router) Init(ctx context.Context, config *Config, _ dns.Client, ohm out
 		r.balancers[rule.Tag] = balancer
 	}
 
-	r.rules = make([]*Rule, 0, len(config.Rule))
-	for _, rule := range config.Rule {
-		cond, err := rule.BuildCondition()
-		if err != nil {
-			r.closeWebhooks()
-			return err
-		}
-		rr := &Rule{
-			Condition: cond,
-			Tag:       rule.GetTag(),
-			RuleTag:   rule.GetRuleTag(),
-		}
-		if wh := rule.GetWebhook(); wh != nil {
-			notifier, err := NewWebhookNotifier(wh)
-			if err != nil {
-				r.closeWebhooks()
-				return err
-			}
-			rr.Webhook = notifier
-		}
-		btag := rule.GetBalancingTag()
-		if len(btag) > 0 {
-			brule, found := r.balancers[btag]
-			if !found {
-				if rr.Webhook != nil {
-					rr.Webhook.Close()
-				}
-				r.closeWebhooks()
-				return errors.New("balancer ", btag, " not found")
-			}
-			rr.Balancer = brule
-		}
-		r.rules = append(r.rules, rr)
+	newrules, err := r.buildRules(config.Rule)
+	if err != nil {
+		return err
 	}
-
+	r.rules = newrules
 	return nil
 }
 
@@ -171,10 +141,19 @@ func (r *Router) ReloadRules(config *Config, shouldAppend bool) error {
 		tagset[rule.GetRuleTag()] = struct{}{}
 	}
 
-	newrules := make([]*Rule, len(config.Rule))
+	newrule, err := r.buildRules(config.Rule)
+	if err != nil {
+		return err
+	}
+	r.rules = append(r.rules, newrule...)
+	return nil
+}
+
+func (r *Router) buildRules(config []*RoutingRule) ([]*Rule, error) {
+	newrules := make([]*Rule, len(config))
 	var eg errgroup.Group
 
-	for i, rule := range config.Rule {
+	for i, rule := range config {
 		eg.Go(func() error {
 			cond, err := rule.BuildCondition()
 			if err != nil {
@@ -210,18 +189,10 @@ func (r *Router) ReloadRules(config *Config, shouldAppend bool) error {
 	}
 	err := eg.Wait()
 	if err != nil {
-		for _, rr := range newrules {
-			if rr == nil {
-				continue
-			}
-			if rr.Webhook != nil {
-				rr.Webhook.Close()
-			}
-		}
-		return err
+		closeWebhooks(newrules)
+		return nil, err
 	}
-	r.rules = append(r.rules, newrules...)
-	return nil
+	return newrules, err
 }
 
 func (r *Router) RuleExists(tag string) bool {
@@ -318,8 +289,11 @@ func (r *Router) Start() error {
 }
 
 // closeWebhooks closes all webhook notifiers in the current rule set.
-func (r *Router) closeWebhooks() {
-	for _, rule := range r.rules {
+func closeWebhooks(rules []*Rule) {
+	for _, rule := range rules {
+		if rule == nil {
+			continue
+		}
 		if rule.Webhook != nil {
 			rule.Webhook.Close()
 		}
@@ -330,7 +304,7 @@ func (r *Router) closeWebhooks() {
 func (r *Router) Close() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.closeWebhooks()
+	closeWebhooks(r.rules)
 	return nil
 }
 
