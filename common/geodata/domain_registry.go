@@ -56,6 +56,13 @@ func (r *DomainRegistry) Reload() error {
 	return nil
 }
 
+func (r *DomainRegistry) Clear() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.factory = newDomainMatcherFactory()
+	r.matchers = nil
+}
+
 func newDomainRegistry() *DomainRegistry {
 	return &DomainRegistry{
 		factory: newDomainMatcherFactory(),

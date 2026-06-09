@@ -57,6 +57,13 @@ func (r *IPRegistry) Reload() error {
 	return nil
 }
 
+func (r *IPRegistry) Clear() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.ipsetFactory = NewIPSetFactory()
+	r.matchers = nil
+}
+
 func newIPRegistry() *IPRegistry {
 	return &IPRegistry{
 		ipsetFactory: NewIPSetFactory(),
