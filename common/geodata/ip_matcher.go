@@ -3,7 +3,6 @@ package geodata
 import (
 	"context"
 	"net/netip"
-	"runtime"
 	"slices"
 	"sort"
 	"strings"
@@ -908,10 +907,6 @@ func (f *IPSetFactory) createFrom(yield func(func(*CIDR)) error) (*IPSet, error)
 	if err != nil {
 		return nil, err
 	}
-
-	// peak mem
-	runtime.GC()
-	defer runtime.GC()
 
 	ipv4, err := ipv4Builder.IPSet()
 	if err != nil {
