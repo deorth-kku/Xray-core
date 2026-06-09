@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"runtime"
 	"strings"
 
 	"github.com/xtls/xray-core/common/errors"
@@ -26,7 +25,6 @@ func checkFile(file, code string) error {
 }
 
 func loadFile(file, code string) ([]byte, error) {
-	runtime.GC() // peak mem
 	r, err := filesystem.OpenAsset(file)
 	if err != nil {
 		return nil, errors.New("failed to open ", file).Base(err)
@@ -44,7 +42,6 @@ func loadIP(file, code string) ([]*CIDR, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer runtime.GC() // peak mem
 	var geoip GeoIP
 	if err := proto.Unmarshal(bs, &geoip); err != nil {
 		return nil, errors.New("error unmarshal IP in ", file, ":", code).Base(err)
@@ -57,7 +54,6 @@ func LoadSite(file, code string) ([]*Domain, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer runtime.GC() // peak mem
 	var geosite GeoSite
 	if err := proto.Unmarshal(bs, &geosite); err != nil {
 		return nil, errors.New("error unmarshal Site in ", file, ":", code).Base(err)
