@@ -12,6 +12,7 @@ import (
 	"github.com/xtls/xray-core/features/outbound"
 	"github.com/xtls/xray-core/features/routing"
 	routing_dns "github.com/xtls/xray-core/features/routing/dns"
+	"golang.org/x/sync/errgroup"
 )
 
 // Router is an implementation of routing.Router.
@@ -152,54 +153,74 @@ func (r *Router) ReloadRules(config *Config, shouldAppend bool) error {
 		r.balancers[rule.Tag] = balancer
 	}
 
-	startIdx := len(r.rules)
-	closeNewWebhooks := func() {
-		for i := startIdx; i < len(r.rules); i++ {
-			if r.rules[i].Webhook != nil {
-				r.rules[i].Webhook.Close()
-			}
-		}
-		r.rules = r.rules[:startIdx]
+	tagset := make(map[string]struct{}) // they don't have a Set in common/utils, bruh
+	for _, rule := range r.rules {
+		tagset[rule.RuleTag] = struct{}{}
 	}
-
+	hastag := func(tag string) bool {
+		if tag == "" {
+			return false
+		}
+		_, ok := tagset[tag]
+		return ok
+	}
 	for _, rule := range config.Rule {
-		if r.RuleExists(rule.GetRuleTag()) {
-			closeNewWebhooks()
+		if hastag(rule.GetRuleTag()) {
 			return errors.New("duplicate ruleTag ", rule.GetRuleTag())
 		}
-		cond, err := rule.BuildCondition()
-		if err != nil {
-			closeNewWebhooks()
-			return err
-		}
-		rr := &Rule{
-			Condition: cond,
-			Tag:       rule.GetTag(),
-			RuleTag:   rule.GetRuleTag(),
-		}
-		if wh := rule.GetWebhook(); wh != nil {
-			notifier, err := NewWebhookNotifier(wh)
-			if err != nil {
-				closeNewWebhooks()
-				return err
-			}
-			rr.Webhook = notifier
-		}
-		btag := rule.GetBalancingTag()
-		if len(btag) > 0 {
-			brule, found := r.balancers[btag]
-			if !found {
-				if rr.Webhook != nil {
-					rr.Webhook.Close()
-				}
-				closeNewWebhooks()
-				return errors.New("balancer ", btag, " not found")
-			}
-			rr.Balancer = brule
-		}
-		r.rules = append(r.rules, rr)
+		tagset[rule.GetRuleTag()] = struct{}{}
 	}
 
+	newrules := make([]*Rule, len(config.Rule))
+	var eg errgroup.Group
+
+	for i, rule := range config.Rule {
+		eg.Go(func() error {
+			cond, err := rule.BuildCondition()
+			if err != nil {
+				return err
+			}
+			rr := &Rule{
+				Condition: cond,
+				Tag:       rule.GetTag(),
+				RuleTag:   rule.GetRuleTag(),
+			}
+			if wh := rule.GetWebhook(); wh != nil {
+				notifier, err := NewWebhookNotifier(wh)
+				if err != nil {
+					return err
+				}
+				rr.Webhook = notifier
+			}
+			btag := rule.GetBalancingTag()
+			if len(btag) > 0 {
+				brule, found := r.balancers[btag]
+				if !found {
+					if rr.Webhook != nil {
+						rr.Webhook.Close()
+						rr.Webhook = nil
+					}
+					return errors.New("balancer ", btag, " not found")
+				}
+				rr.Balancer = brule
+			}
+			newrules[i] = rr
+			return nil
+		})
+	}
+	err := eg.Wait()
+	if err != nil {
+		for _, rr := range newrules {
+			if rr == nil {
+				continue
+			}
+			if rr.Webhook != nil {
+				rr.Webhook.Close()
+			}
+		}
+		return err
+	}
+	r.rules = append(r.rules, newrules...)
 	return nil
 }
 
