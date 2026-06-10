@@ -155,7 +155,10 @@ func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, sessi
 		// request
 		requestBuff := new(bytes.Buffer)
 		requestBuff.Grow(512 + int(req.ContentLength))
-		common.Must(req.Write(requestBuff))
+		err := req.Write(requestBuff)
+		if err != nil {
+			return err
+		}
 		stop()
 		var uploadConn any
 		var h1UploadConn *H1Conn
