@@ -32,7 +32,7 @@ func (g *MphValueMatcher) Add(matcher Matcher, value uint32) {
 			g.ac = NewACAutomatonMatcherGroup()
 		}
 		g.ac.AddSubstrMatcher(matcher, value)
-	case *RegexMatcher:
+	default:
 		if g.regex == nil {
 			g.regex = &SimpleMatcherGroup{}
 		}
