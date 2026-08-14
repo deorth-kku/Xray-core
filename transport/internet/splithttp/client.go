@@ -96,7 +96,7 @@ func (c *DefaultDialerClient) OpenStream(ctx context.Context, url url.URL, sessi
 	req := NewRequestWithContext(reqctx, method, url, nil, c.transportConfig.GetRequestHeader())
 	c.transportConfig.FillStreamRequest(req, sessionId, "")
 
-	wrc0 := &WaitReadCloser{Wait: make(chan struct{})}
+	wrc0 := &WaitReadCloser{Wait: make(chan struct{}), Cancel: cancel}
 	wrc = wrc0
 	go func() {
 		resp, err := c.client.Do(req)
@@ -213,6 +213,7 @@ func (c *DefaultDialerClient) PostPacket(ctx context.Context, url url.URL, sessi
 type WaitReadCloser struct {
 	Wait chan struct{}
 	io.ReadCloser
+	Cancel context.CancelFunc
 }
 
 func (w *WaitReadCloser) Set(rc io.ReadCloser) {
@@ -235,6 +236,9 @@ func (w *WaitReadCloser) Read(b []byte) (int, error) {
 }
 
 func (w *WaitReadCloser) Close() error {
+	if w.Cancel != nil {
+		w.Cancel()
+	}
 	if w.ReadCloser != nil {
 		return w.ReadCloser.Close()
 	}
