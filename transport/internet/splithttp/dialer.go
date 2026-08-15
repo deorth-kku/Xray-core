@@ -85,6 +85,21 @@ func init() {
 	common.Must(internet.RegisterDialerPool(protocolName, pool{}))
 }
 
+const idleCleanupInterval = time.Second * 15
+
+func cleanup(ctx context.Context) {
+	ticker := time.NewTicker(idleCleanupInterval)
+	for range ticker.C {
+		globalDialerAccess.Lock()
+		for k, v := range globalDialerMap {
+			if v.shouldRemove(ctx) {
+				delete(globalDialerMap, k)
+			}
+		}
+		globalDialerAccess.Unlock()
+	}
+}
+
 func getHTTPClient(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (DialerClient, *XmuxClient) {
 	realityConfig := reality.ConfigFromStreamSettings(streamSettings)
 
@@ -97,6 +112,7 @@ func getHTTPClient(ctx context.Context, dest net.Destination, streamSettings *in
 
 	if globalDialerMap == nil {
 		globalDialerMap = make(map[dialerConf]*XmuxManager)
+		go cleanup(context.WithoutCancel(ctx))
 	}
 
 	key := dialerConf{dest, streamSettings}

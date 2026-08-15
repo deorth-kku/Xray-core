@@ -72,7 +72,7 @@ func (m *XmuxManager) newXmuxClient() *XmuxClient {
 	return xmuxClient
 }
 
-func (m *XmuxManager) GetXmuxClient(ctx context.Context) *XmuxClient { // when locking
+func (m *XmuxManager) clean(ctx context.Context) {
 	m.xmuxClients = slices.DeleteFunc(m.xmuxClients, func(xmuxClient *XmuxClient) bool {
 		isClosed := xmuxClient.XmuxConn.IsClosed()
 		if isClosed ||
@@ -89,7 +89,15 @@ func (m *XmuxManager) GetXmuxClient(ctx context.Context) *XmuxClient { // when l
 		}
 		return false
 	})
+}
 
+func (m *XmuxManager) shouldRemove(ctx context.Context) bool { // when locking
+	m.clean(ctx)
+	return len(m.xmuxClients) == 0
+}
+
+func (m *XmuxManager) GetXmuxClient(ctx context.Context) *XmuxClient { // when locking
+	m.clean(ctx)
 	if len(m.xmuxClients) == 0 {
 		errors.LogDebug(ctx, "XMUX: creating xmuxClient because xmuxClients is empty")
 		return m.newXmuxClient()
