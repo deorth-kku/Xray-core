@@ -36,7 +36,45 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 
 func init() {
 	common.Must(internet.RegisterTransportDialer(protocolName, Dial))
-	common.Must(internet.RegisterDialerDelete(protocolName, CloseConn))
+	common.Must(internet.RegisterDialerPool(protocolName, pool{}))
+}
+
+type pool struct{}
+
+func (pool) Delete(key dialerConf) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	v, ok := globalDialerMap[key]
+	if ok {
+		v.Close()
+		delete(globalDialerMap, key)
+	}
+}
+
+func (pool) Len() int {
+	return len(globalDialerMap)
+}
+
+func (pool) Keys() []dialerConf {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	l := len(globalDialerMap)
+	list := make([]dialerConf, 0, l)
+	for k := range globalDialerMap {
+		list = append(list, k)
+	}
+	return list
+}
+
+func (pool) Clear() int {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	count := len(globalDialerMap)
+	for k, v := range globalDialerMap {
+		v.Close()
+		delete(globalDialerMap, k)
+	}
+	return count
 }
 
 type dialerConf = internet.DialerConf
@@ -235,29 +273,4 @@ func cleanconns() {
 		}
 		globalDialerAccess.Unlock()
 	}
-}
-
-func CloseConn(key dialerConf) {
-	globalDialerAccess.Lock()
-	defer globalDialerAccess.Unlock()
-	v, ok := globalDialerMap[key]
-	if ok {
-		v.Close()
-		delete(globalDialerMap, key)
-	}
-}
-
-func GrpcCloseAllConns() (closed int) {
-	globalDialerAccess.Lock()
-	defer globalDialerAccess.Unlock()
-	for k, v := range globalDialerMap {
-		v.Close()
-		delete(globalDialerMap, k)
-		closed++
-	}
-	return
-}
-
-func GrpcLenConns() (l int) {
-	return len(globalDialerMap)
 }

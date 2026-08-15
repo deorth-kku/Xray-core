@@ -185,10 +185,14 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 
 	h.proxy = proxyHandler
 	if dest, ok := proxyHandler.(serverDest); ok {
-		runtime.AddCleanup(h, internet.DeleteDailer, internet.DialerConf{
+		key := internet.DialerConf{
 			Destination:        dest.ServerDest(),
 			MemoryStreamConfig: h.streamSettings,
-		})
+		}
+		f := internet.DeleteDailer(key)
+		if f != nil {
+			runtime.AddCleanup(h, f, key)
+		}
 	}
 	return h, nil
 }

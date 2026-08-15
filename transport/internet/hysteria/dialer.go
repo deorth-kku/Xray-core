@@ -353,22 +353,40 @@ var (
 )
 
 func init() {
-	common.Must(internet.RegisterDialerDelete(protocolName, func(key dialerConf) {
-		if manager == nil {
-			return
-		}
-		manager.delete(key)
-	}))
+	common.Must(internet.RegisterDialerPool(protocolName, pool{}))
 }
 
-func ClientsLen() int {
+type pool struct{}
+
+func (pool) Delete(key dialerConf) {
+	if manager == nil {
+		return
+	}
+	manager.delete(key)
+}
+
+func (pool) Len() int {
 	if manager == nil {
 		return 0
 	}
 	return len(manager.m)
 }
 
-func CloseAllClients() int {
+func (pool) Keys() []dialerConf {
+	if manager == nil {
+		return nil
+	}
+	manager.RLock()
+	defer manager.RUnlock()
+	l := len(manager.m)
+	list := make([]dialerConf, 0, l)
+	for k := range manager.m {
+		list = append(list, k)
+	}
+	return list
+}
+
+func (pool) Clear() int {
 	if manager == nil {
 		return 0
 	}

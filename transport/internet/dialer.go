@@ -3,6 +3,7 @@ package internet
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/xtls/xray-core/common"
@@ -81,27 +82,40 @@ type DialerConf struct {
 	*MemoryStreamConfig
 }
 
-type delelefunc = func(key DialerConf)
+var dialerCache = make(map[string]DialerPool)
 
-var dialerDeleteCache = make(map[string]delelefunc)
-
-func DeleteDailer(key DialerConf) {
+func DeleteDailer(key DialerConf) func(key DialerConf) {
 	if key.MemoryStreamConfig == nil {
-		return
+		return nil
 	}
-	f, ok := dialerDeleteCache[key.MemoryStreamConfig.ProtocolName]
+	p, ok := dialerCache[key.MemoryStreamConfig.ProtocolName]
 	if !ok {
-		return
+		return nil
 	}
-	f(key)
+	return p.Delete
 }
 
-func RegisterDialerDelete(protocol string, f delelefunc) error {
-	if _, found := dialerDeleteCache[protocol]; found {
-		return errors.New(protocol, " dialer delete already registered").AtError()
+type DialerPool interface {
+	Delete(key DialerConf)
+	Len() int
+	Keys() []DialerConf
+	Clear() int
+}
+
+func RegisterDialerPool(protocol string, p DialerPool) error {
+	if _, found := dialerCache[protocol]; found {
+		return errors.New(protocol, " dialer pool already registered").AtError()
 	}
-	dialerDeleteCache[protocol] = f
+	dialerCache[protocol] = p
 	return nil
+}
+
+func GetDialerPool(protocol string) DialerPool {
+	return dialerCache[protocol]
+}
+
+func RangeDialerPool(y func(string, DialerPool) bool) {
+	maps.All(dialerCache)(y)
 }
 
 // DestIpAddress returns the ip of proxy server. It is useful in case of Android client, which prepare an IP before proxy connection is established

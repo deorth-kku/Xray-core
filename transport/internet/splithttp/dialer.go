@@ -44,7 +44,9 @@ var (
 	globalDialerAccess sync.Mutex
 )
 
-func DeleteXmuxManager(key dialerConf) {
+type pool struct{}
+
+func (pool) Delete(key dialerConf) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 	v, ok := globalDialerMap[key]
@@ -54,15 +56,11 @@ func DeleteXmuxManager(key dialerConf) {
 	}
 }
 
-func init() {
-	common.Must(internet.RegisterDialerDelete(protocolName, DeleteXmuxManager))
-}
-
-func XmuxManagerCount() int {
+func (pool) Len() int {
 	return len(globalDialerMap)
 }
 
-func ClearXmuxManagers() (l int) {
+func (pool) Clear() (l int) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 	for _, v := range globalDialerMap {
@@ -70,6 +68,21 @@ func ClearXmuxManagers() (l int) {
 	}
 	globalDialerMap = nil
 	return
+}
+
+func (pool) Keys() []dialerConf {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+	l := len(globalDialerMap)
+	list := make([]dialerConf, 0, l)
+	for k := range globalDialerMap {
+		list = append(list, k)
+	}
+	return list
+}
+
+func init() {
+	common.Must(internet.RegisterDialerPool(protocolName, pool{}))
 }
 
 func getHTTPClient(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (DialerClient, *XmuxClient) {
