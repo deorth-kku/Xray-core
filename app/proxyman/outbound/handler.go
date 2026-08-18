@@ -188,10 +188,14 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 	if f := internet.DeleteDailerFunc(h.streamSettings); f != nil {
 		dest, ok := proxyHandler.(serverDest)
 		if ok {
-			runtime.AddCleanup(h, f, internet.DialerConf{
+			key := internet.DialerConf{
 				Destination:        dest.ServerDest(),
 				MemoryStreamConfig: h.streamSettings,
-			})
+			}
+			if config := tls.ConfigFromStreamSettings(h.streamSettings); config != nil && len(config.NextProtocol) > 0 && config.NextProtocol[0] == "h3" {
+				key.Destination.Network = net.Network_UDP
+			}
+			runtime.AddCleanup(h, f, key)
 		} else {
 			errors.LogError(ctx, "unexpected protocol+network pair: ", reflect.TypeOf(proxyHandler).String(), "+", h.streamSettings.ProtocolName)
 		}
