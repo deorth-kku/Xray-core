@@ -84,11 +84,11 @@ type DialerConf struct {
 
 var dialerCache = make(map[string]DialerPool)
 
-func DeleteDailer(key DialerConf) func(key DialerConf) {
-	if key.MemoryStreamConfig == nil {
+func DeleteDailerFunc(streamConfig *MemoryStreamConfig) func(key DialerConf) {
+	if streamConfig == nil {
 		return nil
 	}
-	p, ok := dialerCache[key.MemoryStreamConfig.ProtocolName]
+	p, ok := dialerCache[streamConfig.ProtocolName]
 	if !ok {
 		return nil
 	}

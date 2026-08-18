@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"reflect"
 	"runtime"
 
 	"github.com/xtls/xray-core/common/dice"
@@ -184,14 +185,15 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 	}
 
 	h.proxy = proxyHandler
-	if dest, ok := proxyHandler.(serverDest); ok {
-		key := internet.DialerConf{
-			Destination:        dest.ServerDest(),
-			MemoryStreamConfig: h.streamSettings,
-		}
-		f := internet.DeleteDailer(key)
-		if f != nil {
-			runtime.AddCleanup(h, f, key)
+	if f := internet.DeleteDailerFunc(h.streamSettings); f != nil {
+		dest, ok := proxyHandler.(serverDest)
+		if ok {
+			runtime.AddCleanup(h, f, internet.DialerConf{
+				Destination:        dest.ServerDest(),
+				MemoryStreamConfig: h.streamSettings,
+			})
+		} else {
+			errors.LogError(ctx, "unexpected protocol+network pair: ", reflect.TypeOf(proxyHandler).String(), "+", h.streamSettings.ProtocolName)
 		}
 	}
 	return h, nil
