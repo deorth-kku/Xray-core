@@ -322,7 +322,7 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 					pktConn.Close()
 					return nil, err
 				}
-				runtime.AddCleanup(conn, closerCleanup, pktConn)
+				runtime.AddCleanup(conn, common.CloserCleanup, pktConn)
 
 				switch quicParams.Congestion {
 				case "reno":
@@ -382,10 +382,6 @@ func createHTTPClient(dest net.Destination, streamSettings *internet.MemoryStrea
 
 type closeIdler interface {
 	CloseIdleConnections()
-}
-
-func closerCleanup[T io.Closer](closer T) {
-	closer.Close()
 }
 
 func init() {

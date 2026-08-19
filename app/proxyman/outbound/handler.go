@@ -200,6 +200,11 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 			errors.LogError(ctx, "unexpected protocol+network pair: ", reflect.TypeOf(proxyHandler).String(), "+", h.streamSettings.ProtocolName)
 		}
 	}
+	common.AddCloserCleanup(h, h.mux)
+	common.AddCloserCleanup(h, h.xudp)
+	if closer, ok := h.proxy.(common.Closable); ok {
+		runtime.AddCleanup(h, common.CloserCleanup, closer)
+	}
 	return h, nil
 }
 
@@ -416,9 +421,7 @@ func (h *Handler) Start() error {
 
 // Close implements common.Closable.
 func (h *Handler) Close() error {
-	common.CloseT(h.mux)
-	common.Close(h.proxy)
-	common.CloseT(h.xudp)
+	// moved to runtime.AddCleanup to avoid interrupting connections
 	return nil
 }
 

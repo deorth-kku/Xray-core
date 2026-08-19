@@ -2,6 +2,7 @@ package common
 
 import (
 	"io"
+	"runtime"
 
 	"github.com/xtls/xray-core/common/errors"
 )
@@ -41,6 +42,17 @@ func CloseT[T comparableCloser](obj T) error {
 		return nil
 	}
 	return obj.Close()
+}
+
+func CloserCleanup[T io.Closer](closer T) {
+	closer.Close()
+}
+
+func AddCloserCleanup[T any, S comparableCloser](ptr *T, closer S) runtime.Cleanup {
+	if closer == *new(S) {
+		return runtime.Cleanup{}
+	}
+	return runtime.AddCleanup(ptr, CloserCleanup, closer)
 }
 
 // Interrupt calls Interrupt() if object implements Interruptible interface, or Close() if the object implements Closable interface.
